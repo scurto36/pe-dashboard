@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live PE Signal Dashboard</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #060c14; font-family: 'Courier New', monospace; color: #e0f7fa; min-height: 100vh; }
+  .header { background: linear-gradient(135deg, #091520, #0d2137); padding: 22px 28px; border-bottom: 1px solid #00f5d415; }
+  .header-label { font-size: 10px; letter-spacing: 4px; color: #00f5d470; text-transform: uppercase; margin-bottom: 4px; }
+  .header-title { font-size: 24px; font-weight: 900; color: #fff; margin-bottom: 2px; }
+  .header-sub { font-size: 11px; color: #ffffff40; line-height: 1.6; }
+  .header-row { margin-top: 12px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .refresh-btn { background: #00f5d415; border: 1px solid #00f5d440; color: #00f5d4; padding: 7px 18px; border-radius: 4px; cursor: pointer; font-family: 'Courier New', monospace; font-size: 11px; letter-spacing: 1px; transition: all 0.2s; }
+  .refresh-btn:hover { background: #00f5d425; }
+  .refresh-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .last-updated { font-size: 10px; color: #ffffff30; }
+  .progress-bar { height: 3px; background: #00f5d4; width: 0%; transition: width 0.3s; }
+  .info-banner { background: #ffd16610; border-bottom: 1px solid #ffd16625; padding: 10px 28px; font-size: 11px; color: #ffd166; }
+  .controls-panel { background: #0a1628; border-bottom: 1px solid #ffffff08; padding: 16px 28px; }
+  .controls-title { font-size: 10px; letter-spacing: 3px; color: #ffffff40; text-transform: uppercase; margin-bottom: 14px; }
+  .controls-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; }
+  .control-group { display: flex; flex-direction: column; gap: 6px; }
+  .control-label { font-size: 10px; color: #ffffff50; letter-spacing: 1px; display: flex; justify-content: space-between; }
+  .control-label span { color: #ffd166; font-weight: 700; }
+  input[type=range] { width: 100%; accent-color: #00f5d4; cursor: pointer; }
+  .control-desc { font-size: 9px; color: #ffffff25; line-height: 1.5; }
+  .apply-btn { background: #7b61ff20; border: 1px solid #7b61ff50; color: #7b61ff; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-family: 'Courier New', monospace; font-size: 11px; transition: all 0.2s; }
+  .apply-btn:hover { background: #7b61ff35; }
+  .preset-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; padding-top: 10px; border-top: 1px solid #ffffff08; align-items: center; }
+  .preset-label { font-size: 9px; color: #ffffff30; letter-spacing: 2px; text-transform: uppercase; }
+  .preset-btn { background: #ffffff08; border: 1px solid #ffffff15; color: #ffffff50; padding: 4px 12px; border-radius: 3px; cursor: pointer; font-family: 'Courier New', monospace; font-size: 10px; transition: all 0.2s; }
+  .preset-btn:hover { background: #ffffff15; color: #fff; }
+  .summary-bar { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; padding: 14px 28px; background: #070d14; border-bottom: 1px solid #ffffff08; }
+  .summary-stat { text-align: center; padding: 6px; }
+  .summary-stat + .summary-stat { border-left: 1px solid #ffffff08; }
+  .summary-num { font-size: 24px; font-weight: 900; }
+  .summary-lbl { font-size: 9px; letter-spacing: 2px; color: #ffffff40; margin-top: 3px; text-transform: uppercase; }
+  .legend-bar { display: flex; gap: 18px; padding: 10px 28px; background: #070d14; border-bottom: 1px solid #ffffff08; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 10px; color: #ffffff50; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .filters { display: flex; gap: 8px; padding: 12px 28px; background: #070d14; border-bottom: 1px solid #ffffff08; flex-wrap: wrap; }
+  .filter-btn { background: #0a1628; border: 1px solid #ffffff15; color: #ffffff50; padding: 5px 14px; border-radius: 4px; cursor: pointer; font-family: 'Courier New', monospace; font-size: 10px; letter-spacing: 1px; transition: all 0.2s; }
+  .filter-btn:hover, .filter-btn.active { background: #00f5d415; border-color: #00f5d450; color: #00f5d4; }
+  .loading-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 20px; }
+  .loading-spinner { width: 36px; height: 36px; border: 3px solid #ffffff10; border-top-color: #00f5d4; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 16px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-size: 13px; color: #ffffff50; margin-bottom: 6px; }
+  .loading-detail { font-size: 11px; color: #ffffff25; text-align: center; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; padding: 20px 28px; }
+  .card { background: #0a1628; border-radius: 10px; padding: 16px 18px; border: 1px solid #ffffff08; position: relative; transition: border-color 0.2s, transform 0.15s; }
+  .card:hover { border-color: #ffffff18; transform: translateY(-1px); }
+  .card.cheap     { border-left: 3px solid #00f5d4; }
+  .card.expensive { border-left: 3px solid #ff6b9d; }
+  .card.neutral   { border-left: 3px solid #ffffff15; }
+  .signal-badge { position: absolute; top: 12px; right: 12px; font-size: 8px; letter-spacing: 2px; text-transform: uppercase; padding: 3px 8px; border-radius: 3px; font-weight: 700; }
+  .badge-very-cheap     { background: #00f5d430; color: #00f5d4;  border: 1px solid #00f5d4; }
+  .badge-cheap          { background: #00f5d415; color: #00f5d4;  border: 1px solid #00f5d440; }
+  .badge-very-expensive { background: #ff6b9d30; color: #ff6b9d; border: 1px solid #ff6b9d; }
+  .badge-expensive      { background: #ff6b9d15; color: #ff6b9d; border: 1px solid #ff6b9d40; }
+  .badge-neutral        { background: #ffffff08; color: #ffffff50; border: 1px solid #ffffff20; }
+  .badge-na             { background: #ffffff05; color: #ffffff25; border: 1px solid #ffffff10; }
+  .ticker-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; padding-right: 95px; }
+  .ticker { font-size: 19px; font-weight: 900; color: #fff; }
+  .sector-tag { font-size: 8px; padding: 2px 7px; border-radius: 3px; letter-spacing: 1px; white-space: nowrap; }
+  .company-name { font-size: 10px; color: #ffffff28; margin-bottom: 10px; padding-right: 95px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pe-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-bottom: 10px; }
+  .pe-box { background: #070d14; border-radius: 5px; padding: 7px 9px; }
+  .pe-label { font-size: 7px; color: #ffffff35; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 3px; }
+  .pe-val { font-size: 15px; font-weight: 700; }
+  .sparkline-wrap { margin-bottom: 10px; }
+  .sparkline-label { font-size: 8px; color: #ffffff25; margin-bottom: 4px; display: flex; justify-content: space-between; }
+  canvas.spark { width: 100%; height: 44px; display: block; }
+  .gauge-wrap { margin-bottom: 6px; }
+  .gauge-labels { display: flex; justify-content: space-between; font-size: 8px; color: #ffffff25; margin-bottom: 3px; }
+  .gauge-track { background: #ffffff08; border-radius: 3px; height: 6px; position: relative; }
+  .gauge-fill { height: 100%; border-radius: 3px; }
+  .gauge-marker { position: absolute; top: -3px; width: 2px; height: 12px; background: #7b61ff; border-radius: 1px; }
+  .gauge-tick { position: absolute; top: -2px; width: 1px; height: 10px; border-radius: 1px; opacity: 0.6; }
+  .std-info { font-size: 10px; margin-top: 6px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .meta-info { font-size: 9px; color: #ffffff20; margin-top: 5px; }
+  .no-data-msg { font-size: 10px; color: #ffffff20; margin-top: 6px; }
+  .footnote { padding: 16px 28px; font-size: 10px; color: #ffffff20; border-top: 1px solid #ffffff08; line-height: 1.6; }
+  @media (max-width: 500px) {
+    .grid { grid-template-columns: 1fr; padding: 12px; }
+    .summary-bar { grid-template-columns: 1fr 1fr; }
+    .header, .filters, .legend-bar, .controls-panel { padding-left: 14px; padding-right: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-label">Live PE Signal Dashboard</div>
+  <div class="header-title">PE Mean Reversion Signals</div>
+  <div class="header-sub">Current TTM PE vs 5-quarter historical baseline · SD band signals</div>
+  <div class="header-row">
+    <button class="refresh-btn" id="refreshBtn" onclick="loadAll()">⟳ Refresh Live Data</button>
+    <span class="last-updated" id="lastUpdated">Not yet loaded</span>
+  </div>
+</div>
+<div class="progress-bar" id="progressBar"></div>
+<div class="info-banner">⚡ Free plan: 5 quarters of history. Current PE = TTM (trailing 12 months) from FMP.</div>
+
+<div class="controls-panel">
+  <div class="controls-title">⚙ Signal Controls</div>
+  <div class="controls-grid">
+    <div class="control-group">
+      <div class="control-label">Cheap threshold <span id="cheapVal">0.5</span> SD</div>
+      <input type="range" id="cheapThresh" min="0.1" max="2.0" step="0.1" value="0.5"
+        oninput="document.getElementById('cheapVal').textContent=parseFloat(this.value).toFixed(1)">
+      <div class="control-desc">CHEAP fires when PE is this many SDs below the 5Q mean.</div>
+    </div>
+    <div class="control-group">
+      <div class="control-label">Expensive threshold <span id="expVal">0.5</span> SD</div>
+      <input type="range" id="expThresh" min="0.1" max="2.0" step="0.1" value="0.5"
+        oninput="document.getElementById('expVal').textContent=parseFloat(this.value).toFixed(1)">
+      <div class="control-desc">PRICEY fires when PE is this many SDs above the 5Q mean.</div>
+    </div>
+    <div class="control-group" style="justify-content:flex-end;">
+      <button class="apply-btn" onclick="applyThresholds()">▶ Apply</button>
+      <div class="preset-row">
+        <span class="preset-label">Presets:</span>
+        <button class="preset-btn" onclick="setPreset(0.3,0.3)">Sensitive</button>
+        <button class="preset-btn" onclick="setPreset(0.5,0.5)">Default</button>
+        <button class="preset-btn" onclick="setPreset(1.0,1.0)">Conservative</button>
+        <button class="preset-btn" onclick="setPreset(0.5,1.0)">Value Hunt</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="summary-bar" id="summaryBar">
+  <div class="summary-stat"><div class="summary-num" style="color:#00f5d4">—</div><div class="summary-lbl">Cheap</div></div>
+  <div class="summary-stat"><div class="summary-num" style="color:#ffffff70">—</div><div class="summary-lbl">Neutral</div></div>
+  <div class="summary-stat"><div class="summary-num" style="color:#ff6b9d">—</div><div class="summary-lbl">Expensive</div></div>
+  <div class="summary-stat"><div class="summary-num" style="color:#ffffff30">—</div><div class="summary-lbl">No Data</div></div>
+</div>
+
+<div class="legend-bar">
+  <div class="legend-item"><div class="legend-dot" style="background:#00f5d4"></div>Cheap vs 5Q history</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#ff6b9d"></div>Expensive vs 5Q history</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#ffffff30"></div>Neutral</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#7b61ff"></div>5Q mean</div>
+</div>
+
+<div class="filters">
+  <button class="filter-btn active" onclick="applyFilter('all',this)">ALL</button>
+  <button class="filter-btn" onclick="applyFilter('cheap',this)">🟢 CHEAP</button>
+  <button class="filter-btn" onclick="applyFilter('expensive',this)">🔴 EXPENSIVE</button>
+  <button class="filter-btn" onclick="applyFilter('neutral',this)">⚪ NEUTRAL</button>
+</div>
+
+<div id="mainContent">
+  <div class="loading-screen">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Loading live PE data...</div>
+    <div class="loading-detail">Fetching all 27 stocks from FMP</div>
+  </div>
+</div>
+
+<div class="footnote">
+  Data: Financial Modeling Prep Stable API · TTM PE + 5Q quarterly history · Not financial advice
+</div>
+
+<script>
+const API_KEY = "emuhuS5sNwXWTgW8QWqL3Ypqpv4YOutn";
+const BASE    = "https://financialmodelingprep.com/stable";
+
+const TICKERS = [
+  "GOOGL","MSFT","NVDA","AAPL","AMZN","ADBE","CRM","DELL","TSM","ASML",
+  "PLAB","WIX","JPM","BCS","WMT","COST","TGT","NEE","SLB","VST",
+  "UAL","VFC","IVVD","VKTX","NXE","SCZ","IFX"
+];
+
+const SECTOR_COLORS = {
+  "Technology":"#00f5d4","Financial Services":"#7b61ff",
+  "Healthcare":"#ff6b9d","Consumer Defensive":"#06d6a0","Consumer Cyclical":"#ef476f",
+  "Energy":"#ffd166","Industrials":"#118ab2","Communication Services":"#00b4d8",
+  "Utilities":"#90e0ef","Real Estate":"#f4a261","Basic Materials":"#e9c46a"
+};
+
+let allData = {};
+let currentFilter = "all";
+let T_CHEAP = 0.5;
+let T_EXP   = 0.5;
+
+const SC = s => SECTOR_COLORS[s] || "#888";
+
+function calcStats(arr) {
+  const v = arr.filter(x => x && x > 0 && x < 500);
+  if (v.length < 2) return { mean: null, sd: null };
+  const m  = v.reduce((a,b) => a+b, 0) / v.length;
+  const sd = Math.sqrt(v.reduce((a,b) => a + Math.pow(b-m, 2), 0) / v.length);
+  return { mean: m, sd: sd > 0 ? sd : null };
+}
+
+function classify(cur, mean, sd) {
+  if (!cur || !mean || !sd) return { label:"N/A", badgeClass:"badge-na", cardClass:"neutral", z:null };
+  const z = (cur - mean) / sd;
+  if (z <= -(T_CHEAP*2)) return { label:"VERY CHEAP",  badgeClass:"badge-very-cheap",      cardClass:"cheap",     z };
+  if (z <=  -T_CHEAP)    return { label:"CHEAP",        badgeClass:"badge-cheap",            cardClass:"cheap",     z };
+  if (z >=  (T_EXP*2))   return { label:"VERY PRICEY",  badgeClass:"badge-very-expensive",  cardClass:"expensive", z };
+  if (z >=   T_EXP)      return { label:"PRICEY",        badgeClass:"badge-expensive",        cardClass:"expensive", z };
+  return                        { label:"NEUTRAL",        badgeClass:"badge-neutral",          cardClass:"neutral",   z };
+}
+
+function setProgress(p) { document.getElementById("progressBar").style.width = p + "%"; }
+
+function setPreset(cheap, exp) {
+  T_CHEAP = cheap; T_EXP = exp;
+  document.getElementById("cheapThresh").value = cheap;
+  document.getElementById("expThresh").value   = exp;
+  document.getElementById("cheapVal").textContent = cheap.toFixed(1);
+  document.getElementById("expVal").textContent   = exp.toFixed(1);
+  if (Object.keys(allData).length > 0) renderGrid();
+}
+
+function applyThresholds() {
+  T_CHEAP = parseFloat(document.getElementById("cheapThresh").value);
+  T_EXP   = parseFloat(document.getElementById("expThresh").value);
+  if (Object.keys(allData).length > 0) renderGrid();
+}
+
+function drawSparkline(canvas, qtrs, mean, sd, cur, color) {
+  const ctx = canvas.getContext("2d");
+  const W   = canvas.offsetWidth || 280;
+  const H   = 44;
+  const DPR = window.devicePixelRatio || 1;
+  canvas.width  = W * DPR;
+  canvas.height = H * DPR;
+  ctx.scale(DPR, DPR);
+  const data = [...qtrs].filter(x => x > 0 && x < 500).reverse();
+  if (data.length < 2) return;
+  const all  = [...data, cur].filter(Boolean);
+  const minV = Math.min(...all) * 0.9;
+  const maxV = Math.max(...all) * 1.1;
+  const toX  = i => (i / Math.max(data.length - 1, 1)) * (W - 8) + 4;
+  const toY  = v => H - ((v - minV) / (maxV - minV)) * (H - 10) - 5;
+  if (mean && sd) {
+    ctx.fillStyle = color + "15";
+    ctx.fillRect(0, toY(mean + sd), W, toY(mean - sd) - toY(mean + sd));
+    ctx.strokeStyle = "#7b61ff40";
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3,3]);
+    ctx.beginPath(); ctx.moveTo(0, toY(mean)); ctx.lineTo(W, toY(mean)); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  ctx.strokeStyle = "#ffffff25";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  data.forEach((v,i) => i===0 ? ctx.moveTo(toX(i),toY(v)) : ctx.lineTo(toX(i),toY(v)));
+  ctx.stroke();
+  if (cur) {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(W - 6, toY(cur), 4, 0, Math.PI*2);
+    ctx.fill();
+  }
+}
+
+function safePE(val) {
+  const n = parseFloat(val);
+  return (!isNaN(n) && n > 0 && n < 500) ? n : null;
+}
+
+async function loadTicker(ticker, idx, total) {
+  try {
+    // 1. Profile — name, sector, price
+    const profResp = await fetch(`${BASE}/profile?symbol=${ticker}&apikey=${API_KEY}`);
+    const profJson = await profResp.json();
+    const profile  = Array.isArray(profJson) ? profJson[0] : profJson;
+
+    // 2. TTM ratios — current PE
+    // Field confirmed from your test: "priceToEarningsRatioTTM"
+    let currentPE = null;
+    try {
+      const ttmResp = await fetch(`${BASE}/ratios-ttm?symbol=${ticker}&apikey=${API_KEY}`);
+      const ttmJson = await ttmResp.json();
+      const ttm     = Array.isArray(ttmJson) ? ttmJson[0] : ttmJson;
+      // Try all known field name variants
+      currentPE = safePE(ttm?.priceToEarningsRatioTTM)
+               || safePE(ttm?.peRatioTTM)
+               || safePE(ttm?.priceEarningsRatioTTM)
+               || null;
+    } catch(e) {}
+
+    // 3. Quarterly key-metrics — historical PE (limit=5)
+    let quarterlyPEs = [];
+    let dates = [];
+    try {
+      const kmResp = await fetch(`${BASE}/key-metrics?symbol=${ticker}&period=quarter&limit=5&apikey=${API_KEY}`);
+      const kmJson = await kmResp.json();
+      if (Array.isArray(kmJson)) {
+        kmJson.forEach(q => {
+          // Try multiple field names
+          const pe = safePE(q.peRatio) || safePE(q.priceEarningsRatio) || safePE(q.priceToEarningsRatio);
+          if (pe) { quarterlyPEs.push(pe); dates.push(q.date || ""); }
+        });
+      }
+    } catch(e) {}
+
+    // Use most recent quarterly as fallback current PE
+    if (!currentPE && quarterlyPEs.length > 0) currentPE = quarterlyPEs[0];
+
+    allData[ticker] = {
+      ticker,
+      name:        profile?.companyName || ticker,
+      sector:      profile?.sector      || "Unknown",
+      currentPE,
+      price:       profile?.price       || null,
+      quarterlyPEs,
+      dates,
+    };
+
+  } catch(e) {
+    console.warn(ticker, e.message);
+    allData[ticker] = { ticker, name:ticker, sector:"Unknown", currentPE:null, price:null, quarterlyPEs:[], dates:[] };
+  }
+  setProgress(Math.round(((idx+1)/total)*100));
+}
+
+function renderGrid() {
+  let cheap=0, exp=0, neu=0, noData=0;
+  const grid = document.createElement("div");
+  grid.className = "grid";
+  grid.id = "cardGrid";
+
+  TICKERS.forEach(ticker => {
+    const s = allData[ticker];
+    if (!s) return;
+
+    const { mean, sd } = calcStats(s.quarterlyPEs);
+    const cur = s.currentPE;
+    const { label, badgeClass, cardClass, z } = classify(cur, mean, sd);
+
+    if (label==="N/A") noData++;
+    else if (cardClass==="cheap") cheap++;
+    else if (cardClass==="expensive") exp++;
+    else neu++;
+
+    const hasData = cur && mean && sd;
+    const pct     = hasData ? (((cur-mean)/mean)*100).toFixed(1) : null;
+    const gMin    = hasData ? Math.max(0, mean-2.5*sd) : 0;
+    const gMax    = hasData ? mean+2.5*sd : 100;
+    const toG     = v => Math.min(97, Math.max(3, ((v-gMin)/(gMax-gMin))*100));
+    const gPct    = hasData ? toG(cur)  : 50;
+    const mPct    = hasData ? toG(mean) : 50;
+    const cTick   = hasData ? toG(mean - T_CHEAP*sd) : null;
+    const eTick   = hasData ? toG(mean + T_EXP*sd)   : null;
+    const gc      = cardClass==="cheap" ? "#00f5d4" : cardClass==="expensive" ? "#ff6b9d" : "#ffffff20";
+    const sc      = SC(s.sector);
+    const sigs    = hasData ? (Math.abs(z)>=Math.max(T_CHEAP,T_EXP)*2 ? "⚡⚡ Strong" : Math.abs(z)>=Math.min(T_CHEAP,T_EXP) ? "⚡ Signal" : "") : "";
+    const zCol    = z > 0 ? "#ff6b9d" : "#00f5d4";
+    const sLbl    = (s.sector||"").replace("Financial Services","Fin.").replace("Consumer Defensive","Cons.D").replace("Consumer Cyclical","Cons.C").replace("Communication Services","Comm.");
+    const uid     = `${ticker}_${Date.now()}`;
+
+    const card = document.createElement("div");
+    card.className = `card ${cardClass}`;
+    card.setAttribute("data-class", cardClass);
+    card.innerHTML = `
+      <div class="signal-badge ${badgeClass}">${label}</div>
+      <div class="ticker-row">
+        <span class="ticker">${ticker}</span>
+        <span class="sector-tag" style="background:${sc}18;color:${sc};border:1px solid ${sc}30">${sLbl}</span>
+      </div>
+      <div class="company-name">${s.name}</div>
+      <div class="pe-row">
+        <div class="pe-box"><div class="pe-label">Current PE</div><div class="pe-val" style="color:#fff">${cur ? cur.toFixed(1) : "—"}</div></div>
+        <div class="pe-box"><div class="pe-label">5Q Mean</div><div class="pe-val" style="color:#7b61ff">${mean ? mean.toFixed(1) : "—"}</div></div>
+        <div class="pe-box"><div class="pe-label">5Q SD</div><div class="pe-val" style="color:#ffffff50;font-size:12px">${sd ? "±"+sd.toFixed(1) : "—"}</div></div>
+      </div>
+      ${s.quarterlyPEs.length >= 2 ? `
+      <div class="sparkline-wrap">
+        <div class="sparkline-label"><span>5Q history → now</span><span style="color:${gc}">${cur ? cur.toFixed(1) : ""} now</span></div>
+        <canvas class="spark" id="spark_${uid}"></canvas>
+      </div>` : ""}
+      ${hasData ? `
+      <div class="gauge-wrap">
+        <div class="gauge-labels"><span>← Cheap</span><span style="color:#7b61ff60">mean ${mean.toFixed(1)}</span><span>Pricey →</span></div>
+        <div class="gauge-track">
+          <div class="gauge-fill" style="width:${gPct}%;background:${gc};opacity:0.85"></div>
+          <div class="gauge-marker" style="left:${mPct}%"></div>
+          ${cTick!==null?`<div class="gauge-tick" style="left:${cTick}%;background:#00f5d4"></div>`:""}
+          ${eTick!==null?`<div class="gauge-tick" style="left:${eTick}%;background:#ff6b9d"></div>`:""}
+        </div>
+      </div>
+      <div class="std-info">
+        <span style="color:#ffffff40">${Math.abs(z).toFixed(2)} SD</span>
+        <span style="color:${zCol};font-weight:700">${pct>0?"+":""}${pct}% vs mean</span>
+        ${sigs?`<span style="color:#ffd166">${sigs}</span>`:""}
+      </div>` : `<div class="no-data-msg">Insufficient PE history (pre-revenue or new listing)</div>`}
+      ${s.price ? `<div class="meta-info">$${s.price.toFixed(2)} · ${s.quarterlyPEs.length} quarters loaded</div>` : ""}
+    `;
+    grid.appendChild(card);
+
+    if (s.quarterlyPEs.length >= 2) {
+      requestAnimationFrame(() => {
+        const cvs = document.getElementById(`spark_${uid}`);
+        if (cvs) drawSparkline(cvs, s.quarterlyPEs, mean, sd, cur, gc);
+      });
+    }
+  });
+
+  document.getElementById("summaryBar").innerHTML = `
+    <div class="summary-stat"><div class="summary-num" style="color:#00f5d4">${cheap}</div><div class="summary-lbl">Cheap</div></div>
+    <div class="summary-stat"><div class="summary-num" style="color:#ffffff70">${neu}</div><div class="summary-lbl">Neutral</div></div>
+    <div class="summary-stat"><div class="summary-num" style="color:#ff6b9d">${exp}</div><div class="summary-lbl">Expensive</div></div>
+    <div class="summary-stat"><div class="summary-num" style="color:#ffffff30">${noData}</div><div class="summary-lbl">No Data</div></div>
+  `;
+
+  const mc = document.getElementById("mainContent");
+  mc.innerHTML = "";
+  mc.appendChild(grid);
+  applyFilterToGrid(currentFilter);
+}
+
+function applyFilterToGrid(fc) {
+  document.querySelectorAll(".card").forEach(c => {
+    c.style.display = (fc==="all" || c.getAttribute("data-class")===fc) ? "" : "none";
+  });
+}
+
+function applyFilter(cls, btn) {
+  currentFilter = cls;
+  document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  applyFilterToGrid(cls);
+}
+
+async function loadAll() {
+  const btn = document.getElementById("refreshBtn");
+  btn.disabled = true;
+  btn.textContent = "⟳ Loading...";
+  setProgress(0);
+  allData = {};
+
+  document.getElementById("mainContent").innerHTML = `
+    <div class="loading-screen">
+      <div class="loading-spinner"></div>
+      <div class="loading-text" id="loadingText">Fetching live PE data...</div>
+      <div class="loading-detail">Profile + TTM PE + 5Q history · 27 stocks</div>
+    </div>`;
+
+  // Small batches with delay to respect free plan rate limits
+  for (let i = 0; i < TICKERS.length; i += 3) {
+    const batch = TICKERS.slice(i, i+3);
+    await Promise.all(batch.map((t,j) => loadTicker(t, i+j, TICKERS.length)));
+    const el = document.getElementById("loadingText");
+    if (el) el.textContent = `Loaded ${Math.min(i+3, TICKERS.length)} / ${TICKERS.length} stocks...`;
+    await new Promise(r => setTimeout(r, 500));
+  }
+
+  renderGrid();
+  setProgress(100);
+  setTimeout(() => setProgress(0), 800);
+  const now = new Date();
+  document.getElementById("lastUpdated").textContent = `Updated: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
+  btn.disabled = false;
+  btn.textContent = "⟳ Refresh Live Data";
+}
+
+loadAll();
+</script>
+</body>
+</html>
