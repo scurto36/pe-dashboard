@@ -887,32 +887,34 @@ async function apiFetch(url, retries = 2) {
   }
 }
 
+// Fetch daily price history using confirmed working endpoint
 async function fetchPriceHistory(ticker) {
+  // /historical-price-eod/full returns {historical:[{date,close,...}]} newest first
   const d = await apiFetch(`${BASE}/historical-price-eod/full?symbol=${ticker}&limit=130&apikey=${API_KEY}`);
-  if (!d || !d.historical || !Array.isArray(d.historical)) return [];
-  // Returns newest first — reverse to get oldest first
-  return d.historical.map(x => x.close).filter(v => v > 0).reverse();
+  if (d && d.historical && Array.isArray(d.historical) && d.historical.length > 0) {
+    return d.historical.map(x => x.close).filter(v => v > 0).reverse();
+  }
+  // Fallback: try /historical-price-eod (no "full")
+  const d2 = await apiFetch(`${BASE}/historical-price-eod?symbol=${ticker}&limit=130&apikey=${API_KEY}`);
+  if (d2 && d2.historical && Array.isArray(d2.historical) && d2.historical.length > 0) {
+    return d2.historical.map(x => x.close).filter(v => v > 0).reverse();
+  }
+  return [];
 }
 
+// Get TTM EPS from ratios-ttm (confirmed working on Starter plan)
 async function fetchTTMMetrics(ticker) {
-  const d = await apiFetch(`${BASE}/key-metrics-ttm?symbol=${ticker}&apikey=${API_KEY}`);
-  if (!Array.isArray(d) || !d[0]) return null;
-  return d[0];
-}
-
-async function fetchForwardPE(ticker) {
-  // Try ratios-ttm for forward PE field
   const d = await apiFetch(`${BASE}/ratios-ttm?symbol=${ticker}&apikey=${API_KEY}`);
   if (!Array.isArray(d) || !d[0]) return null;
-  const fpe = d[0].priceToEarningsRatioTTM; // fallback; some endpoints have forwardPE
-  // Also try analyst estimates
-  const d2 = await apiFetch(`${BASE}/analyst-estimates?symbol=${ticker}&limit=1&apikey=${API_KEY}`);
-  if (Array.isArray(d2) && d2[0] && d2[0].estimatedEpsAvg) {
-    // get current price
-    const q = await apiFetch(`${BASE}/quote?symbol=${ticker}&apikey=${API_KEY}`);
-    if (Array.isArray(q) && q[0] && q[0].price && d2[0].estimatedEpsAvg > 0) {
-      return +(q[0].price / d2[0].estimatedEpsAvg).toFixed(1);
-    }
+  return d[0]; // has priceToEarningsRatioTTM and netProfitMarginTTM etc
+}
+
+// Forward PE from analyst estimates
+async function fetchForwardPE(ticker, currentPrice) {
+  const d = await apiFetch(`${BASE}/analyst-estimates?symbol=${ticker}&limit=2&apikey=${API_KEY}`);
+  if (Array.isArray(d) && d[0] && d[0].estimatedEpsAvg > 0 && currentPrice > 0) {
+    const fpe = +(currentPrice / d[0].estimatedEpsAvg).toFixed(1);
+    return (fpe > 0 && fpe < 500) ? fpe : null;
   }
   return null;
 }
@@ -924,16 +926,12 @@ async function fetchQuote(ticker) {
 }
 
 async function fetchEarningsDate(ticker) {
-  const d = await apiFetch(`${BASE}/earnings-surprises?symbol=${ticker}&limit=1&apikey=${API_KEY}`);
-  // Try earnings calendar
   const today = new Date();
   const future = new Date(); future.setDate(today.getDate() + 45);
   const from = today.toISOString().split('T')[0];
   const to = future.toISOString().split('T')[0];
   const cal = await apiFetch(`${BASE}/earnings-calendar?symbol=${ticker}&from=${from}&to=${to}&apikey=${API_KEY}`);
-  if (Array.isArray(cal) && cal.length > 0) {
-    return cal[0].date;
-  }
+  if (Array.isArray(cal) && cal.length > 0) return cal[0].date;
   return null;
 }
 
@@ -980,24 +978,31 @@ function zToPercent(z) {
 
 // ── PROCESS TICKER ──
 async function processTicker(ticker) {
-  const [prices, metrics, quote, earningsDate] = await Promise.all([
-    fetchPriceHistory(ticker),
-    fetchTTMMetrics(ticker),
+  const [ratios, quote, earningsDate] = await Promise.all([
+    fetchTTMMetrics(ticker),   // ratios-ttm → confirmed working
     fetchQuote(ticker),
     fetchEarningsDate(ticker),
   ]);
 
-  const eps = metrics ? (metrics.netIncomePerShareTTM || metrics.epsttm || metrics.eps) : null;
-  const currentPrice = quote ? quote.price : null;
-  const name = quote ? quote.name : ticker;
+  // TTM PE directly from ratios-ttm (most reliable)
+  const ttmPE = (() => {
+    const v = ratios?.priceToEarningsRatioTTM;
+    return (v && isFinite(v) && v > 0 && v < 500) ? +v.toFixed(1) : null;
+  })();
 
-  // Build daily PE series from price history + TTM EPS
+  // Derive TTM EPS from price / PE so we can build daily PE series
+  const currentPrice = quote?.price ?? null;
+  const name = quote?.name ?? ticker;
+  const eps = (ttmPE && currentPrice) ? +(currentPrice / ttmPE).toFixed(4) : null;
+
+  // Fetch price history separately (after we have quote)
+  const prices = await fetchPriceHistory(ticker);
+
+  // Build daily PE series: price ÷ TTM EPS for each historical day
   let peSeries = [];
   if (eps && eps > 0 && prices.length > 0) {
     peSeries = prices.map(p => p / eps).filter(pe => pe > 0 && pe < 500);
   }
-
-  const ttmPE = (eps && eps > 0 && currentPrice) ? +(currentPrice / eps).toFixed(1) : null;
 
   // Compute rolling windows
   const windows = {};
@@ -1005,31 +1010,16 @@ async function processTicker(ticker) {
     const slice = peSeries.slice(-w);
     const stats = computeStats(slice);
     if (stats && ttmPE !== null) {
-      const z = zScore(ttmPE, stats.mean, stats.std);
-      windows[w] = { z, mean: stats.mean, std: stats.std, pts: slice.length };
+      windows[w] = { z: zScore(ttmPE, stats.mean, stats.std), mean: stats.mean, std: stats.std, pts: slice.length };
     } else {
       windows[w] = { z: null, mean: null, std: null, pts: slice.length };
     }
   });
 
   // Forward PE
-  let fwdPE = null;
-  if (quote && metrics) {
-    // Try forwardPE from ratios-ttm
-    const ratios = await apiFetch(`${BASE}/ratios-ttm?symbol=${ticker}&apikey=${API_KEY}`);
-    if (Array.isArray(ratios) && ratios[0]) {
-      // Some FMP fields for forward PE
-      fwdPE = ratios[0].priceEarningsToGrowthRatioTTM ? null : null; // placeholder
-      // Try analyst estimate approach
-      const est = await apiFetch(`${BASE}/analyst-estimates?symbol=${ticker}&limit=2&apikey=${API_KEY}`);
-      if (Array.isArray(est) && est[0] && est[0].estimatedEpsAvg > 0 && currentPrice) {
-        fwdPE = +(currentPrice / est[0].estimatedEpsAvg).toFixed(1);
-        if (fwdPE < 0 || fwdPE > 500) fwdPE = null;
-      }
-    }
-  }
+  const fwdPE = currentPrice ? await fetchForwardPE(ticker, currentPrice) : null;
 
-  // Forward PE z-scores (use same std as TTM since we only have one fwd point)
+  // Forward PE z-scores using same rolling std dev as TTM
   const fwdWindows = {};
   [30, 60, 120].forEach(w => {
     if (fwdPE !== null && windows[w].mean !== null && windows[w].std !== null) {
@@ -1383,99 +1373,81 @@ function scrollToTicker(ticker) {
   }
 }
 
-// ── CLAUDE ANALYSIS ──
-const analysisCache = {}; // ticker → text
+// ── RULES-BASED ANALYSIS (replaces Claude API — blocked by CORS from GitHub Pages) ──
+const analysisCache = {};
 
-async function getClaudeAnalysis(ticker) {
-  if (analysisCache[ticker]) return analysisCache[ticker];
-
+function generateAnalysis(ticker) {
   const d = stockData[ticker];
-  if (!d) return 'No data available for this stock.';
+  if (!d) return { tag: 'NO DATA', tagStyle: 'color:var(--muted);background:rgba(90,106,122,0.15)', text: 'No data available for this stock.' };
 
-  // Build a rich context object for Claude
-  const ctx = {
-    ticker,
-    name: d.name,
-    sector: d.sector,
-    currentPrice: d.currentPrice,
-    ttmPE: d.ttmPE,
-    fwdPE: d.fwdPE,
-    windows: {
-      '30d': {
-        z: d.windows[30]?.z,
-        mean: d.windows[30]?.mean,
-        std: d.windows[30]?.std,
-        fwdZ: d.fwdWindows[30]?.z,
-        dataPoints: d.windows[30]?.pts,
-      },
-      '60d': {
-        z: d.windows[60]?.z,
-        mean: d.windows[60]?.mean,
-        std: d.windows[60]?.std,
-        fwdZ: d.fwdWindows[60]?.z,
-        dataPoints: d.windows[60]?.pts,
-      },
-      '120d': {
-        z: d.windows[120]?.z,
-        mean: d.windows[120]?.mean,
-        std: d.windows[120]?.std,
-        fwdZ: d.fwdWindows[120]?.z,
-        dataPoints: d.windows[120]?.pts,
-      },
-    },
-    peSeries30: d.peSeries.slice(-30),
-    peSeries60: d.peSeries.slice(-60),
-    earningsSoon: d.earningsSoon,
-    earningsDate: d.earningsDate,
-    dataQuality: d.dq,
-    currentThreshold: threshold,
-    portfolioSectorAvgZ: sectorAvgZ[d.sector],
-  };
+  const { ttmPE, fwdPE, windows, fwdWindows, peSeries, earningsSoon, earningsDate, dq, sector } = d;
+  const pz60 = windows[60]?.z ?? null;
+  const pz30 = windows[30]?.z ?? null;
+  const pz120 = windows[120]?.z ?? null;
+  const fz60 = fwdWindows[60]?.z ?? null;
+  const mean60 = windows[60]?.mean ?? null;
+  const std60 = windows[60]?.std ?? null;
 
-  // Compute percentile — how often was PE above current level in the 120d window
-  let percentile = null;
-  if (d.ttmPE && d.peSeries.length >= 10) {
-    const series = d.peSeries.slice(-120);
-    const above = series.filter(pe => pe >= d.ttmPE).length;
-    percentile = Math.round((above / series.length) * 100);
+  if (dq === 'none' || ttmPE === null) {
+    return {
+      tag: 'NO DATA', tagStyle: 'color:var(--muted);background:rgba(90,106,122,0.15)',
+      text: `No earnings data available for ${ticker}. This is common for pre-revenue biotech stocks, ETFs, or foreign-listed securities where FMP coverage is limited. Z-score analysis cannot be performed without a positive TTM EPS.`
+    };
   }
-  ctx.percentileAboveCurrent = percentile; // % of days PE was AT or ABOVE current
 
-  const prompt = `You are a quantitative portfolio analyst reviewing PE valuation signals for a personal investment portfolio. 
-Analyze the following data for ${ticker} (${d.name}, ${d.sector} sector) and provide a clear, intelligent 4-5 sentence interpretation.
-
-Data:
-${JSON.stringify(ctx, null, 2)}
-
-Guidelines:
-- Lead with the most important signal (is this stock cheap, fair, or expensive by its own history?)
-- Comment on whether 30/60/120d windows agree or diverge — agreement = higher conviction
-- If forward PE z-score differs meaningfully from TTM z-score, explain what that gap implies about earnings expectations
-- If earnings are coming soon (earningsSoon=true), flag that PE signals may be about to shift
-- If percentileAboveCurrent is available: "Today's PE is higher than X% of the past Y days" is a powerful plain-english statement — use it
-- If data quality is 'partial' or 'none', be clear about what you can and can't conclude
-- Be direct and specific — use actual numbers from the data
-- Do NOT use bullet points. Write in flowing prose.
-- Do NOT recommend buying or selling. Focus purely on valuation context and signal quality.
-- Keep it under 120 words.`;
-
-  try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        messages: [{ role: 'user', content: prompt }]
-      })
-    });
-    const data = await response.json();
-    const text = data.content?.find(b => b.type === 'text')?.text || 'Analysis unavailable.';
-    analysisCache[ticker] = text;
-    return text;
-  } catch(e) {
-    return 'Analysis temporarily unavailable — check your connection.';
+  // Percentile: how often was PE at or above current in 120d window
+  let percentileStr = '';
+  if (peSeries.length >= 20) {
+    const series = peSeries.slice(-120);
+    const above = series.filter(pe => pe >= ttmPE).length;
+    const pct = Math.round((above / series.length) * 100);
+    percentileStr = `Today's PE of ${ttmPE}x is higher than ${pct}% of the past ${series.length} trading days. `;
   }
+
+  // Window agreement
+  const validZs = [pz30, pz60, pz120].filter(z => z !== null);
+  const allAbove = validZs.length >= 2 && validZs.every(z => z >= threshold);
+  const allBelow = validZs.length >= 2 && validZs.every(z => z < threshold);
+  const mixed = validZs.length >= 2 && !allAbove && !allBelow;
+
+  // TTM vs Forward divergence
+  let fwdSentence = '';
+  if (fwdPE !== null && fz60 !== null && pz60 !== null) {
+    const gap = pz60 - fz60;
+    if (gap > 0.4) fwdSentence = `Forward PE z-score (${fz60 > 0 ? '+' : ''}${fz60}σ) is meaningfully lower than TTM (${pz60 > 0 ? '+' : ''}${pz60}σ), suggesting the market expects strong earnings growth to justify the current price. `;
+    else if (gap < -0.4) fwdSentence = `Forward PE z-score (${fz60 > 0 ? '+' : ''}${fz60}σ) is higher than TTM (${pz60 > 0 ? '+' : ''}${pz60}σ), implying analysts expect earnings to decline — a cautionary signal. `;
+    else fwdSentence = `TTM and Forward PE z-scores are closely aligned (${pz60 > 0?'+':''}${pz60}σ vs ${fz60 > 0?'+':''}${fz60}σ), suggesting the market sees stable earnings ahead. `;
+  } else if (fwdPE === null) {
+    fwdSentence = `No analyst forward estimates are available for ${ticker}, so the signal is based on TTM PE only. `;
+  }
+
+  // Earnings warning
+  let earnSentence = '';
+  if (earningsSoon) earnSentence = `⚠ Earnings are due ${earningsDate} — PE-based signals may shift significantly after the report. `;
+
+  // Main signal sentence
+  let mainSentence = '';
+  let tag = '', tagStyle = '';
+
+  if (pz60 === null) {
+    mainSentence = `Insufficient price history to compute a reliable 60-day z-score for ${ticker}. `;
+    tag = 'LIMITED DATA'; tagStyle = 'color:var(--muted);background:rgba(90,106,122,0.15)';
+  } else if (allAbove) {
+    tag = 'EXPENSIVE'; tagStyle = 'color:var(--red);background:rgba(255,64,96,0.12)';
+    mainSentence = `${ticker} is trading above its rolling average PE across all three timeframes (30/60/120d), indicating a high-conviction expensive signal. ${percentileStr}The 60-day average PE is ${mean60}x with a standard deviation of ${std60}, placing today's PE of ${ttmPE}x at +${pz60}σ. `;
+  } else if (allBelow && pz60 < 0) {
+    tag = 'CHEAP'; tagStyle = 'color:var(--green);background:rgba(46,204,138,0.12)';
+    mainSentence = `${ticker} is trading below its rolling average PE across all three timeframes, a high-conviction cheap signal. ${percentileStr}The 60-day average PE is ${mean60}x, and today's ${ttmPE}x puts it at ${pz60}σ — below its own recent norm. `;
+  } else if (mixed) {
+    tag = 'MIXED'; tagStyle = 'color:var(--amber);background:rgba(240,165,0,0.12)';
+    mainSentence = `${ticker} shows mixed signals across timeframes — the 30d z-score is ${pz30 !== null ? (pz30 > 0?'+':'') + pz30 + 'σ' : 'N/A'}, 60d is ${pz60 !== null ? (pz60 > 0?'+':'') + pz60 + 'σ' : 'N/A'}, and 120d is ${pz120 !== null ? (pz120 > 0?'+':'') + pz120 + 'σ' : 'N/A'}. This divergence means the signal conviction is lower — short-term moves may not reflect longer-term valuation. `;
+  } else {
+    tag = 'FAIR VALUE'; tagStyle = 'color:var(--amber);background:rgba(240,165,0,0.12)';
+    mainSentence = `${ticker} is trading near its rolling average PE. ${percentileStr}At ${ttmPE}x vs a 60-day mean of ${mean60}x (${pz60 > 0?'+':''}${pz60}σ), there is no strong cheap or expensive signal at this time. `;
+  }
+
+  const text = mainSentence + fwdSentence + earnSentence;
+  return { tag, tagStyle, text };
 }
 
 function toggleAnalysis(ticker) {
@@ -1490,48 +1462,32 @@ function toggleAnalysis(ticker) {
     return;
   }
 
-  // Open it
   panel.classList.add('open');
   toggle.classList.add('open');
-
-  // If already loaded, do nothing
   if (panel.dataset.loaded === 'true') return;
 
-  // Show loading state
-  panel.classList.add('loading');
-  panel.innerHTML = '<span class="dot-anim">Analyzing</span>';
+  // Generate instantly (rules-based, no API call needed)
+  const { tag, tagStyle, text } = generateAnalysis(ticker);
+  const d = stockData[ticker];
+  const pz = d?.windows[primaryWindow]?.z ?? null;
+  const fpz = d?.fwdWindows[primaryWindow]?.z ?? null;
 
-  getClaudeAnalysis(ticker).then(text => {
-    panel.classList.remove('loading');
-    panel.dataset.loaded = 'true';
+  const metaItems = [
+    pz !== null ? `TTM z: ${pz > 0?'+':''}${pz}σ (${primaryWindow}d)` : 'TTM: no data',
+    fpz !== null ? `Fwd z: ${fpz > 0?'+':''}${fpz}σ` : 'Fwd: no data',
+    d?.ttmPE ? `PE: ${d.ttmPE}x` : '',
+    d?.fwdPE ? `Fwd PE: ${d.fwdPE}x` : '',
+  ].filter(Boolean).join(' · ');
 
-    const d = stockData[ticker];
-    const pz = d?.windows[primaryWindow]?.z ?? null;
-    const fpz = d?.fwdWindows[primaryWindow]?.z ?? null;
-
-    // Signal tag
-    let sigTag = '', sigStyle = '';
-    if (pz === null) { sigTag = 'NO DATA'; sigStyle = 'color:var(--muted);background:rgba(90,106,122,0.15)'; }
-    else if (pz >= threshold) { sigTag = 'EXPENSIVE'; sigStyle = 'color:var(--red);background:rgba(255,64,96,0.12)'; }
-    else if (pz < 0) { sigTag = 'CHEAP'; sigStyle = 'color:var(--green);background:rgba(46,204,138,0.12)'; }
-    else { sigTag = 'FAIR VALUE'; sigStyle = 'color:var(--amber);background:rgba(240,165,0,0.12)'; }
-
-    const metaItems = [
-      pz !== null ? `TTM z: ${pz > 0 ? '+' : ''}${pz}σ (${primaryWindow}d)` : 'TTM: no data',
-      fpz !== null ? `Fwd z: ${fpz > 0 ? '+' : ''}${fpz}σ` : 'Fwd: no data',
-      d?.ttmPE ? `PE: ${d.ttmPE}x` : '',
-      d?.fwdPE ? `Fwd PE: ${d.fwdPE}x` : '',
-    ].filter(Boolean).join(' · ');
-
-    panel.innerHTML = `
-      <span class="signal-tag" style="${sigStyle}">${sigTag}</span>
-      <div>${text}</div>
-      <div class="analysis-meta">
-        <span>${metaItems}</span>
-        <span style="margin-left:auto">Claude · ${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>
-      </div>
-    `;
-  });
+  panel.dataset.loaded = 'true';
+  panel.innerHTML = `
+    <span class="signal-tag" style="${tagStyle}">${tag}</span>
+    <div>${text}</div>
+    <div class="analysis-meta">
+      <span>${metaItems}</span>
+      <span style="margin-left:auto">Rules-based · ${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>
+    </div>
+  `;
 }
 
 // ── LOAD ──
@@ -1590,4 +1546,5 @@ window.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
 
