@@ -365,12 +365,21 @@ async function getQuote(t){
 }
 
 async function getFwdPE(t, price){
-  const d=await apiFetch(`${BASE}/analyst-estimates?symbol=${t}&limit=2&apikey=${API_KEY}`);
-  if(!Array.isArray(d)||!d[0]) return null;
-  const eps=d[0].estimatedEpsAvg;
-  if(!eps||eps<=0||!price) return null;
-  const fpe=+(price/eps).toFixed(1);
-  return (fpe>0&&fpe<500)?fpe:null;
+  if(!price) return null;
+  // Try annual then quarter — endpoint requires period param on Starter plan
+  for(const period of ['annual','quarter']){
+    const d=await apiFetch(`${BASE}/analyst-estimates?symbol=${t}&period=${period}&limit=3&apikey=${API_KEY}`);
+    if(!Array.isArray(d)||!d[0]) continue;
+    // Prefer future-dated estimate, fall back to most recent
+    const now=new Date();
+    const est=d.find(x=>new Date(x.date)>now)||d[0];
+    // Try multiple possible field names FMP uses
+    const eps=est.estimatedEpsAvg||est.estimatedEps||est.epsAvg||est.eps;
+    if(!eps||eps<=0) continue;
+    const fpe=+(price/eps).toFixed(1);
+    if(fpe>0&&fpe<500) return fpe;
+  }
+  return null;
 }
 
 async function getEarnings(t){
