@@ -3,852 +3,296 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Portfolio PE Z-Score Dashboard</title>
+<title>Portfolio PE Z-Score</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #080a0d;
-  --bg2: #0d1017;
-  --surface: #111418;
-  --border: #1a2030;
-  --border2: #243040;
-  --text: #dde4ec;
-  --muted: #4a5a6e;
-  --muted2: #2e3d50;
-  --accent: #3b8fff;
-  --green: #2ecc8a;
-  --red: #ff4060;
-  --amber: #f0a500;
-  --mono: 'IBM Plex Mono', monospace;
-  --sans: 'IBM Plex Sans', sans-serif;
+  --bg: #080a0d; --bg2: #0d1017; --border: #1a2030; --border2: #243040;
+  --text: #dde4ec; --muted: #4a5a6e; --muted2: #2e3d50;
+  --accent: #3b8fff; --green: #2ecc8a; --red: #ff4060; --amber: #f0a500;
+  --mono: 'IBM Plex Mono', monospace; --sans: 'IBM Plex Sans', sans-serif;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--sans);
-  min-height: 100vh;
-  overflow-x: hidden;
-}
+body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; overflow-x: hidden; }
 
-/* ── LOADING SCREEN ── */
-#loading-screen {
-  position: fixed;
-  inset: 0;
-  background: var(--bg);
-  z-index: 1000;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 24px;
-  transition: opacity 0.4s;
-}
-#loading-screen.hidden { opacity: 0; pointer-events: none; }
-.load-title {
-  font-family: var(--mono);
-  font-size: 13px;
-  color: var(--accent);
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-}
-.load-ticker {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--muted);
-  letter-spacing: 0.08em;
-  height: 16px;
-}
-.load-bar-wrap {
-  width: 320px;
-  height: 3px;
-  background: var(--border2);
-  border-radius: 2px;
-}
-.load-bar {
-  height: 100%;
-  background: var(--accent);
-  border-radius: 2px;
-  width: 0%;
-  transition: width 0.3s ease;
-}
-.load-count {
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--muted);
-  letter-spacing: 0.06em;
-}
+/* LOADING */
+#ls { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; transition: opacity 0.4s; }
+#ls.hidden { opacity: 0; pointer-events: none; }
+.lt { font-family: var(--mono); font-size: 13px; color: var(--accent); letter-spacing: 0.15em; text-transform: uppercase; }
+.ltick { font-family: var(--mono); font-size: 11px; color: var(--muted); height: 16px; }
+.lbw { width: 300px; height: 3px; background: var(--border2); border-radius: 2px; }
+.lb { height: 100%; background: var(--accent); border-radius: 2px; width: 0%; transition: width 0.25s ease; }
+.lc { font-family: var(--mono); font-size: 10px; color: var(--muted); }
+.lnote { font-family: var(--mono); font-size: 10px; color: var(--muted2); max-width: 300px; text-align: center; line-height: 1.5; }
 
-/* ── HEADER ── */
-header {
-  padding: 18px 28px 14px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-.logo {
-  font-family: var(--mono);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--accent);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-#last-updated {
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--muted);
-}
-#refresh-btn {
-  margin-left: auto;
-  background: none;
-  border: 1px solid var(--border2);
-  color: var(--muted);
-  font-family: var(--mono);
-  font-size: 11px;
-  padding: 5px 14px;
-  cursor: pointer;
-  letter-spacing: 0.05em;
-  transition: all 0.15s;
-}
-#refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
-#refresh-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+/* HEADER */
+header { padding: 14px 22px 11px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.logo { font-family: var(--mono); font-size: 13px; font-weight: 600; color: var(--accent); letter-spacing: 0.12em; text-transform: uppercase; }
+#lup { font-family: var(--mono); font-size: 10px; color: var(--muted); }
+.hr { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.dbb { font-family: var(--mono); font-size: 9px; color: var(--muted2); border: 1px solid var(--border2); padding: 3px 8px; border-radius: 2px; }
+button.hbtn { background: none; border: 1px solid var(--border2); color: var(--muted); font-family: var(--mono); font-size: 11px; padding: 4px 12px; cursor: pointer; letter-spacing: 0.04em; transition: all 0.15s; }
+button.hbtn:hover { border-color: var(--accent); color: var(--accent); }
+button.hbtn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-/* ── SUMMARY STRIP ── */
-.summary {
-  display: flex;
-  border-bottom: 1px solid var(--border);
-}
-.s-item {
-  flex: 1;
-  padding: 12px 20px;
-  border-right: 1px solid var(--border);
-}
-.s-item:last-child { border-right: none; }
-.s-label {
-  font-family: var(--mono);
-  font-size: 9px;
-  color: var(--muted);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  margin-bottom: 4px;
-}
-.s-val {
-  font-family: var(--mono);
-  font-size: 17px;
-  font-weight: 500;
-}
-.s-val.green { color: var(--green); }
-.s-val.red { color: var(--red); }
-.s-val.amber { color: var(--amber); }
-.s-val.accent { color: var(--accent); }
+/* SUMMARY */
+.sum { display: flex; border-bottom: 1px solid var(--border); overflow-x: auto; }
+.si { flex: 1; min-width: 90px; padding: 10px 14px; border-right: 1px solid var(--border); }
+.si:last-child { border-right: none; }
+.sl { font-family: var(--mono); font-size: 9px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
+.sv { font-family: var(--mono); font-size: 15px; font-weight: 500; }
+.sv.g { color: var(--green); } .sv.r { color: var(--red); } .sv.a { color: var(--amber); } .sv.b { color: var(--accent); }
 
-/* ── ALERT BANNER ── */
-#alert-banner {
-  display: none;
-  padding: 8px 28px;
-  background: rgba(255,64,96,0.08);
-  border-bottom: 1px solid rgba(255,64,96,0.2);
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--red);
-  cursor: pointer;
-  letter-spacing: 0.04em;
-}
-#alert-banner:hover { background: rgba(255,64,96,0.12); }
+/* ALERT */
+#ab { display: none; padding: 6px 22px; background: rgba(255,64,96,0.08); border-bottom: 1px solid rgba(255,64,96,0.2); font-family: var(--mono); font-size: 11px; color: var(--red); cursor: pointer; }
+#ab:hover { background: rgba(255,64,96,0.12); }
 
-/* ── CONTROLS ROW ── */
-.controls {
-  display: flex;
-  align-items: stretch;
-  border-bottom: 1px solid var(--border);
-  gap: 0;
-}
-.sector-tabs {
-  display: flex;
-  flex: 1;
-  overflow-x: auto;
-}
-.sector-tab {
-  font-family: var(--mono);
-  font-size: 11px;
-  padding: 11px 16px;
-  color: var(--muted);
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-  letter-spacing: 0.06em;
-  white-space: nowrap;
-  transition: all 0.12s;
-  user-select: none;
-  border-right: 1px solid var(--border);
-}
-.sector-tab:hover { color: var(--text); background: var(--bg2); }
-.sector-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-.sector-tab .sector-z {
-  font-size: 9px;
-  opacity: 0.7;
-  margin-left: 4px;
-}
+/* CONTROLS */
+.ctrl { display: flex; align-items: stretch; border-bottom: 1px solid var(--border); }
+.stabs { display: flex; flex: 1; overflow-x: auto; }
+.stab { font-family: var(--mono); font-size: 11px; padding: 9px 13px; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; transition: all 0.12s; border-right: 1px solid var(--border); user-select: none; }
+.stab:hover { color: var(--text); background: var(--bg2); }
+.stab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.stab .sz { font-size: 9px; opacity: 0.7; margin-left: 3px; }
+.wzone { padding: 7px 12px; border-left: 1px solid var(--border); display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
+.wlbl { font-family: var(--mono); font-size: 9px; color: var(--muted); letter-spacing: 0.07em; }
+.wtog { display: flex; border: 1px solid var(--border2); border-radius: 2px; overflow: hidden; }
+.wbtn { font-family: var(--mono); font-size: 10px; padding: 3px 9px; color: var(--muted); cursor: pointer; background: none; border: none; border-right: 1px solid var(--border2); transition: all 0.1s; }
+.wbtn:last-child { border-right: none; }
+.wbtn.active { background: var(--accent); color: white; }
 
-/* ── SLIDER ZONE ── */
-.slider-zone {
-  padding: 14px 28px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  background: var(--bg2);
-}
-.slider-label {
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--muted);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-.slider-wrap {
-  flex: 1;
-  position: relative;
-  height: 32px;
-  display: flex;
-  align-items: center;
-}
-.slider-track {
-  position: absolute;
-  left: 0; right: 0;
-  height: 4px;
-  background: linear-gradient(to right, var(--green) 0%, var(--amber) 50%, var(--red) 100%);
-  border-radius: 2px;
-  opacity: 0.3;
-}
-.slider-input {
-  position: relative;
-  width: 100%;
-  -webkit-appearance: none;
-  appearance: none;
-  background: transparent;
-  height: 4px;
-  cursor: pointer;
-  z-index: 2;
-}
-.slider-input::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 16px; height: 16px;
-  border-radius: 50%;
-  background: var(--text);
-  border: 2px solid var(--bg);
-  box-shadow: 0 0 0 1px var(--border2);
-  cursor: grab;
-}
-.slider-input::-webkit-slider-thumb:active { cursor: grabbing; }
-.slider-ticks {
-  position: absolute;
-  left: 0; right: 0;
-  top: 22px;
-  display: flex;
-  justify-content: space-between;
-  pointer-events: none;
-}
-.slider-tick {
-  font-family: var(--mono);
-  font-size: 9px;
-  color: var(--muted);
-}
-.slider-val-display {
-  font-family: var(--mono);
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text);
-  min-width: 50px;
-  text-align: right;
-}
-.sector-avg-indicator {
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--muted);
-  white-space: nowrap;
-}
-#reset-slider-btn {
-  background: none;
-  border: 1px solid var(--border2);
-  color: var(--muted);
-  font-family: var(--mono);
-  font-size: 10px;
-  padding: 4px 10px;
-  cursor: pointer;
-  letter-spacing: 0.04em;
-  transition: all 0.12s;
-}
-#reset-slider-btn:hover { border-color: var(--accent); color: var(--accent); }
+/* SLIDER */
+.slzone { padding: 11px 22px; border-bottom: 1px solid var(--border); background: var(--bg2); display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.sllbl { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.07em; text-transform: uppercase; white-space: nowrap; }
+.slwrap { flex: 1; min-width: 100px; position: relative; height: 34px; display: flex; align-items: center; }
+.sltrack { position: absolute; left: 0; right: 0; height: 4px; background: linear-gradient(to right, var(--green), var(--amber) 50%, var(--red)); border-radius: 2px; opacity: 0.3; }
+input[type=range].slinput { position: relative; width: 100%; -webkit-appearance: none; appearance: none; background: transparent; height: 4px; cursor: pointer; z-index: 2; }
+input[type=range].slinput::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--text); border: 2px solid var(--bg); box-shadow: 0 0 0 1px var(--border2); cursor: grab; }
+.slticks { position: absolute; left: 0; right: 0; top: 23px; display: flex; justify-content: space-between; pointer-events: none; }
+.sltick { font-family: var(--mono); font-size: 9px; color: var(--muted); }
+.slval { font-family: var(--mono); font-size: 14px; font-weight: 500; color: var(--text); min-width: 50px; text-align: right; white-space: nowrap; }
+.savgind { font-family: var(--mono); font-size: 10px; color: var(--muted); white-space: nowrap; }
+.mbsl { display: none; align-items: center; gap: 7px; }
+.msb { font-family: var(--mono); font-size: 18px; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border2); background: none; color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.12s; }
+.msb:hover { border-color: var(--accent); color: var(--accent); }
+button.rbtn { background: none; border: 1px solid var(--border2); color: var(--muted); font-family: var(--mono); font-size: 10px; padding: 4px 9px; cursor: pointer; transition: all 0.12s; white-space: nowrap; }
+button.rbtn:hover { border-color: var(--accent); color: var(--accent); }
 
-/* ── WINDOW TOGGLE ── */
-.window-toggle {
-  display: flex;
-  gap: 0;
-  border: 1px solid var(--border2);
-  border-radius: 3px;
-  overflow: hidden;
-}
-.win-btn {
-  font-family: var(--mono);
-  font-size: 10px;
-  padding: 4px 10px;
-  color: var(--muted);
-  cursor: pointer;
-  background: none;
-  border: none;
-  border-right: 1px solid var(--border2);
-  letter-spacing: 0.04em;
-  transition: all 0.12s;
-}
-.win-btn:last-child { border-right: none; }
-.win-btn.active { background: var(--accent); color: white; }
-.win-btn:hover:not(.active) { color: var(--text); background: var(--bg2); }
+/* LEGEND */
+.leg { display: flex; gap: 14px; padding: 6px 22px; border-bottom: 1px solid var(--border); align-items: center; flex-wrap: wrap; }
+.li { display: flex; align-items: center; gap: 5px; font-family: var(--mono); font-size: 10px; color: var(--muted); }
 
-/* ── LEGEND ── */
-.legend {
-  display: flex;
-  gap: 20px;
-  padding: 8px 28px;
-  border-bottom: 1px solid var(--border);
-  align-items: center;
-  flex-wrap: wrap;
-}
-.leg-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--muted);
-}
-.leg-dot {
-  width: 10px; height: 10px;
-  border-radius: 50%;
-  border: 1.5px solid currentColor;
-}
-.leg-diamond {
-  width: 9px; height: 9px;
-  transform: rotate(45deg);
-  border: 1.5px solid currentColor;
-}
-.leg-square {
-  width: 8px; height: 8px;
-  border: 1.5px solid currentColor;
-}
+/* LAYOUT */
+.layout { display: flex; min-height: calc(100vh - 280px); }
+.slist { flex: 1; overflow-y: auto; }
 
-/* ── MAIN LAYOUT ── */
-.main-layout {
-  display: flex;
-  gap: 0;
-  min-height: calc(100vh - 280px);
-}
+/* SECTOR */
+.shdr { display: flex; align-items: center; gap: 10px; padding: 7px 22px 5px; background: var(--bg2); border-bottom: 1px solid var(--border); border-top: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+.sname { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.13em; text-transform: uppercase; font-weight: 500; }
+.savgz { font-family: var(--mono); font-size: 10px; padding: 1px 6px; border-radius: 2px; }
+.scnt { font-family: var(--mono); font-size: 9px; color: var(--muted2); margin-left: auto; }
 
-/* ── STOCK LIST ── */
-.stock-list {
-  flex: 1;
-  overflow-y: auto;
-}
+/* STOCK ROW */
+.srw { border-bottom: 1px solid var(--border); }
+.sr { display: flex; align-items: center; padding: 8px 22px; gap: 9px; border-left: 3px solid transparent; transition: background 0.1s, border-left-color 0.2s; }
+.sr:hover { background: #0f1520; }
+.sr.sch { border-left-color: var(--green); }
+.sr.sex { border-left-color: var(--red); animation: pr 2s ease-in-out infinite; }
+@keyframes pr { 0%,100%{border-left-color:var(--red)}50%{border-left-color:rgba(255,64,96,0.2)} }
 
-/* ── SECTOR GROUP ── */
-.sector-group { }
-.sector-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 28px 6px;
-  background: var(--bg2);
-  border-bottom: 1px solid var(--border);
-  border-top: 1px solid var(--border);
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-.sector-name {
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--muted);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  font-weight: 500;
-}
-.sector-avg-z {
-  font-family: var(--mono);
-  font-size: 10px;
-  padding: 1px 7px;
-  border-radius: 2px;
-  letter-spacing: 0.04em;
-}
-.sector-count {
-  font-family: var(--mono);
-  font-size: 9px;
-  color: var(--muted2);
-  margin-left: auto;
-}
+.sinf { width: 130px; flex-shrink: 0; }
+.stk { font-family: var(--mono); font-size: 13px; font-weight: 500; letter-spacing: 0.06em; }
+.stk.cheap{color:var(--green)} .stk.exp{color:var(--red)} .stk.amb{color:var(--amber)}
+.snm { font-size: 10px; color: var(--muted); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 125px; }
 
-/* ── STOCK ROW ── */
-.stock-row {
-  display: flex;
-  align-items: center;
-  padding: 10px 28px;
-  border-bottom: 1px solid var(--border);
-  border-left: 3px solid transparent;
-  gap: 12px;
-  transition: background 0.1s, border-left-color 0.2s;
-  cursor: default;
-}
-.stock-row:hover { background: #0f1520; }
-.stock-row.signal-cheap { border-left-color: var(--green); }
-.stock-row.signal-expensive { border-left-color: var(--red); }
-.stock-row.signal-expensive { animation: pulse-red 2s ease-in-out infinite; }
+.dqd { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.dqf{background:var(--green);opacity:0.7} .dqp{background:var(--amber);opacity:0.7} .dqn{background:var(--muted);opacity:0.35}
+.ebdg { font-family: var(--mono); font-size: 9px; padding: 1px 5px; background: rgba(240,165,0,0.15); color: var(--amber); border-radius: 2px; flex-shrink: 0; }
 
-@keyframes pulse-red {
-  0%, 100% { border-left-color: var(--red); }
-  50% { border-left-color: rgba(255,64,96,0.3); }
-}
+/* BAR */
+.bzone { flex: 1; position: relative; height: 34px; display: flex; align-items: center; min-width: 0; }
+.btrack { position: absolute; left: 0; right: 0; height: 2px; background: var(--border2); border-radius: 1px; }
+.tline { position: absolute; top: 3px; bottom: 3px; width: 1px; border-left: 1px dashed rgba(255,255,255,0.16); pointer-events: none; }
+.zdot { position: absolute; transform: translate(-50%,-50%); top: 50%; cursor: pointer; transition: left 0.3s ease; }
+.zdot:hover { z-index: 5; }
+.zdot .tip { display: none; position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); background: #1a2535; border: 1px solid var(--border2); padding: 6px 10px; font-family: var(--mono); font-size: 10px; color: var(--text); white-space: pre; z-index: 100; pointer-events: none; line-height: 1.6; border-radius: 2px; min-width: 155px; }
+.zdot:hover .tip { display: block; }
+.garrow { position: absolute; top: 50%; transform: translateY(-50%); font-size: 9px; pointer-events: none; opacity: 0.6; }
 
-/* ticker info */
-.stock-info {
-  width: 160px;
-  flex-shrink: 0;
-}
-.stock-ticker {
-  font-family: var(--mono);
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  transition: color 0.2s;
-}
-.stock-ticker.cheap { color: var(--green); }
-.stock-ticker.expensive { color: var(--red); }
-.stock-ticker.amber { color: var(--amber); }
-.stock-name {
-  font-size: 10px;
-  color: var(--muted);
-  margin-top: 1px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 150px;
-}
+/* PE VALUES */
+.peval { width: 150px; flex-shrink: 0; display: flex; flex-direction: column; gap: 2px; font-family: var(--mono); font-size: 10px; }
+.pr2 { display: flex; gap: 6px; align-items: center; }
+.pl { color: var(--muted); width: 26px; }
+.pn { color: var(--text); }
+.pz2 { font-size: 9px; padding: 0 3px; }
 
-/* data quality */
-.dq-dot {
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  title: '';
-}
-.dq-full { background: var(--green); opacity: 0.7; }
-.dq-partial { background: var(--amber); opacity: 0.7; }
-.dq-none { background: var(--muted); opacity: 0.5; }
+/* COVERAGE */
+.covb { width: 54px; flex-shrink: 0; }
+.covl { font-family: var(--mono); font-size: 8px; color: var(--muted2); margin-bottom: 2px; }
+.covt { height: 2px; background: var(--border2); border-radius: 1px; }
+.covf { height: 100%; border-radius: 1px; background: var(--accent); opacity: 0.45; }
 
-/* earnings badge */
-.earn-badge {
-  font-family: var(--mono);
-  font-size: 9px;
-  padding: 1px 5px;
-  background: rgba(240,165,0,0.15);
-  color: var(--amber);
-  border-radius: 2px;
-  letter-spacing: 0.04em;
-  flex-shrink: 0;
-}
+/* ANALYSIS */
+.atog { display: flex; align-items: center; gap: 5px; padding: 3px 0; font-family: var(--mono); font-size: 10px; color: var(--muted); cursor: pointer; background: none; border: none; white-space: nowrap; transition: color 0.12s; flex-shrink: 0; }
+.atog:hover { color: var(--accent); }
+.atog .arr { font-size: 9px; transition: transform 0.18s; }
+.atog.open .arr { transform: rotate(90deg); }
+.apanel { display: none; margin: 0 22px 9px 25px; padding: 11px 13px; background: #0b1220; border: 1px solid var(--border2); border-radius: 2px; font-size: 12px; line-height: 1.7; color: var(--text); }
+.apanel.open { display: block; }
+.sigtag { display: inline-block; padding: 1px 7px; border-radius: 2px; font-family: var(--mono); font-size: 9px; letter-spacing: 0.06em; font-weight: 500; margin-bottom: 7px; }
+.ameta { margin-top: 7px; padding-top: 6px; border-top: 1px solid var(--border); font-family: var(--mono); font-size: 9px; color: var(--muted2); display: flex; gap: 10px; flex-wrap: wrap; }
 
-/* bar zone */
-.bar-zone {
-  flex: 1;
-  position: relative;
-  height: 40px;
-  display: flex;
-  align-items: center;
-}
-.bar-track {
-  position: absolute;
-  left: 0; right: 0;
-  height: 2px;
-  background: var(--border2);
-  border-radius: 1px;
-}
-/* threshold line */
-.threshold-line {
-  position: absolute;
-  top: 4px;
-  bottom: 4px;
-  width: 1px;
-  background: rgba(255,255,255,0.15);
-  border-left: 1px dashed rgba(255,255,255,0.15);
-  pointer-events: none;
-}
+/* LEADERBOARD */
+.lb { width: 255px; flex-shrink: 0; border-left: 1px solid var(--border); display: flex; flex-direction: column; }
+.lbh { padding: 9px 13px; border-bottom: 1px solid var(--border); background: var(--bg2); display: flex; align-items: center; justify-content: space-between; }
+.lbtitle { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
+.lbwt { display: flex; border: 1px solid var(--border2); border-radius: 2px; overflow: hidden; }
+.lbwb { font-family: var(--mono); font-size: 9px; padding: 3px 7px; color: var(--muted); cursor: pointer; background: none; border: none; border-right: 1px solid var(--border2); transition: all 0.1s; }
+.lbwb:last-child { border-right: none; }
+.lbwb.active { background: var(--border2); color: var(--text); }
+button.lbx { background: none; border: 1px solid var(--border2); color: var(--muted); font-family: var(--mono); font-size: 10px; padding: 2px 7px; cursor: pointer; transition: all 0.1s; }
+button.lbx:hover { border-color: var(--accent); color: var(--accent); }
+.lbbody { flex: 1; overflow: auto; }
+.lbsec { padding: 7px 0; border-bottom: 1px solid var(--border); }
+.lbst { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; padding: 0 13px 5px; }
+.lbrow { display: flex; align-items: center; padding: 4px 13px; gap: 5px; cursor: pointer; transition: background 0.1s; }
+.lbrow:hover { background: var(--bg2); }
+.lbrk { font-family: var(--mono); font-size: 9px; color: var(--muted2); width: 14px; }
+.lbtk { font-family: var(--mono); font-size: 12px; font-weight: 500; flex: 1; }
+.lbz { font-family: var(--mono); font-size: 11px; }
+.lbfz { font-family: var(--mono); font-size: 9px; color: var(--muted); }
 
-/* dots */
-.z-dot {
-  position: absolute;
-  transform: translate(-50%, -50%);
-  top: 50%;
-  cursor: pointer;
-  transition: transform 0.3s ease, left 0.4s ease;
-}
-.z-dot:hover { transform: translate(-50%, -50%) scale(1.4); }
-.z-dot-inner {
-  display: block;
-}
-/* tooltip */
-.z-dot[data-tip]:hover::after {
-  content: attr(data-tip);
-  position: absolute;
-  bottom: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #1a2535;
-  border: 1px solid var(--border2);
-  padding: 6px 10px;
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--text);
-  white-space: pre;
-  z-index: 100;
-  pointer-events: none;
-  line-height: 1.6;
-  border-radius: 2px;
-}
+.dot-anim::after { content: '...'; animation: dots 1.2s steps(4,end) infinite; }
+@keyframes dots{0%,20%{content:'.'}40%{content:'..'}60%,80%{content:'...'}100%{content:''}}
 
-/* gap arrow */
-.gap-arrow {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 10px;
-  pointer-events: none;
-  opacity: 0.6;
-}
+footer { padding: 9px 22px; border-top: 1px solid var(--border); font-family: var(--mono); font-size: 9px; color: var(--muted); display: flex; gap: 14px; flex-wrap: wrap; }
 
-/* PE values */
-.pe-values {
-  width: 180px;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  font-family: var(--mono);
-  font-size: 10px;
+/* MOBILE */
+@media(max-width:768px){
+  .lb{display:none}
+  .lb.lbopen{display:flex;position:fixed;right:0;top:0;bottom:0;z-index:200;background:var(--bg);box-shadow:-4px 0 20px rgba(0,0,0,0.6);width:260px}
+  input[type=range].slinput{display:none}
+  .slticks{display:none}
+  .mbsl{display:flex}
+  .slwrap{flex:0;min-width:0}
+  .covb{display:none}
+  .peval{width:110px}
+  .sinf{width:95px}
+  #lbtoggle{display:flex}
 }
-.pe-row {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-.pe-lbl { color: var(--muted); width: 28px; }
-.pe-ttm { color: var(--text); }
-.pe-fwd { color: var(--muted); }
-.pe-z { font-size: 9px; padding: 0 4px; border-radius: 1px; }
-
-/* ── LEADERBOARD ── */
-.leaderboard {
-  width: 280px;
-  flex-shrink: 0;
-  border-left: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-}
-.lb-header {
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--border);
-  background: var(--bg2);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.lb-title {
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--muted);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-.lb-win-toggle {
-  display: flex;
-  gap: 0;
-  border: 1px solid var(--border2);
-  border-radius: 2px;
-  overflow: hidden;
-}
-.lb-win-btn {
-  font-family: var(--mono);
-  font-size: 9px;
-  padding: 3px 7px;
-  color: var(--muted);
-  cursor: pointer;
-  background: none;
-  border: none;
-  border-right: 1px solid var(--border2);
-  transition: all 0.1s;
-}
-.lb-win-btn:last-child { border-right: none; }
-.lb-win-btn.active { background: var(--border2); color: var(--text); }
-
-.lb-section {
-  flex: 1;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--border);
-}
-.lb-section-title {
-  font-family: var(--mono);
-  font-size: 9px;
-  color: var(--muted);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: 0 16px 8px;
-}
-.lb-row {
-  display: flex;
-  align-items: center;
-  padding: 5px 16px;
-  gap: 8px;
-  cursor: pointer;
-  transition: background 0.1s;
-}
-.lb-row:hover { background: var(--bg2); }
-.lb-rank {
-  font-family: var(--mono);
-  font-size: 9px;
-  color: var(--muted2);
-  width: 14px;
-}
-.lb-ticker {
-  font-family: var(--mono);
-  font-size: 12px;
-  font-weight: 500;
-  flex: 1;
-}
-.lb-z {
-  font-family: var(--mono);
-  font-size: 11px;
-}
-.lb-fwd-z {
-  font-family: var(--mono);
-  font-size: 9px;
-  color: var(--muted);
-}
-
-/* ── FOOTER ── */
-footer {
-  padding: 12px 28px;
-  border-top: 1px solid var(--border);
-  font-family: var(--mono);
-  font-size: 9px;
-  color: var(--muted);
-  display: flex;
-  gap: 20px;
-  flex-wrap: wrap;
-}
-
-.dot-anim::after {
-  content: '...';
-  animation: dots 1.2s steps(4,end) infinite;
-}
-@keyframes dots {
-  0%,20%  { content: '.'; }
-  40%     { content: '..'; }
-  60%,80% { content: '...'; }
-  100%    { content: ''; }
-}
-
-/* ── ANALYSIS PANEL ── */
-.analysis-toggle {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 28px 4px 0;
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--muted);
-  cursor: pointer;
-  user-select: none;
-  transition: color 0.12s;
-  border: none;
-  background: none;
-  width: 100%;
-  text-align: left;
-}
-.analysis-toggle:hover { color: var(--accent); }
-.analysis-toggle .tog-arrow { font-size: 9px; transition: transform 0.2s; }
-.analysis-toggle.open .tog-arrow { transform: rotate(90deg); }
-
-.analysis-panel {
-  display: none;
-  margin: 0 28px 12px 28px;
-  padding: 14px 16px;
-  background: #0d1520;
-  border: 1px solid var(--border2);
-  border-radius: 3px;
-  font-family: var(--sans);
-  font-size: 12px;
-  line-height: 1.7;
-  color: var(--text);
-  position: relative;
-}
-.analysis-panel.open { display: block; }
-.analysis-panel.loading {
-  color: var(--muted);
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.04em;
-}
-.analysis-panel .analysis-meta {
-  margin-top: 10px;
-  padding-top: 8px;
-  border-top: 1px solid var(--border);
-  font-family: var(--mono);
-  font-size: 9px;
-  color: var(--muted2);
-  display: flex;
-  gap: 16px;
-}
-.analysis-panel .signal-tag {
-  display: inline-block;
-  padding: 1px 7px;
-  border-radius: 2px;
-  font-family: var(--mono);
-  font-size: 9px;
-  letter-spacing: 0.06em;
-  font-weight: 500;
-  margin-bottom: 8px;
-}
-
-/* ── HIDDEN ── */
-.hidden { display: none !important; }
+@media(min-width:769px){#lbtoggle{display:none}}
+#lbtoggle { background:none; border:1px solid var(--border2); color:var(--muted); font-family:var(--mono); font-size:10px; padding:4px 10px; cursor:pointer; align-items:center; gap:5px; transition:all 0.12s; }
+#lbtoggle:hover{border-color:var(--accent);color:var(--accent)}
 </style>
 </head>
 <body>
 
-<!-- LOADING SCREEN -->
-<div id="loading-screen">
-  <div class="load-title">PE Z-Score Dashboard</div>
-  <div class="load-ticker" id="load-ticker">Initializing...</div>
-  <div class="load-bar-wrap">
-    <div class="load-bar" id="load-bar"></div>
-  </div>
-  <div class="load-count" id="load-count">0 / 29 stocks</div>
+<div id="ls">
+  <div class="lt">PE Z-Score Dashboard</div>
+  <div class="ltick" id="ltick">Initializing...</div>
+  <div class="lbw"><div class="lb" id="lbar"></div></div>
+  <div class="lc" id="lcnt">0 / 29</div>
+  <div class="lnote" id="lnote"></div>
 </div>
 
-<!-- MAIN CONTENT -->
-<div id="main-content" style="opacity:0;transition:opacity 0.4s">
+<div id="mc" style="opacity:0;transition:opacity 0.4s">
 
 <header>
   <div class="logo">PE Z-Score</div>
-  <span id="last-updated">—</span>
-  <button id="refresh-btn" onclick="initLoad()">↻ Refresh</button>
+  <span id="lup">—</span>
+  <div class="hr">
+    <span class="dbb" id="dbb">DB: 0d</span>
+    <button id="lbtoggle" class="hbtn" onclick="toggleLB()">📊 Rankings</button>
+    <button id="rfbtn" class="hbtn" onclick="initLoad(true)">↻ Refresh</button>
+  </div>
 </header>
 
-<div class="summary">
-  <div class="s-item">
-    <div class="s-label">Holdings</div>
-    <div class="s-val accent" id="s-total">—</div>
-  </div>
-  <div class="s-item">
-    <div class="s-label">Avg Portfolio Z</div>
-    <div class="s-val amber" id="s-avgz">—</div>
-  </div>
-  <div class="s-item">
-    <div class="s-label">Cheap (below threshold)</div>
-    <div class="s-val green" id="s-cheap">—</div>
-  </div>
-  <div class="s-item">
-    <div class="s-label">Expensive (above threshold)</div>
-    <div class="s-val red" id="s-expensive">—</div>
-  </div>
-  <div class="s-item">
-    <div class="s-label">Earnings Soon</div>
-    <div class="s-val amber" id="s-earn">—</div>
-  </div>
-  <div class="s-item">
-    <div class="s-label">No PE Data</div>
-    <div class="s-val" id="s-na" style="color:var(--muted)">—</div>
-  </div>
+<div class="sum">
+  <div class="si"><div class="sl">Holdings</div><div class="sv b" id="st">—</div></div>
+  <div class="si"><div class="sl">Avg Z</div><div class="sv a" id="saz">—</div></div>
+  <div class="si"><div class="sl">Cheap</div><div class="sv g" id="sch">—</div></div>
+  <div class="si"><div class="sl">Expensive</div><div class="sv r" id="sex">—</div></div>
+  <div class="si"><div class="sl">Earn Soon</div><div class="sv a" id="sea">—</div></div>
+  <div class="si"><div class="sl">No Data</div><div class="sv" id="sna" style="color:var(--muted)">—</div></div>
 </div>
 
-<div id="alert-banner" onclick="filterToExpensive()">
-  ⚠ <span id="alert-text"></span> — click to review
-</div>
+<div id="ab" onclick="jumpExp()">⚠ <span id="abtxt"></span> — click to review</div>
 
-<div class="controls">
-  <div class="sector-tabs" id="sector-tabs"></div>
-  <div style="padding:8px 16px;border-left:1px solid var(--border);display:flex;align-items:center;gap:8px">
-    <span style="font-family:var(--mono);font-size:10px;color:var(--muted)">PRIMARY</span>
-    <div class="window-toggle" id="win-toggle">
-      <button class="win-btn" data-w="30" onclick="setPrimary(30)">30d</button>
-      <button class="win-btn active" data-w="60" onclick="setPrimary(60)">60d</button>
-      <button class="win-btn" data-w="120" onclick="setPrimary(120)">120d</button>
+<div class="ctrl">
+  <div class="stabs" id="stabs"></div>
+  <div class="wzone">
+    <span class="wlbl">PRIMARY</span>
+    <div class="wtog" id="wtog">
+      <button class="wbtn" data-w="1" onclick="setPrimary(1)">1Y</button>
+      <button class="wbtn active" data-w="3" onclick="setPrimary(3)">3Y</button>
+      <button class="wbtn" data-w="5" onclick="setPrimary(5)">5Y</button>
     </div>
   </div>
 </div>
 
-<div class="slider-zone">
-  <span class="slider-label">σ Threshold</span>
-  <div class="slider-wrap">
-    <div class="slider-track"></div>
-    <input type="range" class="slider-input" id="sigma-slider" min="0" max="2" step="0.05" value="1.0" oninput="onSliderMove()">
-    <div class="slider-ticks">
-      <span class="slider-tick">0σ</span>
-      <span class="slider-tick">0.5σ</span>
-      <span class="slider-tick">1.0σ</span>
-      <span class="slider-tick">1.5σ</span>
-      <span class="slider-tick">2.0σ</span>
+<div class="slzone">
+  <span class="sllbl">σ Threshold</span>
+  <div class="slwrap">
+    <div class="sltrack"></div>
+    <input type="range" class="slinput" id="slid" min="0" max="2" step="0.05" value="1.0" oninput="onSl()">
+    <div class="slticks">
+      <span class="sltick">0σ</span><span class="sltick">0.5σ</span><span class="sltick">1.0σ</span><span class="sltick">1.5σ</span><span class="sltick">2.0σ</span>
     </div>
   </div>
-  <div class="slider-val-display" id="slider-val">1.00σ</div>
-  <div class="sector-avg-indicator" id="sector-avg-ind"></div>
-  <button id="reset-slider-btn" onclick="resetSlider()">↺ Reset</button>
+  <div class="mbsl">
+    <button class="msb" onclick="nudge(-0.05)">−</button>
+    <button class="msb" onclick="nudge(0.05)">+</button>
+  </div>
+  <div class="slval" id="slval">1.00σ</div>
+  <div class="savgind" id="savgind"></div>
+  <button class="rbtn" onclick="resetSl()">↺ Reset</button>
 </div>
 
-<div class="legend">
-  <span style="font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase">Dots:</span>
-  <span class="leg-item"><span class="leg-dot" style="color:var(--muted)"></span>30d TTM</span>
-  <span class="leg-item"><span class="leg-diamond" style="color:var(--muted)"></span>60d TTM</span>
-  <span class="leg-item"><span class="leg-square" style="color:var(--muted)"></span>120d TTM</span>
-  <span style="margin-left:8px;font-family:var(--mono);font-size:9px;color:var(--muted2)">hollow = Forward PE</span>
-  <span style="margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--muted)">● full data &nbsp; ◐ TTM only &nbsp; ○ no data</span>
+<div class="leg">
+  <span style="font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:0.1em">DOTS:</span>
+  <span class="li">● 1Y TTM</span><span class="li">◆ 3Y TTM</span><span class="li">■ 5Y TTM</span>
+  <span class="li" style="color:var(--muted2)">hollow = Fwd PE</span>
+  <span style="margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--muted)">● full &nbsp;◐ TTM only &nbsp;○ no data</span>
 </div>
 
-<div class="main-layout">
-  <div class="stock-list" id="stock-list"></div>
-  <div class="leaderboard">
-    <div class="lb-header">
-      <span class="lb-title">Rankings</span>
-      <div class="lb-win-toggle">
-        <button class="lb-win-btn" data-w="30" onclick="setLbWindow(30)">30d</button>
-        <button class="lb-win-btn active" data-w="60" onclick="setLbWindow(60)">60d</button>
-        <button class="lb-win-btn" data-w="120" onclick="setLbWindow(120)">120d</button>
+<div class="layout">
+  <div class="slist" id="slist"></div>
+  <div class="lb" id="lbpanel">
+    <div class="lbh">
+      <span class="lbtitle">Rankings</span>
+      <div style="display:flex;gap:7px;align-items:center">
+        <div class="lbwt">
+          <button class="lbwb" data-w="1" onclick="setLbW(1)">1Y</button>
+          <button class="lbwb active" data-w="3" onclick="setLbW(3)">3Y</button>
+          <button class="lbwb" data-w="5" onclick="setLbW(5)">5Y</button>
+        </div>
+        <button class="lbx" onclick="toggleLB()">✕</button>
       </div>
     </div>
-    <div class="lb-section">
-      <div class="lb-section-title" style="color:var(--green)">▼ Most Cheap (Fwd PE)</div>
-      <div id="lb-cheap"></div>
-    </div>
-    <div class="lb-section">
-      <div class="lb-section-title" style="color:var(--red)">▲ Most Expensive (Fwd PE)</div>
-      <div id="lb-expensive"></div>
+    <div class="lbbody">
+      <div class="lbsec">
+        <div class="lbst" style="color:var(--green)">▼ Most Cheap (Fwd PE)</div>
+        <div id="lbc"></div>
+      </div>
+      <div class="lbsec">
+        <div class="lbst" style="color:var(--red)">▲ Most Expensive (Fwd PE)</div>
+        <div id="lbe"></div>
+      </div>
     </div>
   </div>
 </div>
 
 <footer>
-  <span>Data: Financial Modeling Prep API</span>
-  <span>Z-score = (current PE − rolling mean) ÷ rolling std dev</span>
-  <span>Clamped −1σ to +3σ for display</span>
-  <span>Forward PE from analyst consensus estimates</span>
+  <span>Data: FMP API · localStorage daily accumulation</span>
+  <span>Z = (PE − mean) ÷ std · Annual history bootstraps daily DB</span>
 </footer>
-
-</div><!-- end main-content -->
+</div>
 
 <script>
 const API_KEY = 'emuhuS5sNwXWTgW8QWqL3Ypqpv4YOutn';
 const BASE = 'https://financialmodelingprep.com/stable';
+const DBK = 'pe_db_v3';
 
-// ── SECTORS ──
 const SECTORS = {
   'Tech':     ['MSFT','NVDA','ADBE','CRM','AAPL','AMZN','TSM','ASML','GOOGL','WIX','DELL','PLAB','IFX'],
   'Energy':   ['NEE','CEG','VST','SLB','NXE'],
@@ -857,694 +301,398 @@ const SECTORS = {
   'Biotech':  ['VKTX','IVVD'],
   'ETF':      ['SPY','SCZ'],
 };
-const TICKER_SECTOR = {};
-Object.entries(SECTORS).forEach(([s, tickers]) => tickers.forEach(t => TICKER_SECTOR[t] = s));
-const ALL_TICKERS = Object.values(SECTORS).flat();
-const TOTAL = ALL_TICKERS.length;
+const TSEC = {};
+Object.entries(SECTORS).forEach(([s,ts])=>ts.forEach(t=>TSEC[t]=s));
+const ALL = Object.values(SECTORS).flat();
+const TOTAL = ALL.length;
 
-// ── STATE ──
-let stockData = {}; // ticker → computed data
-let activeSector = 'All';
-let primaryWindow = 60;
-let lbWindow = 60;
-let threshold = 1.0;
-let sectorAvgZ = {}; // sector → avg z-score for primary window
+let SD = {}, activeSec = 'All', primW = 3, lbW = 3, thresh = 1.0, secAvgZ = {}, peDB = {};
 
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+const today = () => new Date().toISOString().split('T')[0];
 
-// ── API HELPERS ──
-async function apiFetch(url, retries = 2) {
-  for (let i = 0; i <= retries; i++) {
-    try {
-      const r = await fetch(url);
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      const d = await r.json();
-      return d;
-    } catch(e) {
-      if (i === retries) return null;
-      await sleep(400);
-    }
-  }
+// DB
+function loadDB(){ try{ const r=localStorage.getItem(DBK); peDB=r?JSON.parse(r):{}; }catch{peDB={};} }
+function saveDB(){ try{ localStorage.setItem(DBK,JSON.stringify(peDB)); }catch{} }
+
+function recordDaily(t, pe, fpe){
+  if(!pe) return;
+  if(!peDB[t]) peDB[t]={annual:[],daily:[]};
+  const d=today();
+  peDB[t].daily=peDB[t].daily.filter(x=>x.date!==d);
+  peDB[t].daily.push({date:d,pe,fpe:fpe||null});
+  peDB[t].daily.sort((a,b)=>a.date.localeCompare(b.date));
+  if(peDB[t].daily.length>180) peDB[t].daily=peDB[t].daily.slice(-180);
 }
 
-// Fetch daily price history using confirmed working endpoint
-async function fetchPriceHistory(ticker) {
-  // /historical-price-eod/full returns {historical:[{date,close,...}]} newest first
-  const d = await apiFetch(`${BASE}/historical-price-eod/full?symbol=${ticker}&limit=130&apikey=${API_KEY}`);
-  if (d && d.historical && Array.isArray(d.historical) && d.historical.length > 0) {
-    return d.historical.map(x => x.close).filter(v => v > 0).reverse();
-  }
-  // Fallback: try /historical-price-eod (no "full")
-  const d2 = await apiFetch(`${BASE}/historical-price-eod?symbol=${ticker}&limit=130&apikey=${API_KEY}`);
-  if (d2 && d2.historical && Array.isArray(d2.historical) && d2.historical.length > 0) {
-    return d2.historical.map(x => x.close).filter(v => v > 0).reverse();
-  }
-  return [];
+function recordAnnual(t, pts){
+  if(!peDB[t]) peDB[t]={annual:[],daily:[]};
+  if(pts&&pts.length) peDB[t].annual=pts;
 }
 
-// Get TTM EPS from ratios-ttm (confirmed working on Starter plan)
-async function fetchTTMMetrics(ticker) {
-  const d = await apiFetch(`${BASE}/ratios-ttm?symbol=${ticker}&apikey=${API_KEY}`);
-  if (!Array.isArray(d) || !d[0]) return null;
-  return d[0]; // has priceToEarningsRatioTTM and netProfitMarginTTM etc
+function getSeries(t, years){
+  const db=peDB[t]; if(!db) return [];
+  const cutoff=new Date(); cutoff.setFullYear(cutoff.getFullYear()-years);
+  const cs=cutoff.toISOString().split('T')[0];
+  const daily=(db.daily||[]).filter(d=>d.date>=cs).map(d=>d.pe).filter(v=>v>0&&v<500);
+  if(daily.length>=3) return daily;
+  const ann=new Date().getFullYear();
+  return (db.annual||[]).filter(d=>d.year>=ann-years).map(d=>d.pe).filter(v=>v>0&&v<500);
 }
 
-// Forward PE from analyst estimates
-async function fetchForwardPE(ticker, currentPrice) {
-  const d = await apiFetch(`${BASE}/analyst-estimates?symbol=${ticker}&limit=2&apikey=${API_KEY}`);
-  if (Array.isArray(d) && d[0] && d[0].estimatedEpsAvg > 0 && currentPrice > 0) {
-    const fpe = +(currentPrice / d[0].estimatedEpsAvg).toFixed(1);
-    return (fpe > 0 && fpe < 500) ? fpe : null;
-  }
-  return null;
+function dayCount(t){ return (peDB[t]?.daily||[]).length; }
+
+// API
+async function apiFetch(url){
+  try{ const r=await fetch(url); if(!r.ok) return null; return await r.json(); }catch{ return null; }
 }
 
-async function fetchQuote(ticker) {
-  const d = await apiFetch(`${BASE}/quote?symbol=${ticker}&apikey=${API_KEY}`);
-  if (!Array.isArray(d) || !d[0]) return null;
-  return d[0];
+async function getRatiosTTM(t){
+  const d=await apiFetch(`${BASE}/ratios-ttm?symbol=${t}&apikey=${API_KEY}`);
+  return (Array.isArray(d)&&d[0])?d[0]:null;
 }
 
-async function fetchEarningsDate(ticker) {
-  const today = new Date();
-  const future = new Date(); future.setDate(today.getDate() + 45);
-  const from = today.toISOString().split('T')[0];
-  const to = future.toISOString().split('T')[0];
-  const cal = await apiFetch(`${BASE}/earnings-calendar?symbol=${ticker}&from=${from}&to=${to}&apikey=${API_KEY}`);
-  if (Array.isArray(cal) && cal.length > 0) return cal[0].date;
-  return null;
+async function getAnnualRatios(t){
+  const d=await apiFetch(`${BASE}/ratios?symbol=${t}&limit=6&apikey=${API_KEY}`);
+  if(!Array.isArray(d)||!d.length) return [];
+  return d.map(x=>({year:new Date(x.date||'').getFullYear(),pe:x.priceToEarningsRatio}))
+    .filter(x=>x.pe&&isFinite(x.pe)&&x.pe>0&&x.pe<500).reverse();
 }
 
-// ── COMPUTE Z-SCORES ──
-function computeStats(series) {
-  if (!series || series.length < 5) return null;
-  const mean = series.reduce((a,b) => a+b, 0) / series.length;
-  const variance = series.reduce((a,b) => a + (b-mean)**2, 0) / series.length;
-  const std = Math.sqrt(variance);
-  return { mean: +mean.toFixed(2), std: +std.toFixed(2) };
+async function getQuote(t){
+  const d=await apiFetch(`${BASE}/quote?symbol=${t}&apikey=${API_KEY}`);
+  return (Array.isArray(d)&&d[0])?d[0]:null;
 }
 
-function zScore(current, mean, std) {
-  if (!std || std === 0) return null;
-  return +((current - mean) / std).toFixed(2);
+async function getFwdPE(t, price){
+  const d=await apiFetch(`${BASE}/analyst-estimates?symbol=${t}&limit=2&apikey=${API_KEY}`);
+  if(!Array.isArray(d)||!d[0]) return null;
+  const eps=d[0].estimatedEpsAvg;
+  if(!eps||eps<=0||!price) return null;
+  const fpe=+(price/eps).toFixed(1);
+  return (fpe>0&&fpe<500)?fpe:null;
 }
 
-function clampZ(z) {
-  if (z === null) return null;
-  return Math.max(-1, Math.min(3, z));
+async function getEarnings(t){
+  const td=today(), fut=new Date(); fut.setDate(fut.getDate()+45);
+  const to=fut.toISOString().split('T')[0];
+  const d=await apiFetch(`${BASE}/earnings-calendar?symbol=${t}&from=${td}&to=${to}&apikey=${API_KEY}`);
+  return (Array.isArray(d)&&d.length)?d[0].date:null;
 }
 
-function zColor(z) {
-  if (z === null) return 'var(--muted)';
-  if (z <= 0) return 'var(--green)';
-  if (z <= 1) {
-    // lerp green→amber
-    const t = z;
-    return `color-mix(in srgb, var(--amber) ${Math.round(t*100)}%, var(--green))`;
-  }
-  if (z <= 2) {
-    const t = z - 1;
-    return `color-mix(in srgb, var(--red) ${Math.round(t*100)}%, var(--amber))`;
-  }
+// Stats
+function stats(s){
+  if(!s||s.length<2) return null;
+  const m=s.reduce((a,b)=>a+b,0)/s.length;
+  const v=s.reduce((a,b)=>a+(b-m)**2,0)/s.length;
+  return {mean:+m.toFixed(2),std:+Math.sqrt(v).toFixed(2)};
+}
+function zscore(v,m,std){ if(!std||!v) return null; return +((v-m)/std).toFixed(2); }
+function clamp(z){ return z===null?null:Math.max(-1,Math.min(3,z)); }
+function zcol(z){
+  if(z===null) return 'var(--muted)';
+  if(z<=0) return 'var(--green)';
+  if(z<=1) return `color-mix(in srgb,var(--amber) ${Math.round(z*100)}%,var(--green))`;
+  if(z<=2) return `color-mix(in srgb,var(--red) ${Math.round((z-1)*100)}%,var(--amber))`;
   return 'var(--red)';
 }
+function zpct(z){ if(z===null) return null; return ((clamp(z)+1)/4)*100; }
 
-function zToPercent(z) {
-  // map z from [-1,3] range to [0%,100%]
-  if (z === null) return null;
-  const clamped = clampZ(z);
-  return ((clamped + 1) / 4) * 100;
-}
-
-// ── PROCESS TICKER ──
-async function processTicker(ticker) {
-  const [ratios, quote, earningsDate] = await Promise.all([
-    fetchTTMMetrics(ticker),   // ratios-ttm → confirmed working
-    fetchQuote(ticker),
-    fetchEarningsDate(ticker),
+// Process
+async function procTicker(t){
+  const [ratios, annual, quote, earnDate] = await Promise.all([
+    getRatiosTTM(t), getAnnualRatios(t), getQuote(t), getEarnings(t)
   ]);
+  const price=quote?.price??null, name=quote?.name??t;
+  const ttmPE=(()=>{ const v=ratios?.priceToEarningsRatioTTM; return (v&&isFinite(v)&&v>0&&v<500)?+v.toFixed(1):null; })();
+  const fwdPE=await getFwdPE(t,price);
 
-  // TTM PE directly from ratios-ttm (most reliable)
-  const ttmPE = (() => {
-    const v = ratios?.priceToEarningsRatioTTM;
-    return (v && isFinite(v) && v > 0 && v < 500) ? +v.toFixed(1) : null;
-  })();
+  recordAnnual(t,annual);
+  recordDaily(t,ttmPE,fwdPE);
 
-  // Derive TTM EPS from price / PE so we can build daily PE series
-  const currentPrice = quote?.price ?? null;
-  const name = quote?.name ?? ticker;
-  const eps = (ttmPE && currentPrice) ? +(currentPrice / ttmPE).toFixed(4) : null;
-
-  // Fetch price history separately (after we have quote)
-  const prices = await fetchPriceHistory(ticker);
-
-  // Build daily PE series: price ÷ TTM EPS for each historical day
-  let peSeries = [];
-  if (eps && eps > 0 && prices.length > 0) {
-    peSeries = prices.map(p => p / eps).filter(pe => pe > 0 && pe < 500);
-  }
-
-  // Compute rolling windows
-  const windows = {};
-  [30, 60, 120].forEach(w => {
-    const slice = peSeries.slice(-w);
-    const stats = computeStats(slice);
-    if (stats && ttmPE !== null) {
-      windows[w] = { z: zScore(ttmPE, stats.mean, stats.std), mean: stats.mean, std: stats.std, pts: slice.length };
-    } else {
-      windows[w] = { z: null, mean: null, std: null, pts: slice.length };
-    }
+  const wins={}, fwins={};
+  [1,3,5].forEach(y=>{
+    const s=getSeries(t,y), st=stats(s);
+    wins[y]=st&&ttmPE!==null?{z:zscore(ttmPE,st.mean,st.std),mean:st.mean,std:st.std,pts:s.length}:{z:null,mean:null,std:null,pts:s.length};
+    fwins[y]=fwdPE!==null&&wins[y].mean!==null&&wins[y].std!==null?{z:zscore(fwdPE,wins[y].mean,wins[y].std)}:{z:null};
   });
 
-  // Forward PE
-  const fwdPE = currentPrice ? await fetchForwardPE(ticker, currentPrice) : null;
+  let dq='none';
+  if(ttmPE!==null&&[1,3,5].some(y=>getSeries(t,y).length>=2)) dq=fwdPE!==null?'full':'partial';
+  else if(ttmPE!==null) dq='partial';
 
-  // Forward PE z-scores using same rolling std dev as TTM
-  const fwdWindows = {};
-  [30, 60, 120].forEach(w => {
-    if (fwdPE !== null && windows[w].mean !== null && windows[w].std !== null) {
-      fwdWindows[w] = { z: zScore(fwdPE, windows[w].mean, windows[w].std) };
-    } else {
-      fwdWindows[w] = { z: null };
-    }
-  });
+  let earnSoon=false;
+  if(earnDate){ const df=(new Date(earnDate)-new Date())/86400000; if(df>=0&&df<=30) earnSoon=true; }
 
-  // Data quality
-  let dq = 'none';
-  if (ttmPE !== null && peSeries.length >= 30) dq = fwdPE !== null ? 'full' : 'partial';
-  else if (ttmPE !== null) dq = 'partial';
+  let pct=null;
+  const all5=getSeries(t,5);
+  if(ttmPE&&all5.length>=5){ pct=Math.round(all5.filter(p=>p>=ttmPE).length/all5.length*100); }
 
-  // Earnings soon?
-  let earningsSoon = false;
-  if (earningsDate) {
-    const diff = (new Date(earningsDate) - new Date()) / (1000*60*60*24);
-    if (diff >= 0 && diff <= 30) earningsSoon = true;
-  }
-
-  return {
-    ticker, name, sector: TICKER_SECTOR[ticker],
-    ttmPE, fwdPE, currentPrice,
-    peSeries, windows, fwdWindows,
-    dq, earningsSoon, earningsDate
-  };
+  return {ticker:t,name,sector:TSEC[t],ttmPE,fwdPE,price,wins,fwins,dq,earnSoon,earnDate,pct};
 }
 
-// ── RENDER ──
-function renderAll() {
-  const visibleTickers = activeSector === 'All'
-    ? ALL_TICKERS
-    : SECTORS[activeSector] || [];
-
-  const visibleData = visibleTickers
-    .map(t => stockData[t])
-    .filter(Boolean);
-
-  // Compute sector averages
-  Object.keys(SECTORS).forEach(s => {
-    const zvals = SECTORS[s]
-      .map(t => stockData[t])
-      .filter(Boolean)
-      .map(d => d.windows[primaryWindow]?.z)
-      .filter(z => z !== null);
-    sectorAvgZ[s] = zvals.length ? +(zvals.reduce((a,b)=>a+b,0)/zvals.length).toFixed(2) : null;
+// Render
+function renderAll(){
+  Object.keys(SECTORS).forEach(s=>{
+    const zs=SECTORS[s].map(t=>SD[t]?.wins[primW]?.z).filter(z=>z!=null);
+    secAvgZ[s]=zs.length?+(zs.reduce((a,b)=>a+b,0)/zs.length).toFixed(2):null;
   });
+  const allZ=ALL.map(t=>SD[t]?.wins[primW]?.z).filter(z=>z!=null);
+  const pavgZ=allZ.length?+(allZ.reduce((a,b)=>a+b,0)/allZ.length).toFixed(2):null;
+  const vis=(activeSec==='All'?ALL:SECTORS[activeSec]||[]).map(t=>SD[t]).filter(Boolean);
 
-  // Portfolio avg z
-  const allZ = ALL_TICKERS.map(t => stockData[t]?.windows[primaryWindow]?.z).filter(z => z != null);
-  const portfolioAvgZ = allZ.length ? +(allZ.reduce((a,b)=>a+b,0)/allZ.length).toFixed(2) : null;
+  const cheap=vis.filter(d=>{const z=d.wins[primW]?.z;return z!==null&&z<thresh;}).length;
+  const exp=vis.filter(d=>{const z=d.wins[primW]?.z;return z!==null&&z>=thresh;}).length;
+  const na=vis.filter(d=>d.wins[primW]?.z===null).length;
+  const es=vis.filter(d=>d.earnSoon).length;
 
-  // Update sector avg indicator
-  const currentAvgZ = activeSector === 'All' ? portfolioAvgZ : sectorAvgZ[activeSector];
-  document.getElementById('sector-avg-ind').textContent =
-    currentAvgZ !== null ? `${activeSector === 'All' ? 'Portfolio' : activeSector} avg: ${currentAvgZ}σ` : '';
+  document.getElementById('st').textContent=vis.length;
+  document.getElementById('saz').textContent=pavgZ!==null?pavgZ+'σ':'—';
+  document.getElementById('sch').textContent=cheap;
+  document.getElementById('sex').textContent=exp;
+  document.getElementById('sea').textContent=es;
+  document.getElementById('sna').textContent=na;
 
-  // Render sector tabs
-  renderTabs();
+  const ab=document.getElementById('ab');
+  if(exp>0){ ab.style.display='block'; document.getElementById('abtxt').textContent=`${exp} stock${exp>1?'s':''} above ${thresh.toFixed(2)}σ`; }
+  else ab.style.display='none';
 
-  // Update summary
-  const cheap = visibleData.filter(d => {
-    const z = d.windows[primaryWindow]?.z;
-    return z !== null && z < threshold;
-  }).length;
-  const expensive = visibleData.filter(d => {
-    const z = d.windows[primaryWindow]?.z;
-    return z !== null && z >= threshold;
-  }).length;
-  const na = visibleData.filter(d => d.windows[primaryWindow]?.z === null).length;
-  const earnSoon = visibleData.filter(d => d.earningsSoon).length;
+  const cavgZ=activeSec==='All'?pavgZ:secAvgZ[activeSec];
+  document.getElementById('savgind').textContent=cavgZ!==null?`${activeSec==='All'?'Portfolio':activeSec} avg: ${cavgZ>0?'+':''}${cavgZ}σ`:'';
 
-  document.getElementById('s-total').textContent = visibleData.length;
-  document.getElementById('s-avgz').textContent = portfolioAvgZ !== null ? portfolioAvgZ + 'σ' : '—';
-  document.getElementById('s-cheap').textContent = cheap;
-  document.getElementById('s-expensive').textContent = expensive;
-  document.getElementById('s-earn').textContent = earnSoon;
-  document.getElementById('s-na').textContent = na;
+  const maxDays=Math.max(...ALL.map(t=>dayCount(t)),0);
+  document.getElementById('dbb').textContent=`DB: ${maxDays}d`;
 
-  // Alert banner
-  const banner = document.getElementById('alert-banner');
-  if (expensive > 0) {
-    banner.style.display = 'block';
-    document.getElementById('alert-text').textContent =
-      `${expensive} stock${expensive>1?'s':''} above ${threshold.toFixed(2)}σ threshold`;
-  } else {
-    banner.style.display = 'none';
-  }
-
-  // Render stock list grouped by sector
-  const list = document.getElementById('stock-list');
-  let html = '';
-  const sectorsToShow = activeSector === 'All' ? Object.keys(SECTORS) : [activeSector];
-
-  sectorsToShow.forEach(sector => {
-    const tickers = SECTORS[sector].filter(t => stockData[t]);
-    if (!tickers.length) return;
-
-    const avgZ = sectorAvgZ[sector];
-    const avgZCol = avgZ !== null ? zColor(avgZ) : 'var(--muted)';
-    const avgZStr = avgZ !== null ? `${avgZ > 0 ? '+' : ''}${avgZ}σ` : '—';
-
-    html += `<div class="sector-group" id="sector-group-${sector}">`;
-    html += `<div class="sector-header">
-      <span class="sector-name">${sector}</span>
-      <span class="sector-avg-z" style="color:${avgZCol};background:${avgZCol.replace(')',',0.1)').replace('var(','rgba(')}">${avgZStr} avg</span>
-      <span class="sector-count">${tickers.length} stocks</span>
-    </div>`;
-
-    // Sort by primary window z-score ascending (cheap first)
-    const sorted = tickers.slice().sort((a,b) => {
-      const za = stockData[a]?.windows[primaryWindow]?.z ?? 99;
-      const zb = stockData[b]?.windows[primaryWindow]?.z ?? 99;
-      return za - zb;
-    });
-
-    sorted.forEach(ticker => {
-      html += renderStockRow(stockData[ticker]);
-    });
-
-    html += '</div>';
-  });
-
-  list.innerHTML = html;
-
-  // Render leaderboard
-  renderLeaderboard(visibleData);
+  renderTabs(); renderList(); renderLB(vis);
 }
 
-function renderStockRow(d) {
-  const { ticker, name, ttmPE, fwdPE, windows, fwdWindows, dq, earningsSoon, earningsDate } = d;
+function renderTabs(){
+  const el=document.getElementById('stabs');
+  el.innerHTML=['All',...Object.keys(SECTORS)].map(s=>{
+    const z=s==='All'?null:secAvgZ[s];
+    const zs=z!==null?` <span class="sz" style="color:${zcol(z)}">${z>0?'+':''}${z}σ</span>`:'';
+    return `<div class="stab ${activeSec===s?'active':''}" onclick="setSec('${s}')">${s}${zs}</div>`;
+  }).join('');
+}
 
-  // Determine row signal
-  const pz = windows[primaryWindow]?.z ?? null;
-  let rowClass = '';
-  let tickerClass = '';
-  if (pz !== null) {
-    const outsideCount = [30,60,120].filter(w => {
-      const z = windows[w]?.z;
-      return z !== null && z >= threshold;
-    }).length;
-    if (outsideCount >= 2) { rowClass = 'signal-expensive'; tickerClass = 'expensive'; }
-    else if (outsideCount === 1) { tickerClass = 'amber'; }
-    else if (pz < 0) { rowClass = 'signal-cheap'; tickerClass = 'cheap'; }
-  }
+function renderList(){
+  const el=document.getElementById('slist');
+  const secs=activeSec==='All'?Object.keys(SECTORS):[activeSec];
+  let html='';
+  secs.forEach(sec=>{
+    const ts=SECTORS[sec].filter(t=>SD[t]); if(!ts.length) return;
+    const az=secAvgZ[sec], azc=az!==null?zcol(az):'var(--muted)', azs=az!==null?`${az>0?'+':''}${az}σ avg`:'— avg';
+    html+=`<div><div class="shdr"><span class="sname">${sec}</span><span class="savgz" style="color:${azc}">${azs}</span><span class="scnt">${ts.length} stocks</span></div>`;
+    ts.slice().sort((a,b)=>{const za=SD[a]?.wins[primW]?.z??99,zb=SD[b]?.wins[primW]?.z??99;return za-zb;})
+      .forEach(t=>{ html+=renderRow(SD[t]); });
+    html+='</div>';
+  });
+  el.innerHTML=html;
+}
 
-  // DQ dot
-  const dqClass = dq === 'full' ? 'dq-full' : dq === 'partial' ? 'dq-partial' : 'dq-none';
-  const dqTitle = dq === 'full' ? 'Full data' : dq === 'partial' ? 'TTM only' : 'No PE data';
+function renderRow(d){
+  const {ticker:t,name,ttmPE,fwdPE,wins,fwins,dq,earnSoon,earnDate,pct}=d;
+  const pz=wins[primW]?.z??null;
+  const outCnt=[1,3,5].filter(w=>{const z=wins[w]?.z;return z!==null&&z>=thresh;}).length;
+  let rc='',tc='';
+  if(outCnt>=2){rc='sex';tc='exp';}
+  else if(outCnt===1){tc='amb';}
+  else if(pz!==null&&pz<0){rc='sch';tc='cheap';}
 
-  // Earnings badge
-  const earnBadge = earningsSoon
-    ? `<span class="earn-badge" title="Earnings: ${earningsDate}">E</span>`
-    : '';
+  const dqc=dq==='full'?'dqf':dq==='partial'?'dqp':'dqn';
+  const dqtip=dq==='full'?'Full data':dq==='partial'?'TTM only':'No PE data';
+  const eb=earnSoon?`<span class="ebdg" title="Earnings: ${earnDate}">E</span>`:'';
+  const tpct=((thresh+1)/4)*100;
 
-  // Build dots for bar
-  const threshPct = ((threshold + 1) / 4) * 100;
-
-  let dotsHTML = `<div class="bar-track"></div>
-    <div class="threshold-line" style="left:${threshPct}%"></div>`;
-
-  const windowShapes = {30:'circle', 60:'diamond', 120:'square'};
-  const windowLabels = {30:'30d', 60:'60d', 120:'120d'};
-
-  [30,60,120].forEach(w => {
-    const wz = windows[w]?.z ?? null;
-    const fz = fwdWindows[w]?.z ?? null;
-
-    // TTM dot
-    if (wz !== null) {
-      const pct = zToPercent(wz);
-      const col = zColor(wz);
-      const isPrimary = w === primaryWindow;
-      const size = isPrimary ? 10 : 8;
-      const tip = `${ticker} · ${w}d TTM\nZ-score: ${wz > 0 ? '+' : ''}${wz}σ\nPE today: ${ttmPE}x\n${w}d avg PE: ${windows[w].mean}x\nStd dev: ${windows[w].std}`;
-
-      let shape;
-      if (w === 30) shape = `<circle cx="5" cy="5" r="4" fill="${col}" ${!isPrimary?'opacity="0.6"':''}/>`;
-      else if (w === 60) shape = `<polygon points="5,1 9,5 5,9 1,5" fill="${col}" ${!isPrimary?'opacity="0.6"':''}/>`;
-      else shape = `<rect x="1" y="1" width="8" height="8" fill="${col}" ${!isPrimary?'opacity="0.6"':''}/>`;
-
-      dotsHTML += `<div class="z-dot" style="left:${pct}%" data-tip="${tip}">
-        <svg class="z-dot-inner" width="10" height="10" viewBox="0 0 10 10">${shape}</svg>
-      </div>`;
+  let dots=`<div class="btrack"></div><div class="tline" style="left:${tpct}%"></div>`;
+  const wl={1:'1Y',3:'3Y',5:'5Y'};
+  [1,3,5].forEach(w=>{
+    const wz=wins[w]?.z??null, fz=fwins[w]?.z??null, ip=w===primW;
+    const m=wins[w]?.mean, s=wins[w]?.std;
+    if(wz!==null){
+      const pp=zpct(wz), col=zcol(wz);
+      const tip=`${t} · ${wl[w]} TTM\nZ: ${wz>0?'+':''}${wz}σ  PE: ${ttmPE}x\n${wl[w]} mean: ${m}x  std: ${s}\n${pct!==null?`Higher than ${pct}% of history`:''}`;
+      let sh;
+      if(w===1) sh=`<circle cx="5" cy="5" r="${ip?4:3}" fill="${col}" ${!ip?'opacity="0.5"':''}/>`;
+      else if(w===3) sh=`<polygon points="5,${ip?1:1.5} ${ip?9:8.5},5 5,${ip?9:8.5} ${ip?1:1.5},5" fill="${col}" ${!ip?'opacity="0.5"':''}/>`;
+      else sh=`<rect x="${ip?1:1.5}" y="${ip?1:1.5}" width="${ip?8:7}" height="${ip?8:7}" fill="${col}" ${!ip?'opacity="0.5"':''}/>`;
+      dots+=`<div class="zdot" style="left:${pp}%"><svg width="10" height="10" viewBox="0 0 10 10">${sh}</svg><span class="tip">${tip}</span></div>`;
     }
-
-    // Forward PE dot (hollow)
-    if (fz !== null) {
-      const fpct = zToPercent(fz);
-      const fcol = zColor(fz);
-      const isPrimary = w === primaryWindow;
-      const tip = `${ticker} · ${w}d Forward\nZ-score: ${fz > 0 ? '+' : ''}${fz}σ\nFwd PE: ${fwdPE}x\n${w}d avg PE: ${windows[w].mean}x`;
-
-      let shape;
-      if (w === 30) shape = `<circle cx="5" cy="5" r="3.5" fill="none" stroke="${fcol}" stroke-width="1.5" ${!isPrimary?'opacity="0.5"':''}/>`;
-      else if (w === 60) shape = `<polygon points="5,1 9,5 5,9 1,5" fill="none" stroke="${fcol}" stroke-width="1.5" ${!isPrimary?'opacity="0.5"':''}/>`;
-      else shape = `<rect x="1.5" y="1.5" width="7" height="7" fill="none" stroke="${fcol}" stroke-width="1.5" ${!isPrimary?'opacity="0.5"':''}/>`;
-
-      dotsHTML += `<div class="z-dot" style="left:${fpct}%;margin-top:2px" data-tip="${tip}">
-        <svg class="z-dot-inner" width="10" height="10" viewBox="0 0 10 10">${shape}</svg>
-      </div>`;
-
-      // Gap arrow between TTM and Fwd
-      const wz = windows[w]?.z ?? null;
-      if (wz !== null && Math.abs(fz - wz) > 0.2) {
-        const arrowPct = (zToPercent(wz) + zToPercent(fz)) / 2;
-        const arrow = fz < wz ? '↓' : '↑';
-        const arrowCol = fz < wz ? 'var(--green)' : 'var(--red)';
-        dotsHTML += `<div class="gap-arrow" style="left:${arrowPct}%;color:${arrowCol}">${arrow}</div>`;
+    if(fz!==null){
+      const fp=zpct(fz), fc=zcol(fz);
+      const ftip=`${t} · ${wl[w]} Fwd\nZ: ${fz>0?'+':''}${fz}σ  Fwd PE: ${fwdPE}x\n${wl[w]} mean: ${m}x`;
+      let fs;
+      if(w===1) fs=`<circle cx="5" cy="5" r="3.5" fill="none" stroke="${fc}" stroke-width="1.5" ${!ip?'opacity="0.4"':''}/>`;
+      else if(w===3) fs=`<polygon points="5,1.5 8.5,5 5,8.5 1.5,5" fill="none" stroke="${fc}" stroke-width="1.5" ${!ip?'opacity="0.4"':''}/>`;
+      else fs=`<rect x="1.5" y="1.5" width="7" height="7" fill="none" stroke="${fc}" stroke-width="1.5" ${!ip?'opacity="0.4"':''}/>`;
+      dots+=`<div class="zdot" style="left:${fp}%;margin-top:3px"><svg width="10" height="10" viewBox="0 0 10 10">${fs}</svg><span class="tip">${ftip}</span></div>`;
+      if(wz!==null&&Math.abs(fz-wz)>0.25){
+        const ap=(zpct(wz)+zpct(fz))/2, ar=fz<wz?'↓':'↑', ac=fz<wz?'var(--green)':'var(--red)';
+        dots+=`<div class="garrow" style="left:${ap}%;color:${ac}">${ar}</div>`;
       }
     }
   });
 
-  // PE values panel
-  const ttmStr = ttmPE !== null ? ttmPE + 'x' : '—';
-  const fwdStr = fwdPE !== null ? fwdPE + 'x' : '—';
+  const pzs=pz!==null?`${pz>0?'+':''}${pz}σ`:'—';
+  const fpz=fwins[primW]?.z??null, fpzs=fpz!==null?`${fpz>0?'+':''}${fpz}σ`:'—';
+  const pvh=`<div class="pr2"><span class="pl">TTM</span><span class="pn">${ttmPE!==null?ttmPE+'x':'—'}</span><span class="pz2" style="color:${zcol(pz)}">${pzs}</span></div>
+    <div class="pr2"><span class="pl" style="color:var(--muted2)">Fwd</span><span class="pn" style="color:var(--muted)">${fwdPE!==null?fwdPE+'x':'—'}</span><span class="pz2" style="color:${zcol(fpz)}">${fpzs}</span></div>`;
 
-  const pzStr = pz !== null ? `${pz > 0 ? '+' : ''}${pz}σ` : '—';
-  const pzCol = zColor(pz);
-  const fpz = fwdWindows[primaryWindow]?.z ?? null;
-  const fpzStr = fpz !== null ? `${fpz > 0 ? '+' : ''}${fpz}σ` : '—';
+  const dc=dayCount(t), cp=Math.min(dc/120*100,100);
+  const covh=`<div class="covb"><div class="covl">${dc}d</div><div class="covt"><div class="covf" style="width:${cp}%"></div></div></div>`;
 
-  const peValHTML = `
-    <div class="pe-row">
-      <span class="pe-lbl">TTM</span>
-      <span class="pe-ttm">${ttmStr}</span>
-      <span class="pe-z" style="color:${pzCol}">${pzStr}</span>
+  return `<div class="srw" id="wrap-${t}">
+    <div class="sr ${rc}" id="row-${t}">
+      <div class="sinf"><div class="stk ${tc}">${t}</div><div class="snm" title="${name}">${name}</div></div>
+      <div class="dqd ${dqc}" title="${dqtip}"></div>
+      ${eb}
+      <div class="bzone">${dots}</div>
+      <div class="peval">${pvh}</div>
+      ${covh}
+      <button class="atog" id="atog-${t}" onclick="togAn('${t}')"><span class="arr">▸</span> Analysis</button>
     </div>
-    <div class="pe-row">
-      <span class="pe-lbl" style="color:var(--muted2)">Fwd</span>
-      <span class="pe-fwd">${fwdStr}</span>
-      <span class="pe-z" style="color:${zColor(fpz)}">${fpzStr}</span>
-    </div>
-  `;
-
-  return `<div class="stock-row-wrap" id="row-${ticker}">
-    <div class="stock-row ${rowClass}">
-      <div class="stock-info">
-        <div class="stock-ticker ${tickerClass}">${ticker}</div>
-        <div class="stock-name" title="${name}">${name}</div>
-      </div>
-      <div class="dq-dot ${dqClass}" title="${dqTitle}"></div>
-      ${earnBadge}
-      <div class="bar-zone">${dotsHTML}</div>
-      <div class="pe-values">${peValHTML}</div>
-      <button class="analysis-toggle" id="analysis-toggle-${ticker}" onclick="toggleAnalysis('${ticker}')">
-        <span class="tog-arrow">▸</span> Analysis
-      </button>
-    </div>
-    <div class="analysis-panel" id="analysis-panel-${ticker}"></div>
+    <div class="apanel" id="ap-${t}"></div>
   </div>`;
 }
 
-function renderTabs() {
-  const tabs = document.getElementById('sector-tabs');
-  const sectors = ['All', ...Object.keys(SECTORS)];
-  tabs.innerHTML = sectors.map(s => {
-    const z = s === 'All' ? null : sectorAvgZ[s];
-    const zStr = z !== null ? ` <span class="sector-z" style="color:${zColor(z)}">${z > 0 ? '+' : ''}${z}σ</span>` : '';
-    return `<div class="sector-tab ${activeSector===s?'active':''}" onclick="setSector('${s}')">${s}${zStr}</div>`;
-  }).join('');
-}
-
-function renderLeaderboard(visibleData) {
-  const ranked = visibleData
-    .filter(d => d.fwdWindows[lbWindow]?.z !== null)
-    .sort((a,b) => (a.fwdWindows[lbWindow].z ?? 99) - (b.fwdWindows[lbWindow].z ?? 99));
-
-  const top5cheap = ranked.slice(0, 5);
-  const top5exp = ranked.slice(-5).reverse();
-
-  function lbRowHTML(d, rank, isExpensive) {
-    const fz = d.fwdWindows[lbWindow]?.z ?? null;
-    const tz = d.windows[lbWindow]?.z ?? null;
-    const col = isExpensive ? 'var(--red)' : 'var(--green)';
-    const fzStr = fz !== null ? `${fz > 0 ? '+' : ''}${fz}σ` : '—';
-    const tzStr = tz !== null ? `TTM ${tz > 0 ? '+' : ''}${tz}σ` : '';
-    return `<div class="lb-row" onclick="scrollToTicker('${d.ticker}')">
-      <span class="lb-rank">${rank}</span>
-      <span class="lb-ticker" style="color:${col}">${d.ticker}</span>
-      <span class="lb-fwd-z" style="color:var(--muted)">${tzStr}</span>
-      <span class="lb-z" style="color:${col}">${fzStr}</span>
+function renderLB(vis){
+  const ranked=vis.filter(d=>d.fwins[lbW]?.z!==null).sort((a,b)=>(a.fwins[lbW].z??99)-(b.fwins[lbW].z??99));
+  const c5=ranked.slice(0,5), e5=ranked.slice(-5).reverse();
+  const row=(d,i,isE)=>{
+    const fz=d.fwins[lbW]?.z??null, tz=d.wins[lbW]?.z??null;
+    const col=isE?'var(--red)':'var(--green)';
+    return `<div class="lbrow" onclick="scrollToRow('${d.ticker}')">
+      <span class="lbrk">${i}</span><span class="lbtk" style="color:${col}">${d.ticker}</span>
+      <span class="lbfz">${tz!==null?`TTM ${tz>0?'+':''}${tz}σ`:''}</span>
+      <span class="lbz" style="color:${col}">${fz!==null?`${fz>0?'+':''}${fz}σ`:'—'}</span>
     </div>`;
-  }
-
-  document.getElementById('lb-cheap').innerHTML = top5cheap.map((d,i) => lbRowHTML(d,i+1,false)).join('') || '<div style="padding:8px 16px;font-family:var(--mono);font-size:10px;color:var(--muted)">No data</div>';
-  document.getElementById('lb-expensive').innerHTML = top5exp.map((d,i) => lbRowHTML(d,i+1,true)).join('') || '<div style="padding:8px 16px;font-family:var(--mono);font-size:10px;color:var(--muted)">No data</div>';
+  };
+  const nd='<div style="padding:6px 13px;font-family:var(--mono);font-size:10px;color:var(--muted)">No data yet</div>';
+  document.getElementById('lbc').innerHTML=c5.map((d,i)=>row(d,i+1,false)).join('')||nd;
+  document.getElementById('lbe').innerHTML=e5.map((d,i)=>row(d,i+1,true)).join('')||nd;
 }
 
-// ── CONTROLS ──
-function setSector(s) {
-  activeSector = s;
-  // Auto-set slider to sector avg
-  const avgZ = s === 'All'
-    ? (() => {
-        const zvals = ALL_TICKERS.map(t => stockData[t]?.windows[primaryWindow]?.z).filter(z => z != null);
-        return zvals.length ? +(zvals.reduce((a,b)=>a+b,0)/zvals.length).toFixed(2) : 1.0;
-      })()
-    : (sectorAvgZ[s] ?? 1.0);
-  const clamped = Math.max(0, Math.min(2, avgZ));
-  threshold = +clamped.toFixed(2);
-  document.getElementById('sigma-slider').value = threshold;
-  document.getElementById('slider-val').textContent = threshold.toFixed(2) + 'σ';
-  renderAll();
-}
+// Analysis
+function togAn(t){
+  const panel=document.getElementById(`ap-${t}`), tog=document.getElementById(`atog-${t}`);
+  if(!panel||!tog) return;
+  const open=panel.classList.contains('open');
+  if(open){panel.classList.remove('open');tog.classList.remove('open');return;}
+  panel.classList.add('open');tog.classList.add('open');
+  if(panel.dataset.loaded==='true') return;
+  panel.dataset.loaded='true';
 
-function setPrimary(w) {
-  primaryWindow = w;
-  document.querySelectorAll('#win-toggle .win-btn').forEach(b => {
-    b.classList.toggle('active', +b.dataset.w === w);
-  });
-  renderAll();
-}
-
-function setLbWindow(w) {
-  lbWindow = w;
-  document.querySelectorAll('.lb-win-btn').forEach(b => {
-    b.classList.toggle('active', +b.dataset.w === w);
-  });
-  const visibleData = (activeSector === 'All' ? ALL_TICKERS : SECTORS[activeSector] || [])
-    .map(t => stockData[t]).filter(Boolean);
-  renderLeaderboard(visibleData);
-}
-
-function onSliderMove() {
-  threshold = +parseFloat(document.getElementById('sigma-slider').value).toFixed(2);
-  document.getElementById('slider-val').textContent = threshold.toFixed(2) + 'σ';
-  renderAll();
-}
-
-function resetSlider() {
-  setSector(activeSector); // re-triggers auto-set
-}
-
-function filterToExpensive() {
-  // Find first expensive stock and scroll to it
-  const expTicker = ALL_TICKERS.find(t => {
-    const z = stockData[t]?.windows[primaryWindow]?.z;
-    return z !== null && z >= threshold;
-  });
-  if (expTicker) scrollToTicker(expTicker);
-}
-
-function scrollToTicker(ticker) {
-  const el = document.getElementById(`row-${ticker}`);
-  if (el) {
-    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    el.style.background = '#1a2535';
-    setTimeout(() => el.style.background = '', 1200);
-  }
-}
-
-// ── RULES-BASED ANALYSIS (replaces Claude API — blocked by CORS from GitHub Pages) ──
-const analysisCache = {};
-
-function generateAnalysis(ticker) {
-  const d = stockData[ticker];
-  if (!d) return { tag: 'NO DATA', tagStyle: 'color:var(--muted);background:rgba(90,106,122,0.15)', text: 'No data available for this stock.' };
-
-  const { ttmPE, fwdPE, windows, fwdWindows, peSeries, earningsSoon, earningsDate, dq, sector } = d;
-  const pz60 = windows[60]?.z ?? null;
-  const pz30 = windows[30]?.z ?? null;
-  const pz120 = windows[120]?.z ?? null;
-  const fz60 = fwdWindows[60]?.z ?? null;
-  const mean60 = windows[60]?.mean ?? null;
-  const std60 = windows[60]?.std ?? null;
-
-  if (dq === 'none' || ttmPE === null) {
-    return {
-      tag: 'NO DATA', tagStyle: 'color:var(--muted);background:rgba(90,106,122,0.15)',
-      text: `No earnings data available for ${ticker}. This is common for pre-revenue biotech stocks, ETFs, or foreign-listed securities where FMP coverage is limited. Z-score analysis cannot be performed without a positive TTM EPS.`
-    };
-  }
-
-  // Percentile: how often was PE at or above current in 120d window
-  let percentileStr = '';
-  if (peSeries.length >= 20) {
-    const series = peSeries.slice(-120);
-    const above = series.filter(pe => pe >= ttmPE).length;
-    const pct = Math.round((above / series.length) * 100);
-    percentileStr = `Today's PE of ${ttmPE}x is higher than ${pct}% of the past ${series.length} trading days. `;
-  }
-
-  // Window agreement
-  const validZs = [pz30, pz60, pz120].filter(z => z !== null);
-  const allAbove = validZs.length >= 2 && validZs.every(z => z >= threshold);
-  const allBelow = validZs.length >= 2 && validZs.every(z => z < threshold);
-  const mixed = validZs.length >= 2 && !allAbove && !allBelow;
-
-  // TTM vs Forward divergence
-  let fwdSentence = '';
-  if (fwdPE !== null && fz60 !== null && pz60 !== null) {
-    const gap = pz60 - fz60;
-    if (gap > 0.4) fwdSentence = `Forward PE z-score (${fz60 > 0 ? '+' : ''}${fz60}σ) is meaningfully lower than TTM (${pz60 > 0 ? '+' : ''}${pz60}σ), suggesting the market expects strong earnings growth to justify the current price. `;
-    else if (gap < -0.4) fwdSentence = `Forward PE z-score (${fz60 > 0 ? '+' : ''}${fz60}σ) is higher than TTM (${pz60 > 0 ? '+' : ''}${pz60}σ), implying analysts expect earnings to decline — a cautionary signal. `;
-    else fwdSentence = `TTM and Forward PE z-scores are closely aligned (${pz60 > 0?'+':''}${pz60}σ vs ${fz60 > 0?'+':''}${fz60}σ), suggesting the market sees stable earnings ahead. `;
-  } else if (fwdPE === null) {
-    fwdSentence = `No analyst forward estimates are available for ${ticker}, so the signal is based on TTM PE only. `;
-  }
-
-  // Earnings warning
-  let earnSentence = '';
-  if (earningsSoon) earnSentence = `⚠ Earnings are due ${earningsDate} — PE-based signals may shift significantly after the report. `;
-
-  // Main signal sentence
-  let mainSentence = '';
-  let tag = '', tagStyle = '';
-
-  if (pz60 === null) {
-    mainSentence = `Insufficient price history to compute a reliable 60-day z-score for ${ticker}. `;
-    tag = 'LIMITED DATA'; tagStyle = 'color:var(--muted);background:rgba(90,106,122,0.15)';
-  } else if (allAbove) {
-    tag = 'EXPENSIVE'; tagStyle = 'color:var(--red);background:rgba(255,64,96,0.12)';
-    mainSentence = `${ticker} is trading above its rolling average PE across all three timeframes (30/60/120d), indicating a high-conviction expensive signal. ${percentileStr}The 60-day average PE is ${mean60}x with a standard deviation of ${std60}, placing today's PE of ${ttmPE}x at +${pz60}σ. `;
-  } else if (allBelow && pz60 < 0) {
-    tag = 'CHEAP'; tagStyle = 'color:var(--green);background:rgba(46,204,138,0.12)';
-    mainSentence = `${ticker} is trading below its rolling average PE across all three timeframes, a high-conviction cheap signal. ${percentileStr}The 60-day average PE is ${mean60}x, and today's ${ttmPE}x puts it at ${pz60}σ — below its own recent norm. `;
-  } else if (mixed) {
-    tag = 'MIXED'; tagStyle = 'color:var(--amber);background:rgba(240,165,0,0.12)';
-    mainSentence = `${ticker} shows mixed signals across timeframes — the 30d z-score is ${pz30 !== null ? (pz30 > 0?'+':'') + pz30 + 'σ' : 'N/A'}, 60d is ${pz60 !== null ? (pz60 > 0?'+':'') + pz60 + 'σ' : 'N/A'}, and 120d is ${pz120 !== null ? (pz120 > 0?'+':'') + pz120 + 'σ' : 'N/A'}. This divergence means the signal conviction is lower — short-term moves may not reflect longer-term valuation. `;
-  } else {
-    tag = 'FAIR VALUE'; tagStyle = 'color:var(--amber);background:rgba(240,165,0,0.12)';
-    mainSentence = `${ticker} is trading near its rolling average PE. ${percentileStr}At ${ttmPE}x vs a 60-day mean of ${mean60}x (${pz60 > 0?'+':''}${pz60}σ), there is no strong cheap or expensive signal at this time. `;
-  }
-
-  const text = mainSentence + fwdSentence + earnSentence;
-  return { tag, tagStyle, text };
-}
-
-function toggleAnalysis(ticker) {
-  const panel = document.getElementById(`analysis-panel-${ticker}`);
-  const toggle = document.getElementById(`analysis-toggle-${ticker}`);
-  if (!panel || !toggle) return;
-
-  const isOpen = panel.classList.contains('open');
-  if (isOpen) {
-    panel.classList.remove('open');
-    toggle.classList.remove('open');
+  const d=SD[t];
+  if(!d||d.dq==='none'){
+    panel.innerHTML=`<span class="sigtag" style="color:var(--muted);background:rgba(90,106,122,0.15)">NO DATA</span><div>No earnings data for ${t}. Common for pre-revenue biotech, ETFs, and foreign-listed securities.</div>`;
     return;
   }
+  const {ttmPE,fwdPE,wins,fwins,earnSoon,earnDate,pct}=d;
+  const pz=wins[primW]?.z??null, fz=fwins[primW]?.z??null;
+  const m=wins[primW]?.mean, s=wins[primW]?.std;
+  const wl={1:'1-year',3:'3-year',5:'5-year'}[primW];
+  const dc=dayCount(t);
+  const outCnt=[1,3,5].filter(w=>{const z=wins[w]?.z;return z!==null&&z>=thresh;}).length;
 
-  panel.classList.add('open');
-  toggle.classList.add('open');
-  if (panel.dataset.loaded === 'true') return;
+  let tag,ts2;
+  if(pz===null){tag='LIMITED DATA';ts2='color:var(--muted);background:rgba(90,106,122,0.15)';}
+  else if(outCnt>=2){tag='EXPENSIVE';ts2='color:var(--red);background:rgba(255,64,96,0.12)';}
+  else if(pz<0){tag='CHEAP';ts2='color:var(--green);background:rgba(46,204,138,0.12)';}
+  else if(pz<thresh){tag='FAIR VALUE';ts2='color:var(--amber);background:rgba(240,165,0,0.12)';}
+  else{tag='EXPENSIVE';ts2='color:var(--red);background:rgba(255,64,96,0.12)';}
 
-  // Generate instantly (rules-based, no API call needed)
-  const { tag, tagStyle, text } = generateAnalysis(ticker);
-  const d = stockData[ticker];
-  const pz = d?.windows[primaryWindow]?.z ?? null;
-  const fpz = d?.fwdWindows[primaryWindow]?.z ?? null;
+  let txt='';
+  if(pz===null) txt+=`Insufficient history to compute a ${wl} z-score. `;
+  else if(outCnt>=2) txt+=`${t} is trading above its ${wl} average PE across multiple timeframes — high-conviction expensive signal. `;
+  else if(pz<0) txt+=`${t} is trading below its ${wl} average PE of ${m}x (current: ${ttmPE}x, z: ${pz}σ) — cheap by its own history. `;
+  else txt+=`${t} is near its ${wl} average PE of ${m}x (current: ${ttmPE}x, z: ${pz>0?'+':''}${pz}σ). `;
 
-  const metaItems = [
-    pz !== null ? `TTM z: ${pz > 0?'+':''}${pz}σ (${primaryWindow}d)` : 'TTM: no data',
-    fpz !== null ? `Fwd z: ${fpz > 0?'+':''}${fpz}σ` : 'Fwd: no data',
-    d?.ttmPE ? `PE: ${d.ttmPE}x` : '',
-    d?.fwdPE ? `Fwd PE: ${d.fwdPE}x` : '',
-  ].filter(Boolean).join(' · ');
+  if(pct!==null) txt+=`Today's PE of ${ttmPE}x is higher than ${pct}% of its available PE history. `;
 
-  panel.dataset.loaded = 'true';
-  panel.innerHTML = `
-    <span class="signal-tag" style="${tagStyle}">${tag}</span>
-    <div>${text}</div>
-    <div class="analysis-meta">
-      <span>${metaItems}</span>
-      <span style="margin-left:auto">Rules-based · ${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>
-    </div>
-  `;
-}
-
-// ── LOAD ──
-async function initLoad() {
-  stockData = {};
-  sectorAvgZ = {};
-  const btn = document.getElementById('refresh-btn');
-  btn.disabled = true;
-  btn.textContent = '↻ Loading...';
-
-  const loadScreen = document.getElementById('loading-screen');
-  const mainContent = document.getElementById('main-content');
-  loadScreen.classList.remove('hidden');
-  loadScreen.style.opacity = '1';
-  mainContent.style.opacity = '0';
-
-  for (let i = 0; i < ALL_TICKERS.length; i++) {
-    const ticker = ALL_TICKERS[i];
-    document.getElementById('load-ticker').textContent = `Fetching ${ticker}...`;
-    document.getElementById('load-count').textContent = `${i} / ${TOTAL} stocks`;
-    document.getElementById('load-bar').style.width = `${(i/TOTAL)*100}%`;
-
-    const data = await processTicker(ticker);
-    stockData[ticker] = data;
-
-    // Progressive render every 3 tickers
-    if (i % 3 === 0 || i === TOTAL - 1) renderAll();
-
-    if (i < ALL_TICKERS.length - 1) await sleep(80);
+  const vzs=[1,3,5].map(w=>wins[w]?.z).filter(z=>z!==null);
+  if(vzs.length>=2){
+    const agree=vzs.every(z=>z>=thresh)||vzs.every(z=>z<thresh);
+    if(agree) txt+=`All timeframes agree — high-conviction signal. `;
+    else txt+=`Mixed signals across timeframes (${[1,3,5].map(w=>wins[w]?.z!==null?`${w}Y:${wins[w].z>0?'+':''}${wins[w].z}σ`:`${w}Y:N/A`).join(', ')}) — lower conviction. `;
   }
 
-  document.getElementById('load-bar').style.width = '100%';
-  document.getElementById('load-ticker').textContent = 'Complete!';
-  document.getElementById('load-count').textContent = `${TOTAL} / ${TOTAL} stocks`;
+  if(fwdPE!==null&&fz!==null&&pz!==null){
+    const gap=pz-fz;
+    if(gap>0.4) txt+=`Forward PE z (${fz>0?'+':''}${fz}σ) is lower than TTM — market expects earnings growth to close the gap. `;
+    else if(gap<-0.4) txt+=`Forward PE z (${fz>0?'+':''}${fz}σ) is higher than TTM — analysts expect earnings to decline. `;
+    else txt+=`TTM and Forward PE z-scores are aligned — stable earnings expectations. `;
+  } else if(!fwdPE) txt+=`No analyst forward estimates available. `;
 
-  await sleep(400);
-  loadScreen.style.opacity = '0';
-  setTimeout(() => loadScreen.classList.add('hidden'), 400);
-  mainContent.style.opacity = '1';
+  if(earnSoon) txt+=`⚠ Earnings due ${earnDate} — signals may shift after report. `;
+  if(dc<30) txt+=`Daily DB has ${dc} day${dc!==1?'s':''} recorded — currently using annual history. Short-term windows unlock after 30+ days. `;
 
-  const now = new Date();
-  document.getElementById('last-updated').textContent =
-    'Updated ' + now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-  btn.disabled = false;
-  btn.textContent = '↻ Refresh';
+  const meta=[
+    pz!==null?`TTM z: ${pz>0?'+':''}${pz}σ (${wl})`:'TTM: no data',
+    fz!==null?`Fwd z: ${fz>0?'+':''}${fz}σ`:'Fwd: no data',
+    ttmPE?`PE: ${ttmPE}x`:'', fwdPE?`Fwd: ${fwdPE}x`:'', `${dc}d in DB`
+  ].filter(Boolean).join(' · ');
 
+  panel.innerHTML=`<span class="sigtag" style="${ts2}">${tag}</span><div>${txt}</div><div class="ameta"><span>${meta}</span></div>`;
+}
+
+// Controls
+function setSec(s){
+  activeSec=s;
+  const avgZ=s==='All'
+    ?(()=>{const zs=ALL.map(t=>SD[t]?.wins[primW]?.z).filter(z=>z!=null);return zs.length?+(zs.reduce((a,b)=>a+b,0)/zs.length).toFixed(2):1.0;})()
+    :(secAvgZ[s]??1.0);
+  thresh=+Math.max(0,Math.min(2,avgZ)).toFixed(2);
+  document.getElementById('slid').value=thresh;
+  document.getElementById('slval').textContent=thresh.toFixed(2)+'σ';
+  renderAll();
+}
+function setPrimary(w){primW=w;document.querySelectorAll('#wtog .wbtn').forEach(b=>b.classList.toggle('active',+b.dataset.w===w));renderAll();}
+function setLbW(w){lbW=w;document.querySelectorAll('.lbwb').forEach(b=>b.classList.toggle('active',+b.dataset.w===w));const vis=(activeSec==='All'?ALL:SECTORS[activeSec]||[]).map(t=>SD[t]).filter(Boolean);renderLB(vis);}
+function onSl(){thresh=+parseFloat(document.getElementById('slid').value).toFixed(2);document.getElementById('slval').textContent=thresh.toFixed(2)+'σ';renderAll();}
+function nudge(d){const sl=document.getElementById('slid');thresh=+Math.max(0,Math.min(2,thresh+d)).toFixed(2);sl.value=thresh;document.getElementById('slval').textContent=thresh.toFixed(2)+'σ';renderAll();}
+function resetSl(){setSec(activeSec);}
+function jumpExp(){const t=ALL.find(t=>{const z=SD[t]?.wins[primW]?.z;return z!==null&&z>=thresh;});if(t)scrollToRow(t);}
+function scrollToRow(t){const el=document.getElementById(`row-${t}`);if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.style.background='#1a2535';setTimeout(()=>el.style.background='',1200);}}
+function toggleLB(){document.getElementById('lbpanel').classList.toggle('lbopen');}
+
+// Load
+async function initLoad(isRef=false){
+  loadDB();
+  const btn=document.getElementById('rfbtn'); btn.disabled=true; btn.textContent='↻ Loading...';
+  SD={};
+  const ls=document.getElementById('ls'), mc=document.getElementById('mc');
+  ls.classList.remove('hidden'); ls.style.opacity='1'; mc.style.opacity='0';
+  const db0=Math.max(...ALL.map(t=>dayCount(t)),0);
+  document.getElementById('lnote').textContent=db0>0?`Local database: ${db0} day${db0!==1?'s':''} of daily PE recorded`:'First run — bootstrapping from annual PE history';
+
+  for(let i=0;i<ALL.length;i++){
+    const t=ALL[i];
+    document.getElementById('ltick').textContent=`Fetching ${t}...`;
+    document.getElementById('lcnt').textContent=`${i} / ${TOTAL}`;
+    document.getElementById('lbar').style.width=`${(i/TOTAL)*100}%`;
+    SD[t]=await procTicker(t);
+    if(i%4===0||i===TOTAL-1) renderAll();
+    if(i<ALL.length-1) await sleep(100);
+  }
+
+  saveDB();
+  document.getElementById('lbar').style.width='100%';
+  document.getElementById('ltick').textContent='Complete!';
+  document.getElementById('lcnt').textContent=`${TOTAL} / ${TOTAL}`;
+  await sleep(350);
+  ls.style.opacity='0';
+  setTimeout(()=>ls.classList.add('hidden'),400);
+  mc.style.opacity='1';
+  document.getElementById('lup').textContent='Updated '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  btn.disabled=false; btn.textContent='↻ Refresh';
   renderAll();
 }
 
-// Auto-set slider on first load to portfolio avg
-window.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('sigma-slider').value = 1.0;
-  document.getElementById('slider-val').textContent = '1.00σ';
+window.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('slid').value=1.0;
+  document.getElementById('slval').textContent='1.00σ';
   initLoad();
 });
 </script>
 </body>
 </html>
-
-
