@@ -21,7 +21,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
 .lt { font-family: var(--mono); font-size: 13px; color: var(--accent); letter-spacing: 0.15em; text-transform: uppercase; }
 .ltick { font-family: var(--mono); font-size: 11px; color: var(--muted); height: 16px; }
 .lbw { width: 300px; height: 3px; background: var(--border2); border-radius: 2px; }
-.lb { height: 100%; background: var(--accent); border-radius: 2px; width: 0%; transition: width 0.25s ease; }
+.lbar { height: 100%; background: var(--accent); border-radius: 2px; width: 0%; transition: width 0.25s ease; }
 .lc { font-family: var(--mono); font-size: 10px; color: var(--muted); }
 .lnote { font-family: var(--mono); font-size: 10px; color: var(--muted2); max-width: 300px; text-align: center; line-height: 1.5; }
 
@@ -126,6 +126,10 @@ button.rbtn:hover { border-color: var(--accent); color: var(--accent); }
 .pn { color: var(--text); }
 .pz2 { font-size: 9px; padding: 0 3px; }
 
+/* WINDOW BADGE */
+.wbadge { font-family: var(--mono); font-size: 8px; padding: 1px 4px; border-radius: 2px; color: var(--muted2); background: var(--border); margin-left: 2px; }
+.wbadge.live { color: var(--green); background: rgba(46,204,138,0.1); }
+
 /* COVERAGE */
 .covb { width: 54px; flex-shrink: 0; }
 .covl { font-family: var(--mono); font-size: 8px; color: var(--muted2); margin-bottom: 2px; }
@@ -162,9 +166,6 @@ button.lbx:hover { border-color: var(--accent); color: var(--accent); }
 .lbz { font-family: var(--mono); font-size: 11px; }
 .lbfz { font-family: var(--mono); font-size: 9px; color: var(--muted); }
 
-.dot-anim::after { content: '...'; animation: dots 1.2s steps(4,end) infinite; }
-@keyframes dots{0%,20%{content:'.'}40%{content:'..'}60%,80%{content:'...'}100%{content:''}}
-
 footer { padding: 9px 22px; border-top: 1px solid var(--border); font-family: var(--mono); font-size: 9px; color: var(--muted); display: flex; gap: 14px; flex-wrap: wrap; }
 
 /* MOBILE */
@@ -190,7 +191,7 @@ footer { padding: 9px 22px; border-top: 1px solid var(--border); font-family: va
 <div id="ls">
   <div class="lt">PE Z-Score Dashboard</div>
   <div class="ltick" id="ltick">Initializing...</div>
-  <div class="lbw"><div class="lb" id="lbar"></div></div>
+  <div class="lbw"><div class="lbar" id="lbar"></div></div>
   <div class="lc" id="lcnt">0 / 29</div>
   <div class="lnote" id="lnote"></div>
 </div>
@@ -223,9 +224,8 @@ footer { padding: 9px 22px; border-top: 1px solid var(--border); font-family: va
   <div class="wzone">
     <span class="wlbl">PRIMARY</span>
     <div class="wtog" id="wtog">
-      <button class="wbtn" data-w="1" onclick="setPrimary(1)">1Y</button>
-      <button class="wbtn active" data-w="3" onclick="setPrimary(3)">3Y</button>
-      <button class="wbtn" data-w="5" onclick="setPrimary(5)">5Y</button>
+      <button class="wbtn active" data-w="1" onclick="setPrimary(1)">1Y</button>
+      <button class="wbtn" data-w="2" onclick="setPrimary(2)">2Y</button>
     </div>
   </div>
 </div>
@@ -250,7 +250,7 @@ footer { padding: 9px 22px; border-top: 1px solid var(--border); font-family: va
 
 <div class="leg">
   <span style="font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:0.1em">DOTS:</span>
-  <span class="li">● 1Y TTM</span><span class="li">◆ 3Y TTM</span><span class="li">■ 5Y TTM</span>
+  <span class="li">● 1Y TTM</span><span class="li">◆ 2Y TTM</span>
   <span class="li" style="color:var(--muted2)">hollow = Fwd PE</span>
   <span style="margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--muted)">● full &nbsp;◐ TTM only &nbsp;○ no data</span>
 </div>
@@ -262,9 +262,8 @@ footer { padding: 9px 22px; border-top: 1px solid var(--border); font-family: va
       <span class="lbtitle">Rankings</span>
       <div style="display:flex;gap:7px;align-items:center">
         <div class="lbwt">
-          <button class="lbwb" data-w="1" onclick="setLbW(1)">1Y</button>
-          <button class="lbwb active" data-w="3" onclick="setLbW(3)">3Y</button>
-          <button class="lbwb" data-w="5" onclick="setLbW(5)">5Y</button>
+          <button class="lbwb active" data-w="1" onclick="setLbW(1)">1Y</button>
+          <button class="lbwb" data-w="2" onclick="setLbW(2)">2Y</button>
         </div>
         <button class="lbx" onclick="toggleLB()">✕</button>
       </div>
@@ -283,15 +282,16 @@ footer { padding: 9px 22px; border-top: 1px solid var(--border); font-family: va
 </div>
 
 <footer>
-  <span>Data: FMP API · localStorage daily accumulation</span>
-  <span>Z = (PE − mean) ÷ std · Annual history bootstraps daily DB</span>
+  <span>Data: FMP API · GitHub Actions daily snapshot · <span id="dbdays">0</span>d accumulated</span>
+  <span>Z = (PE − mean) ÷ std · Daily repo data preferred over annual bootstrap</span>
 </footer>
 </div>
 
 <script>
 const API_KEY = 'emuhuS5sNwXWTgW8QWqL3Ypqpv4YOutn';
 const BASE = 'https://financialmodelingprep.com/stable';
-const DBK = 'pe_db_v3';
+const DATA_BASE = 'https://raw.githubusercontent.com/scurto36/pe-dashboard/main/data';
+const CACHE_KEY = 'pe_live_v1'; // localStorage for today's live fetch only
 
 const SECTORS = {
   'Tech':     ['MSFT','NVDA','ADBE','CRM','AAPL','AMZN','TSM','ASML','GOOGL','WIX','DELL','PLAB','IFX'],
@@ -305,92 +305,103 @@ const TSEC = {};
 Object.entries(SECTORS).forEach(([s,ts])=>ts.forEach(t=>TSEC[t]=s));
 const ALL = Object.values(SECTORS).flat();
 const TOTAL = ALL.length;
+const WINDOWS = [1, 2]; // years
 
-let SD = {}, activeSec = 'All', primW = 3, lbW = 3, thresh = 1.0, secAvgZ = {}, peDB = {};
+let SD = {}, activeSec = 'All', primW = 1, lbW = 1, thresh = 1.0, secAvgZ = {};
+let repoDaily = {}; // { ticker: [{date, ttmPE, fwdPE}] }
 
 const sleep = ms => new Promise(r=>setTimeout(r,ms));
 const today = () => new Date().toISOString().split('T')[0];
 
-// DB
-function loadDB(){ try{ const r=localStorage.getItem(DBK); peDB=r?JSON.parse(r):{}; }catch{peDB={};} }
-function saveDB(){ try{ localStorage.setItem(DBK,JSON.stringify(peDB)); }catch{} }
-
-function recordDaily(t, pe, fpe){
-  if(!pe) return;
-  if(!peDB[t]) peDB[t]={annual:[],daily:[]};
-  const d=today();
-  peDB[t].daily=peDB[t].daily.filter(x=>x.date!==d);
-  peDB[t].daily.push({date:d,pe,fpe:fpe||null});
-  peDB[t].daily.sort((a,b)=>a.date.localeCompare(b.date));
-  if(peDB[t].daily.length>180) peDB[t].daily=peDB[t].daily.slice(-180);
+// ── REPO DATA ──────────────────────────────────────────────
+async function fetchRepoData(ticker) {
+  try {
+    const r = await fetch(`${DATA_BASE}/${ticker}.json?cb=${Date.now()}`);
+    if (!r.ok) return [];
+    const d = await r.json();
+    return Array.isArray(d.daily) ? d.daily : [];
+  } catch { return []; }
 }
 
-function recordAnnual(t, pts){
-  if(!peDB[t]) peDB[t]={annual:[],daily:[]};
-  if(pts&&pts.length) peDB[t].annual=pts;
+// ── LIVE API ───────────────────────────────────────────────
+async function apiFetch(url) {
+  try { const r=await fetch(url); if(!r.ok) return null; return await r.json(); }
+  catch { return null; }
 }
 
-function getSeries(t, years){
-  const db=peDB[t]; if(!db) return [];
-  const cutoff=new Date(); cutoff.setFullYear(cutoff.getFullYear()-years);
-  const cs=cutoff.toISOString().split('T')[0];
-  const daily=(db.daily||[]).filter(d=>d.date>=cs).map(d=>d.pe).filter(v=>v>0&&v<500);
-  if(daily.length>=3) return daily;
-  const ann=new Date().getFullYear();
-  return (db.annual||[]).filter(d=>d.year>=ann-years).map(d=>d.pe).filter(v=>v>0&&v<500);
-}
-
-function dayCount(t){ return (peDB[t]?.daily||[]).length; }
-
-// API
-async function apiFetch(url){
-  try{ const r=await fetch(url); if(!r.ok) return null; return await r.json(); }catch{ return null; }
-}
-
-async function getRatiosTTM(t){
+async function getRatiosTTM(t) {
   const d=await apiFetch(`${BASE}/ratios-ttm?symbol=${t}&apikey=${API_KEY}`);
   return (Array.isArray(d)&&d[0])?d[0]:null;
 }
 
-async function getAnnualRatios(t){
+async function getAnnualRatios(t) {
   const d=await apiFetch(`${BASE}/ratios?symbol=${t}&limit=6&apikey=${API_KEY}`);
   if(!Array.isArray(d)||!d.length) return [];
   return d.map(x=>({year:new Date(x.date||'').getFullYear(),pe:x.priceToEarningsRatio}))
     .filter(x=>x.pe&&isFinite(x.pe)&&x.pe>0&&x.pe<500).reverse();
 }
 
-async function getQuote(t){
+async function getQuote(t) {
   const d=await apiFetch(`${BASE}/quote?symbol=${t}&apikey=${API_KEY}`);
   return (Array.isArray(d)&&d[0])?d[0]:null;
 }
 
-async function getFwdPE(t, price){
+async function getFwdPE(t, price) {
   if(!price) return null;
-  // Try annual then quarter — endpoint requires period param on Starter plan
-  for(const period of ['annual','quarter']){
-    const d=await apiFetch(`${BASE}/analyst-estimates?symbol=${t}&period=${period}&limit=3&apikey=${API_KEY}`);
-    if(!Array.isArray(d)||!d[0]) continue;
-    // Prefer future-dated estimate, fall back to most recent
-    const now=new Date();
-    const est=d.find(x=>new Date(x.date)>now)||d[0];
-    // Try multiple possible field names FMP uses
-    const eps=est.estimatedEpsAvg||est.estimatedEps||est.epsAvg||est.eps;
-    if(!eps||eps<=0) continue;
-    const fpe=+(price/eps).toFixed(1);
-    if(fpe>0&&fpe<500) return fpe;
-  }
-  return null;
+  const d=await apiFetch(`${BASE}/analyst-estimates?symbol=${t}&period=annual&limit=3&apikey=${API_KEY}`);
+  if(!Array.isArray(d)||!d[0]) return null;
+  const now=new Date();
+  const est=d.find(x=>new Date(x.date)>now)||d[0];
+  const eps=est.estimatedEpsAvg||est.estimatedEps||est.epsAvg||est.eps;
+  if(!eps||eps<=0) return null;
+  const fpe=+(price/eps).toFixed(1);
+  return (fpe>0&&fpe<500)?fpe:null;
 }
 
-async function getEarnings(t){
+async function getEarnings(t) {
   const td=today(), fut=new Date(); fut.setDate(fut.getDate()+45);
   const to=fut.toISOString().split('T')[0];
   const d=await apiFetch(`${BASE}/earnings-calendar?symbol=${t}&from=${td}&to=${to}&apikey=${API_KEY}`);
   return (Array.isArray(d)&&d.length)?d[0].date:null;
 }
 
-// Stats
-function stats(s){
+// ── SERIES BUILDER ─────────────────────────────────────────
+// Prefer repo daily data; fall back to annual history
+function getSeries(ticker, years) {
+  const cutoff = new Date();
+  cutoff.setFullYear(cutoff.getFullYear() - years);
+  const cs = cutoff.toISOString().split('T')[0];
+
+  // Try repo daily first
+  const daily = (repoDaily[ticker] || [])
+    .filter(d => d.date >= cs && d.ttmPE && d.ttmPE > 0 && d.ttmPE < 500)
+    .map(d => d.ttmPE);
+
+  if (daily.length >= 3) return { pts: daily, source: 'daily' };
+
+  // Fall back to annual
+  const ann = new Date().getFullYear();
+  const annPts = (SD[ticker]?._annual || [])
+    .filter(d => d.year >= ann - years)
+    .map(d => d.pe)
+    .filter(v => v > 0 && v < 500);
+
+  return { pts: annPts, source: 'annual' };
+}
+
+function getFwdSeries(ticker, years) {
+  const cutoff = new Date();
+  cutoff.setFullYear(cutoff.getFullYear() - years);
+  const cs = cutoff.toISOString().split('T')[0];
+  return (repoDaily[ticker] || [])
+    .filter(d => d.date >= cs && d.fwdPE && d.fwdPE > 0 && d.fwdPE < 500)
+    .map(d => d.fwdPE);
+}
+
+function dayCount(ticker) { return (repoDaily[ticker] || []).length; }
+
+// ── STATS ──────────────────────────────────────────────────
+function stats(s) {
   if(!s||s.length<2) return null;
   const m=s.reduce((a,b)=>a+b,0)/s.length;
   const v=s.reduce((a,b)=>a+(b-m)**2,0)/s.length;
@@ -407,148 +418,174 @@ function zcol(z){
 }
 function zpct(z){ if(z===null) return null; return ((clamp(z)+1)/4)*100; }
 
-// Process
-async function procTicker(t){
+// ── PROCESS TICKER ─────────────────────────────────────────
+async function procTicker(t) {
   const [ratios, annual, quote, earnDate] = await Promise.all([
     getRatiosTTM(t), getAnnualRatios(t), getQuote(t), getEarnings(t)
   ]);
-  const price=quote?.price??null, name=quote?.name??t;
-  const ttmPE=(()=>{ const v=ratios?.priceToEarningsRatioTTM; return (v&&isFinite(v)&&v>0&&v<500)?+v.toFixed(1):null; })();
-  const fwdPE=await getFwdPE(t,price);
+  const price = quote?.price ?? null;
+  const name = quote?.name ?? t;
+  const ttmPE = (()=>{ const v=ratios?.priceToEarningsRatioTTM; return (v&&isFinite(v)&&v>0&&v<500)?+v.toFixed(1):null; })();
+  const fwdPE = await getFwdPE(t, price);
 
-  recordAnnual(t,annual);
-  recordDaily(t,ttmPE,fwdPE);
+  // Store annual for fallback
+  SD[t] = SD[t] || {};
+  SD[t]._annual = annual;
 
-  const wins={}, fwins={};
-  [1,3,5].forEach(y=>{
-    const s=getSeries(t,y), st=stats(s);
-    wins[y]=st&&ttmPE!==null?{z:zscore(ttmPE,st.mean,st.std),mean:st.mean,std:st.std,pts:s.length}:{z:null,mean:null,std:null,pts:s.length};
-    fwins[y]=fwdPE!==null&&wins[y].mean!==null&&wins[y].std!==null?{z:zscore(fwdPE,wins[y].mean,wins[y].std)}:{z:null};
+  // Merge today's live fetch into repoDaily so today is always current
+  if (ttmPE !== null) {
+    if (!repoDaily[t]) repoDaily[t] = [];
+    repoDaily[t] = repoDaily[t].filter(x => x.date !== today());
+    repoDaily[t].push({ date: today(), ttmPE, fwdPE });
+    repoDaily[t].sort((a,b) => a.date.localeCompare(b.date));
+  }
+
+  // Build windows for [1, 2] years
+  const wins = {}, fwins = {};
+  WINDOWS.forEach(y => {
+    const { pts, source } = getSeries(t, y);
+    const st = stats(pts);
+    wins[y] = st && ttmPE !== null
+      ? { z: zscore(ttmPE, st.mean, st.std), mean: st.mean, std: st.std, pts: pts.length, source }
+      : { z: null, mean: null, std: null, pts: pts.length, source };
+
+    // Forward PE z-score — use TTM mean/std as baseline
+    const fpts = getFwdSeries(t, y);
+    const fst = fpts.length >= 3 ? stats(fpts) : null;
+    if (fwdPE !== null && wins[y].mean !== null && wins[y].std !== null) {
+      // Use fwd-specific stats if available, else use TTM baseline
+      const fm = fst ? fst.mean : wins[y].mean;
+      const fs2 = fst ? fst.std : wins[y].std;
+      fwins[y] = { z: zscore(fwdPE, fm, fs2) };
+    } else {
+      fwins[y] = { z: null };
+    }
   });
 
-  let dq='none';
-  if(ttmPE!==null&&[1,3,5].some(y=>getSeries(t,y).length>=2)) dq=fwdPE!==null?'full':'partial';
-  else if(ttmPE!==null) dq='partial';
+  let dq = 'none';
+  if (ttmPE !== null && WINDOWS.some(y => getSeries(t,y).pts?.length >= 2 || getSeries(t,y).pts >= 2)) dq = fwdPE !== null ? 'full' : 'partial';
+  else if (ttmPE !== null) dq = 'partial';
 
-  let earnSoon=false;
-  if(earnDate){ const df=(new Date(earnDate)-new Date())/86400000; if(df>=0&&df<=30) earnSoon=true; }
+  let earnSoon = false;
+  if (earnDate) { const df=(new Date(earnDate)-new Date())/86400000; if(df>=0&&df<=30) earnSoon=true; }
 
-  let pct=null;
-  const all5=getSeries(t,5);
-  if(ttmPE&&all5.length>=5){ pct=Math.round(all5.filter(p=>p>=ttmPE).length/all5.length*100); }
+  let pct = null;
+  const all2 = getSeries(t, 2).pts;
+  if (ttmPE && all2.length >= 5) pct = Math.round(all2.filter(p=>p>=ttmPE).length/all2.length*100);
 
-  return {ticker:t,name,sector:TSEC[t],ttmPE,fwdPE,price,wins,fwins,dq,earnSoon,earnDate,pct};
+  return { ticker:t, name, sector:TSEC[t], ttmPE, fwdPE, price, wins, fwins, dq, earnSoon, earnDate, pct };
 }
 
-// Render
-function renderAll(){
-  Object.keys(SECTORS).forEach(s=>{
-    const zs=SECTORS[s].map(t=>SD[t]?.wins[primW]?.z).filter(z=>z!=null);
-    secAvgZ[s]=zs.length?+(zs.reduce((a,b)=>a+b,0)/zs.length).toFixed(2):null;
+// ── RENDER ─────────────────────────────────────────────────
+function renderAll() {
+  Object.keys(SECTORS).forEach(s => {
+    const zs = SECTORS[s].map(t=>SD[t]?.wins[primW]?.z).filter(z=>z!=null);
+    secAvgZ[s] = zs.length ? +(zs.reduce((a,b)=>a+b,0)/zs.length).toFixed(2) : null;
   });
-  const allZ=ALL.map(t=>SD[t]?.wins[primW]?.z).filter(z=>z!=null);
-  const pavgZ=allZ.length?+(allZ.reduce((a,b)=>a+b,0)/allZ.length).toFixed(2):null;
-  const vis=(activeSec==='All'?ALL:SECTORS[activeSec]||[]).map(t=>SD[t]).filter(Boolean);
+  const allZ = ALL.map(t=>SD[t]?.wins[primW]?.z).filter(z=>z!=null);
+  const pavgZ = allZ.length ? +(allZ.reduce((a,b)=>a+b,0)/allZ.length).toFixed(2) : null;
+  const vis = (activeSec==='All' ? ALL : SECTORS[activeSec]||[]).map(t=>SD[t]).filter(Boolean);
 
-  const cheap=vis.filter(d=>{const z=d.wins[primW]?.z;return z!==null&&z<thresh;}).length;
-  const exp=vis.filter(d=>{const z=d.wins[primW]?.z;return z!==null&&z>=thresh;}).length;
-  const na=vis.filter(d=>d.wins[primW]?.z===null).length;
-  const es=vis.filter(d=>d.earnSoon).length;
+  const cheap = vis.filter(d=>{const z=d.wins[primW]?.z;return z!==null&&z<thresh;}).length;
+  const exp   = vis.filter(d=>{const z=d.wins[primW]?.z;return z!==null&&z>=thresh;}).length;
+  const na    = vis.filter(d=>d.wins[primW]?.z===null).length;
+  const es    = vis.filter(d=>d.earnSoon).length;
 
-  document.getElementById('st').textContent=vis.length;
-  document.getElementById('saz').textContent=pavgZ!==null?pavgZ+'σ':'—';
-  document.getElementById('sch').textContent=cheap;
-  document.getElementById('sex').textContent=exp;
-  document.getElementById('sea').textContent=es;
-  document.getElementById('sna').textContent=na;
+  document.getElementById('st').textContent  = vis.length;
+  document.getElementById('saz').textContent = pavgZ!==null ? pavgZ+'σ' : '—';
+  document.getElementById('sch').textContent = cheap;
+  document.getElementById('sex').textContent = exp;
+  document.getElementById('sea').textContent = es;
+  document.getElementById('sna').textContent = na;
 
-  const ab=document.getElementById('ab');
+  const ab = document.getElementById('ab');
   if(exp>0){ ab.style.display='block'; document.getElementById('abtxt').textContent=`${exp} stock${exp>1?'s':''} above ${thresh.toFixed(2)}σ`; }
   else ab.style.display='none';
 
-  const cavgZ=activeSec==='All'?pavgZ:secAvgZ[activeSec];
-  document.getElementById('savgind').textContent=cavgZ!==null?`${activeSec==='All'?'Portfolio':activeSec} avg: ${cavgZ>0?'+':''}${cavgZ}σ`:'';
+  const cavgZ = activeSec==='All' ? pavgZ : secAvgZ[activeSec];
+  document.getElementById('savgind').textContent = cavgZ!==null ? `${activeSec==='All'?'Portfolio':activeSec} avg: ${cavgZ>0?'+':''}${cavgZ}σ` : '';
 
-  const maxDays=Math.max(...ALL.map(t=>dayCount(t)),0);
-  document.getElementById('dbb').textContent=`DB: ${maxDays}d`;
+  const maxDays = Math.max(...ALL.map(t=>dayCount(t)), 0);
+  document.getElementById('dbb').textContent = `DB: ${maxDays}d`;
+  document.getElementById('dbdays').textContent = maxDays;
 
   renderTabs(); renderList(); renderLB(vis);
 }
 
-function renderTabs(){
-  const el=document.getElementById('stabs');
-  el.innerHTML=['All',...Object.keys(SECTORS)].map(s=>{
-    const z=s==='All'?null:secAvgZ[s];
-    const zs=z!==null?` <span class="sz" style="color:${zcol(z)}">${z>0?'+':''}${z}σ</span>`:'';
+function renderTabs() {
+  const el = document.getElementById('stabs');
+  el.innerHTML = ['All',...Object.keys(SECTORS)].map(s => {
+    const z = s==='All' ? null : secAvgZ[s];
+    const zs = z!==null ? ` <span class="sz" style="color:${zcol(z)}">${z>0?'+':''}${z}σ</span>` : '';
     return `<div class="stab ${activeSec===s?'active':''}" onclick="setSec('${s}')">${s}${zs}</div>`;
   }).join('');
 }
 
-function renderList(){
-  const el=document.getElementById('slist');
-  const secs=activeSec==='All'?Object.keys(SECTORS):[activeSec];
-  let html='';
-  secs.forEach(sec=>{
-    const ts=SECTORS[sec].filter(t=>SD[t]); if(!ts.length) return;
+function renderList() {
+  const el = document.getElementById('slist');
+  const secs = activeSec==='All' ? Object.keys(SECTORS) : [activeSec];
+  let html = '';
+  secs.forEach(sec => {
+    const ts = SECTORS[sec].filter(t=>SD[t]); if(!ts.length) return;
     const az=secAvgZ[sec], azc=az!==null?zcol(az):'var(--muted)', azs=az!==null?`${az>0?'+':''}${az}σ avg`:'— avg';
-    html+=`<div><div class="shdr"><span class="sname">${sec}</span><span class="savgz" style="color:${azc}">${azs}</span><span class="scnt">${ts.length} stocks</span></div>`;
+    html += `<div><div class="shdr"><span class="sname">${sec}</span><span class="savgz" style="color:${azc}">${azs}</span><span class="scnt">${ts.length} stocks</span></div>`;
     ts.slice().sort((a,b)=>{const za=SD[a]?.wins[primW]?.z??99,zb=SD[b]?.wins[primW]?.z??99;return za-zb;})
       .forEach(t=>{ html+=renderRow(SD[t]); });
-    html+='</div>';
+    html += '</div>';
   });
-  el.innerHTML=html;
+  el.innerHTML = html;
 }
 
-function renderRow(d){
-  const {ticker:t,name,ttmPE,fwdPE,wins,fwins,dq,earnSoon,earnDate,pct}=d;
-  const pz=wins[primW]?.z??null;
-  const outCnt=[1,3,5].filter(w=>{const z=wins[w]?.z;return z!==null&&z>=thresh;}).length;
+function renderRow(d) {
+  const {ticker:t,name,ttmPE,fwdPE,wins,fwins,dq,earnSoon,earnDate,pct} = d;
+  const pz = wins[primW]?.z ?? null;
+  const outCnt = WINDOWS.filter(w=>{const z=wins[w]?.z;return z!==null&&z>=thresh;}).length;
   let rc='',tc='';
   if(outCnt>=2){rc='sex';tc='exp';}
   else if(outCnt===1){tc='amb';}
   else if(pz!==null&&pz<0){rc='sch';tc='cheap';}
 
-  const dqc=dq==='full'?'dqf':dq==='partial'?'dqp':'dqn';
-  const dqtip=dq==='full'?'Full data':dq==='partial'?'TTM only':'No PE data';
-  const eb=earnSoon?`<span class="ebdg" title="Earnings: ${earnDate}">E</span>`:'';
-  const tpct=((thresh+1)/4)*100;
+  const dqc = dq==='full'?'dqf':dq==='partial'?'dqp':'dqn';
+  const dqtip = dq==='full'?'Full data':dq==='partial'?'TTM only':'No PE data';
+  const eb = earnSoon ? `<span class="ebdg" title="Earnings: ${earnDate}">E</span>` : '';
+  const tpct = ((thresh+1)/4)*100;
 
-  let dots=`<div class="btrack"></div><div class="tline" style="left:${tpct}%"></div>`;
-  const wl={1:'1Y',3:'3Y',5:'5Y'};
-  [1,3,5].forEach(w=>{
+  let dots = `<div class="btrack"></div><div class="tline" style="left:${tpct}%"></div>`;
+  const wl = {1:'1Y',2:'2Y'};
+
+  WINDOWS.forEach(w => {
     const wz=wins[w]?.z??null, fz=fwins[w]?.z??null, ip=w===primW;
-    const m=wins[w]?.mean, s=wins[w]?.std;
+    const m=wins[w]?.mean, s=wins[w]?.std, src=wins[w]?.source;
     if(wz!==null){
       const pp=zpct(wz), col=zcol(wz);
-      const tip=`${t} · ${wl[w]} TTM\nZ: ${wz>0?'+':''}${wz}σ  PE: ${ttmPE}x\n${wl[w]} mean: ${m}x  std: ${s}\n${pct!==null?`Higher than ${pct}% of history`:''}`;
+      const srcLabel = src==='daily' ? '(live daily)' : '(annual hist)';
+      const tip=`${t} · ${wl[w]} TTM ${srcLabel}\nZ: ${wz>0?'+':''}${wz}σ  PE: ${ttmPE}x\n${wl[w]} mean: ${m}x  std: ${s}\n${pct!==null?`Higher than ${pct}% of history`:''}`;
       let sh;
       if(w===1) sh=`<circle cx="5" cy="5" r="${ip?4:3}" fill="${col}" ${!ip?'opacity="0.5"':''}/>`;
-      else if(w===3) sh=`<polygon points="5,${ip?1:1.5} ${ip?9:8.5},5 5,${ip?9:8.5} ${ip?1:1.5},5" fill="${col}" ${!ip?'opacity="0.5"':''}/>`;
-      else sh=`<rect x="${ip?1:1.5}" y="${ip?1:1.5}" width="${ip?8:7}" height="${ip?8:7}" fill="${col}" ${!ip?'opacity="0.5"':''}/>`;
-      dots+=`<div class="zdot" style="left:${pp}%"><svg width="10" height="10" viewBox="0 0 10 10">${sh}</svg><span class="tip">${tip}</span></div>`;
+      else sh=`<polygon points="5,${ip?1:1.5} ${ip?9:8.5},5 5,${ip?9:8.5} ${ip?1:1.5},5" fill="${col}" ${!ip?'opacity="0.5"':''}/>`;
+      dots += `<div class="zdot" style="left:${pp}%"><svg width="10" height="10" viewBox="0 0 10 10">${sh}</svg><span class="tip">${tip}</span></div>`;
     }
     if(fz!==null){
       const fp=zpct(fz), fc=zcol(fz);
       const ftip=`${t} · ${wl[w]} Fwd\nZ: ${fz>0?'+':''}${fz}σ  Fwd PE: ${fwdPE}x\n${wl[w]} mean: ${m}x`;
       let fs;
       if(w===1) fs=`<circle cx="5" cy="5" r="3.5" fill="none" stroke="${fc}" stroke-width="1.5" ${!ip?'opacity="0.4"':''}/>`;
-      else if(w===3) fs=`<polygon points="5,1.5 8.5,5 5,8.5 1.5,5" fill="none" stroke="${fc}" stroke-width="1.5" ${!ip?'opacity="0.4"':''}/>`;
-      else fs=`<rect x="1.5" y="1.5" width="7" height="7" fill="none" stroke="${fc}" stroke-width="1.5" ${!ip?'opacity="0.4"':''}/>`;
-      dots+=`<div class="zdot" style="left:${fp}%;margin-top:3px"><svg width="10" height="10" viewBox="0 0 10 10">${fs}</svg><span class="tip">${ftip}</span></div>`;
+      else fs=`<polygon points="5,1.5 8.5,5 5,8.5 1.5,5" fill="none" stroke="${fc}" stroke-width="1.5" ${!ip?'opacity="0.4"':''}/>`;
+      dots += `<div class="zdot" style="left:${fp}%;margin-top:3px"><svg width="10" height="10" viewBox="0 0 10 10">${fs}</svg><span class="tip">${ftip}</span></div>`;
       if(wz!==null&&Math.abs(fz-wz)>0.25){
         const ap=(zpct(wz)+zpct(fz))/2, ar=fz<wz?'↓':'↑', ac=fz<wz?'var(--green)':'var(--red)';
-        dots+=`<div class="garrow" style="left:${ap}%;color:${ac}">${ar}</div>`;
+        dots += `<div class="garrow" style="left:${ap}%;color:${ac}">${ar}</div>`;
       }
     }
   });
 
-  const pzs=pz!==null?`${pz>0?'+':''}${pz}σ`:'—';
-  const fpz=fwins[primW]?.z??null, fpzs=fpz!==null?`${fpz>0?'+':''}${fpz}σ`:'—';
-  const pvh=`<div class="pr2"><span class="pl">TTM</span><span class="pn">${ttmPE!==null?ttmPE+'x':'—'}</span><span class="pz2" style="color:${zcol(pz)}">${pzs}</span></div>
+  const pzs = pz!==null ? `${pz>0?'+':''}${pz}σ` : '—';
+  const fpz = fwins[primW]?.z??null, fpzs = fpz!==null ? `${fpz>0?'+':''}${fpz}σ` : '—';
+  const pvh = `<div class="pr2"><span class="pl">TTM</span><span class="pn">${ttmPE!==null?ttmPE+'x':'—'}</span><span class="pz2" style="color:${zcol(pz)}">${pzs}</span></div>
     <div class="pr2"><span class="pl" style="color:var(--muted2)">Fwd</span><span class="pn" style="color:var(--muted)">${fwdPE!==null?fwdPE+'x':'—'}</span><span class="pz2" style="color:${zcol(fpz)}">${fpzs}</span></div>`;
 
-  const dc=dayCount(t), cp=Math.min(dc/120*100,100);
-  const covh=`<div class="covb"><div class="covl">${dc}d</div><div class="covt"><div class="covf" style="width:${cp}%"></div></div></div>`;
+  const dc = dayCount(t), cp = Math.min(dc/120*100,100);
+  const covh = `<div class="covb"><div class="covl">${dc}d</div><div class="covt"><div class="covf" style="width:${cp}%"></div></div></div>`;
 
   return `<div class="srw" id="wrap-${t}">
     <div class="sr ${rc}" id="row-${t}">
@@ -564,8 +601,8 @@ function renderRow(d){
   </div>`;
 }
 
-function renderLB(vis){
-  const ranked=vis.filter(d=>d.fwins[lbW]?.z!==null).sort((a,b)=>(a.fwins[lbW].z??99)-(b.fwins[lbW].z??99));
+function renderLB(vis) {
+  const ranked = vis.filter(d=>d.fwins[lbW]?.z!==null).sort((a,b)=>(a.fwins[lbW].z??99)-(b.fwins[lbW].z??99));
   const c5=ranked.slice(0,5), e5=ranked.slice(-5).reverse();
   const row=(d,i,isE)=>{
     const fz=d.fwins[lbW]?.z??null, tz=d.wins[lbW]?.z??null;
@@ -576,13 +613,13 @@ function renderLB(vis){
       <span class="lbz" style="color:${col}">${fz!==null?`${fz>0?'+':''}${fz}σ`:'—'}</span>
     </div>`;
   };
-  const nd='<div style="padding:6px 13px;font-family:var(--mono);font-size:10px;color:var(--muted)">No data yet</div>';
-  document.getElementById('lbc').innerHTML=c5.map((d,i)=>row(d,i+1,false)).join('')||nd;
-  document.getElementById('lbe').innerHTML=e5.map((d,i)=>row(d,i+1,true)).join('')||nd;
+  const nd = '<div style="padding:6px 13px;font-family:var(--mono);font-size:10px;color:var(--muted)">No data yet</div>';
+  document.getElementById('lbc').innerHTML = c5.map((d,i)=>row(d,i+1,false)).join('') || nd;
+  document.getElementById('lbe').innerHTML = e5.map((d,i)=>row(d,i+1,true)).join('')  || nd;
 }
 
-// Analysis
-function togAn(t){
+// ── ANALYSIS PANEL ─────────────────────────────────────────
+function togAn(t) {
   const panel=document.getElementById(`ap-${t}`), tog=document.getElementById(`atog-${t}`);
   if(!panel||!tog) return;
   const open=panel.classList.contains('open');
@@ -598,10 +635,10 @@ function togAn(t){
   }
   const {ttmPE,fwdPE,wins,fwins,earnSoon,earnDate,pct}=d;
   const pz=wins[primW]?.z??null, fz=fwins[primW]?.z??null;
-  const m=wins[primW]?.mean, s=wins[primW]?.std;
-  const wl={1:'1-year',3:'3-year',5:'5-year'}[primW];
+  const m=wins[primW]?.mean, s=wins[primW]?.std, src=wins[primW]?.source;
+  const wl={1:'1-year',2:'2-year'}[primW];
   const dc=dayCount(t);
-  const outCnt=[1,3,5].filter(w=>{const z=wins[w]?.z;return z!==null&&z>=thresh;}).length;
+  const outCnt=WINDOWS.filter(w=>{const z=wins[w]?.z;return z!==null&&z>=thresh;}).length;
 
   let tag,ts2;
   if(pz===null){tag='LIMITED DATA';ts2='color:var(--muted);background:rgba(90,106,122,0.15)';}
@@ -611,18 +648,20 @@ function togAn(t){
   else{tag='EXPENSIVE';ts2='color:var(--red);background:rgba(255,64,96,0.12)';}
 
   let txt='';
+  const srcNote = src==='daily' ? `(${dc} daily observations)` : `(annual history bootstrap)`;
+
   if(pz===null) txt+=`Insufficient history to compute a ${wl} z-score. `;
-  else if(outCnt>=2) txt+=`${t} is trading above its ${wl} average PE across multiple timeframes — high-conviction expensive signal. `;
-  else if(pz<0) txt+=`${t} is trading below its ${wl} average PE of ${m}x (current: ${ttmPE}x, z: ${pz}σ) — cheap by its own history. `;
-  else txt+=`${t} is near its ${wl} average PE of ${m}x (current: ${ttmPE}x, z: ${pz>0?'+':''}${pz}σ). `;
+  else if(outCnt>=2) txt+=`${t} is trading above its ${wl} average PE across both timeframes — high-conviction expensive signal ${srcNote}. `;
+  else if(pz<0) txt+=`${t} is trading below its ${wl} average PE of ${m}x (current: ${ttmPE}x, z: ${pz}σ) ${srcNote} — cheap by its own history. `;
+  else txt+=`${t} is near its ${wl} average PE of ${m}x (current: ${ttmPE}x, z: ${pz>0?'+':''}${pz}σ) ${srcNote}. `;
 
   if(pct!==null) txt+=`Today's PE of ${ttmPE}x is higher than ${pct}% of its available PE history. `;
 
-  const vzs=[1,3,5].map(w=>wins[w]?.z).filter(z=>z!==null);
+  const vzs=WINDOWS.map(w=>wins[w]?.z).filter(z=>z!==null);
   if(vzs.length>=2){
     const agree=vzs.every(z=>z>=thresh)||vzs.every(z=>z<thresh);
-    if(agree) txt+=`All timeframes agree — high-conviction signal. `;
-    else txt+=`Mixed signals across timeframes (${[1,3,5].map(w=>wins[w]?.z!==null?`${w}Y:${wins[w].z>0?'+':''}${wins[w].z}σ`:`${w}Y:N/A`).join(', ')}) — lower conviction. `;
+    if(agree) txt+=`Both timeframes agree — high-conviction signal. `;
+    else txt+=`Mixed signals across timeframes (${WINDOWS.map(w=>wins[w]?.z!==null?`${w}Y:${wins[w].z>0?'+':''}${wins[w].z}σ`:`${w}Y:N/A`).join(', ')}) — lower conviction. `;
   }
 
   if(fwdPE!==null&&fz!==null&&pz!==null){
@@ -633,18 +672,19 @@ function togAn(t){
   } else if(!fwdPE) txt+=`No analyst forward estimates available. `;
 
   if(earnSoon) txt+=`⚠ Earnings due ${earnDate} — signals may shift after report. `;
-  if(dc<30) txt+=`Daily DB has ${dc} day${dc!==1?'s':''} recorded — currently using annual history. Short-term windows unlock after 30+ days. `;
+  if(dc<30) txt+=`Daily database has ${dc} day${dc!==1?'s':''} recorded — z-scores currently using annual history bootstrap. Live 30d window unlocks after 30 trading days. `;
 
   const meta=[
     pz!==null?`TTM z: ${pz>0?'+':''}${pz}σ (${wl})`:'TTM: no data',
     fz!==null?`Fwd z: ${fz>0?'+':''}${fz}σ`:'Fwd: no data',
-    ttmPE?`PE: ${ttmPE}x`:'', fwdPE?`Fwd: ${fwdPE}x`:'', `${dc}d in DB`
+    ttmPE?`PE: ${ttmPE}x`:'', fwdPE?`Fwd: ${fwdPE}x`:'',
+    `${dc}d in repo`, src==='daily'?'✓ live data':'~ annual bootstrap'
   ].filter(Boolean).join(' · ');
 
   panel.innerHTML=`<span class="sigtag" style="${ts2}">${tag}</span><div>${txt}</div><div class="ameta"><span>${meta}</span></div>`;
 }
 
-// Controls
+// ── CONTROLS ───────────────────────────────────────────────
 function setSec(s){
   activeSec=s;
   const avgZ=s==='All'
@@ -664,19 +704,31 @@ function jumpExp(){const t=ALL.find(t=>{const z=SD[t]?.wins[primW]?.z;return z!=
 function scrollToRow(t){const el=document.getElementById(`row-${t}`);if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.style.background='#1a2535';setTimeout(()=>el.style.background='',1200);}}
 function toggleLB(){document.getElementById('lbpanel').classList.toggle('lbopen');}
 
-// Load
-async function initLoad(isRef=false){
-  loadDB();
+// ── LOAD ───────────────────────────────────────────────────
+async function initLoad(isRef=false) {
   const btn=document.getElementById('rfbtn'); btn.disabled=true; btn.textContent='↻ Loading...';
-  SD={};
+  SD={}; repoDaily={};
   const ls=document.getElementById('ls'), mc=document.getElementById('mc');
   ls.classList.remove('hidden'); ls.style.opacity='1'; mc.style.opacity='0';
-  const db0=Math.max(...ALL.map(t=>dayCount(t)),0);
-  document.getElementById('lnote').textContent=db0>0?`Local database: ${db0} day${db0!==1?'s':''} of daily PE recorded`:'First run — bootstrapping from annual PE history';
 
+  // Phase 1: fetch all repo JSON files in parallel (fast)
+  document.getElementById('ltick').textContent='Loading repo history...';
+  document.getElementById('lnote').textContent='Fetching daily PE database from GitHub...';
+  const repoFetches = ALL.map(async t => {
+    const data = await fetchRepoData(t);
+    repoDaily[t] = data;
+  });
+  await Promise.all(repoFetches);
+
+  const maxDays = Math.max(...ALL.map(t=>dayCount(t)), 0);
+  document.getElementById('lnote').textContent = maxDays > 0
+    ? `Repo database: ${maxDays} day${maxDays!==1?'s':''} of daily PE loaded`
+    : 'First run — bootstrapping from annual PE history';
+
+  // Phase 2: fetch live data ticker by ticker
   for(let i=0;i<ALL.length;i++){
     const t=ALL[i];
-    document.getElementById('ltick').textContent=`Fetching ${t}...`;
+    document.getElementById('ltick').textContent=`Live fetch: ${t}...`;
     document.getElementById('lcnt').textContent=`${i} / ${TOTAL}`;
     document.getElementById('lbar').style.width=`${(i/TOTAL)*100}%`;
     SD[t]=await procTicker(t);
@@ -684,7 +736,6 @@ async function initLoad(isRef=false){
     if(i<ALL.length-1) await sleep(100);
   }
 
-  saveDB();
   document.getElementById('lbar').style.width='100%';
   document.getElementById('ltick').textContent='Complete!';
   document.getElementById('lcnt').textContent=`${TOTAL} / ${TOTAL}`;
