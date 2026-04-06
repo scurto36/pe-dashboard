@@ -4,7 +4,23 @@
     {
       "date": "2026-04-06",
       "ttmPE": 28.47,
-      "fwdPE": 16.9
+      "fwdPE": 23.171491925674115,
+      "pegTTM": null,
+      "evEbitdaTTM": 18.4162,
+      "epsGrowthTTMYoy": -2.17,
+      "epsGrowth3Y": 16.34,
+      "revenueGrowthTTM": 10.75,
+      "grossMarginTTM": null,
+      "netProfitMarginTTM": 24.93,
+      "roeTTM": 13.05,
+      "beta": 0.7474789,
+      "week52High": 95.91,
+      "week52Low": 61.72,
+      "peCrossCheck": {
+        "fhTTMPE": 28.3992,
+        "divergence": 0.002,
+        "flagged": false
+      }
     }
   ]
 }
