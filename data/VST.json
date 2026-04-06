@@ -3,7 +3,7 @@
   "daily": [
     {
       "date": "2026-04-06",
-      "ttmPE": 54.42,
+      "ttmPE": 54.63,
       "fwdPE": 17.542041780878108,
       "pegTTM": null,
       "evEbitdaTTM": 16.9799,
@@ -18,7 +18,7 @@
       "week52Low": 90.51,
       "peCrossCheck": {
         "fhTTMPE": 53.9626,
-        "divergence": 0.008,
+        "divergence": 0.012,
         "flagged": false
       }
     }
