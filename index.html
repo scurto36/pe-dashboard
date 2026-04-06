@@ -15,7 +15,6 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; overflow-x: hidden; }
 
-/* LOADING */
 #ls { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; transition: opacity 0.4s; }
 #ls.hidden { opacity: 0; pointer-events: none; }
 .lt { font-family: var(--mono); font-size: 13px; color: var(--accent); letter-spacing: 0.15em; text-transform: uppercase; }
@@ -25,7 +24,6 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
 .lc { font-family: var(--mono); font-size: 10px; color: var(--muted); }
 .lnote { font-family: var(--mono); font-size: 10px; color: var(--muted2); max-width: 300px; text-align: center; line-height: 1.5; }
 
-/* HEADER */
 header { padding: 14px 22px 11px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .logo { font-family: var(--mono); font-size: 13px; font-weight: 600; color: var(--accent); letter-spacing: 0.12em; text-transform: uppercase; }
 #lup { font-family: var(--mono); font-size: 10px; color: var(--muted); }
@@ -35,19 +33,16 @@ button.hbtn { background: none; border: 1px solid var(--border2); color: var(--m
 button.hbtn:hover { border-color: var(--accent); color: var(--accent); }
 button.hbtn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-/* SUMMARY */
 .sum { display: flex; border-bottom: 1px solid var(--border); overflow-x: auto; }
 .si { flex: 1; min-width: 90px; padding: 10px 14px; border-right: 1px solid var(--border); }
 .si:last-child { border-right: none; }
 .sl { font-family: var(--mono); font-size: 9px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
 .sv { font-family: var(--mono); font-size: 15px; font-weight: 500; }
-.sv.g { color: var(--green); } .sv.r { color: var(--red); } .sv.a { color: var(--amber); } .sv.b { color: var(--accent); }
+.sv.g{color:var(--green)} .sv.r{color:var(--red)} .sv.a{color:var(--amber)} .sv.b{color:var(--accent)}
 
-/* ALERT */
 #ab { display: none; padding: 6px 22px; background: rgba(255,64,96,0.08); border-bottom: 1px solid rgba(255,64,96,0.2); font-family: var(--mono); font-size: 11px; color: var(--red); cursor: pointer; }
 #ab:hover { background: rgba(255,64,96,0.12); }
 
-/* CONTROLS */
 .ctrl { display: flex; align-items: stretch; border-bottom: 1px solid var(--border); }
 .stabs { display: flex; flex: 1; overflow-x: auto; }
 .stab { font-family: var(--mono); font-size: 11px; padding: 9px 13px; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; transition: all 0.12s; border-right: 1px solid var(--border); user-select: none; }
@@ -61,7 +56,6 @@ button.hbtn:disabled { opacity: 0.4; cursor: not-allowed; }
 .wbtn:last-child { border-right: none; }
 .wbtn.active { background: var(--accent); color: white; }
 
-/* SLIDER */
 .slzone { padding: 11px 22px; border-bottom: 1px solid var(--border); background: var(--bg2); display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 .sllbl { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.07em; text-transform: uppercase; white-space: nowrap; }
 .slwrap { flex: 1; min-width: 100px; position: relative; height: 34px; display: flex; align-items: center; }
@@ -78,38 +72,38 @@ input[type=range].slinput::-webkit-slider-thumb { -webkit-appearance: none; widt
 button.rbtn { background: none; border: 1px solid var(--border2); color: var(--muted); font-family: var(--mono); font-size: 10px; padding: 4px 9px; cursor: pointer; transition: all 0.12s; white-space: nowrap; }
 button.rbtn:hover { border-color: var(--accent); color: var(--accent); }
 
-/* LEGEND */
 .leg { display: flex; gap: 14px; padding: 6px 22px; border-bottom: 1px solid var(--border); align-items: center; flex-wrap: wrap; }
 .li { display: flex; align-items: center; gap: 5px; font-family: var(--mono); font-size: 10px; color: var(--muted); }
 
-/* LAYOUT */
 .layout { display: flex; min-height: calc(100vh - 280px); }
 .slist { flex: 1; overflow-y: auto; }
 
-/* SECTOR */
 .shdr { display: flex; align-items: center; gap: 10px; padding: 7px 22px 5px; background: var(--bg2); border-bottom: 1px solid var(--border); border-top: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
 .sname { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.13em; text-transform: uppercase; font-weight: 500; }
 .savgz { font-family: var(--mono); font-size: 10px; padding: 1px 6px; border-radius: 2px; }
 .scnt { font-family: var(--mono); font-size: 9px; color: var(--muted2); margin-left: auto; }
 
-/* STOCK ROW */
 .srw { border-bottom: 1px solid var(--border); }
 .sr { display: flex; align-items: center; padding: 8px 22px; gap: 9px; border-left: 3px solid transparent; transition: background 0.1s, border-left-color 0.2s; }
 .sr:hover { background: #0f1520; }
-.sr.sch { border-left-color: var(--green); }
-.sr.sex { border-left-color: var(--red); animation: pr 2s ease-in-out infinite; }
+.sr.sch  { border-left-color: var(--green); }
+.sr.sex  { border-left-color: var(--red); animation: pr 2s ease-in-out infinite; }
+.sr.sgrow{ border-left-color: var(--amber); }
 @keyframes pr { 0%,100%{border-left-color:var(--red)}50%{border-left-color:rgba(255,64,96,0.2)} }
 
 .sinf { width: 130px; flex-shrink: 0; }
 .stk { font-family: var(--mono); font-size: 13px; font-weight: 500; letter-spacing: 0.06em; }
-.stk.cheap{color:var(--green)} .stk.exp{color:var(--red)} .stk.amb{color:var(--amber)}
+.stk.cheap{color:var(--green)} .stk.exp{color:var(--red)} .stk.amb{color:var(--amber)} .stk.grow{color:var(--amber)}
 .snm { font-size: 10px; color: var(--muted); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 125px; }
 
 .dqd { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-.dqf{background:var(--green);opacity:0.7} .dqp{background:var(--amber);opacity:0.7} .dqn{background:var(--muted);opacity:0.35}
+.dqf { background: var(--green); opacity: 0.7; }
+.dqp { background: var(--amber); opacity: 0.7; }
+.dqx { background: var(--amber); opacity: 0.9; box-shadow: 0 0 4px var(--amber); }
+.dqn { background: var(--muted); opacity: 0.35; }
+
 .ebdg { font-family: var(--mono); font-size: 9px; padding: 1px 5px; background: rgba(240,165,0,0.15); color: var(--amber); border-radius: 2px; flex-shrink: 0; }
 
-/* BAR */
 .bzone { flex: 1; position: relative; height: 34px; display: flex; align-items: center; min-width: 0; }
 .btrack { position: absolute; left: 0; right: 0; height: 2px; background: var(--border2); border-radius: 1px; }
 .tline { position: absolute; top: 3px; bottom: 3px; width: 1px; border-left: 1px dashed rgba(255,255,255,0.16); pointer-events: none; }
@@ -119,24 +113,17 @@ button.rbtn:hover { border-color: var(--accent); color: var(--accent); }
 .zdot:hover .tip { display: block; }
 .garrow { position: absolute; top: 50%; transform: translateY(-50%); font-size: 9px; pointer-events: none; opacity: 0.6; }
 
-/* PE VALUES */
 .peval { width: 150px; flex-shrink: 0; display: flex; flex-direction: column; gap: 2px; font-family: var(--mono); font-size: 10px; }
 .pr2 { display: flex; gap: 6px; align-items: center; }
 .pl { color: var(--muted); width: 26px; }
 .pn { color: var(--text); }
 .pz2 { font-size: 9px; padding: 0 3px; }
 
-/* WINDOW BADGE */
-.wbadge { font-family: var(--mono); font-size: 8px; padding: 1px 4px; border-radius: 2px; color: var(--muted2); background: var(--border); margin-left: 2px; }
-.wbadge.live { color: var(--green); background: rgba(46,204,138,0.1); }
-
-/* COVERAGE */
 .covb { width: 54px; flex-shrink: 0; }
 .covl { font-family: var(--mono); font-size: 8px; color: var(--muted2); margin-bottom: 2px; }
 .covt { height: 2px; background: var(--border2); border-radius: 1px; }
 .covf { height: 100%; border-radius: 1px; background: var(--accent); opacity: 0.45; }
 
-/* ANALYSIS */
 .atog { display: flex; align-items: center; gap: 5px; padding: 3px 0; font-family: var(--mono); font-size: 10px; color: var(--muted); cursor: pointer; background: none; border: none; white-space: nowrap; transition: color 0.12s; flex-shrink: 0; }
 .atog:hover { color: var(--accent); }
 .atog .arr { font-size: 9px; transition: transform 0.18s; }
@@ -145,8 +132,10 @@ button.rbtn:hover { border-color: var(--accent); color: var(--accent); }
 .apanel.open { display: block; }
 .sigtag { display: inline-block; padding: 1px 7px; border-radius: 2px; font-family: var(--mono); font-size: 9px; letter-spacing: 0.06em; font-weight: 500; margin-bottom: 7px; }
 .ameta { margin-top: 7px; padding-top: 6px; border-top: 1px solid var(--border); font-family: var(--mono); font-size: 9px; color: var(--muted2); display: flex; gap: 10px; flex-wrap: wrap; }
+.afund { margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border); display: flex; gap: 14px; flex-wrap: wrap; }
+.afk { font-family: var(--mono); font-size: 9px; color: var(--muted2); }
+.afv { font-family: var(--mono); font-size: 9px; color: var(--text); margin-left: 3px; }
 
-/* LEADERBOARD */
 .lb { width: 255px; flex-shrink: 0; border-left: 1px solid var(--border); display: flex; flex-direction: column; }
 .lbh { padding: 9px 13px; border-bottom: 1px solid var(--border); background: var(--bg2); display: flex; align-items: center; justify-content: space-between; }
 .lbtitle { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
@@ -163,12 +152,11 @@ button.lbx:hover { border-color: var(--accent); color: var(--accent); }
 .lbrow:hover { background: var(--bg2); }
 .lbrk { font-family: var(--mono); font-size: 9px; color: var(--muted2); width: 14px; }
 .lbtk { font-family: var(--mono); font-size: 12px; font-weight: 500; flex: 1; }
-.lbz { font-family: var(--mono); font-size: 11px; }
+.lbz  { font-family: var(--mono); font-size: 11px; }
 .lbfz { font-family: var(--mono); font-size: 9px; color: var(--muted); }
 
 footer { padding: 9px 22px; border-top: 1px solid var(--border); font-family: var(--mono); font-size: 9px; color: var(--muted); display: flex; gap: 14px; flex-wrap: wrap; }
 
-/* MOBILE */
 @media(max-width:768px){
   .lb{display:none}
   .lb.lbopen{display:flex;position:fixed;right:0;top:0;bottom:0;z-index:200;background:var(--bg);box-shadow:-4px 0 20px rgba(0,0,0,0.6);width:260px}
@@ -252,7 +240,7 @@ footer { padding: 9px 22px; border-top: 1px solid var(--border); font-family: va
   <span style="font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:0.1em">DOTS:</span>
   <span class="li">● 1Y TTM</span><span class="li">◆ 2Y TTM</span>
   <span class="li" style="color:var(--muted2)">hollow = Fwd PE</span>
-  <span style="margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--muted)">● full &nbsp;◐ TTM only &nbsp;○ no data</span>
+  <span style="margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--muted)">● full &nbsp;◐ TTM only &nbsp;○ no data &nbsp;<span style="color:var(--amber)">◉ PE cross-check flag</span></span>
 </div>
 
 <div class="layout">
@@ -282,16 +270,17 @@ footer { padding: 9px 22px; border-top: 1px solid var(--border); font-family: va
 </div>
 
 <footer>
-  <span>Data: FMP API · GitHub Actions daily snapshot · <span id="dbdays">0</span>d accumulated</span>
+  <span>Data: FMP (TTM PE) · Finnhub (Fwd PE + fundamentals) · GitHub Actions daily snapshot · <span id="dbdays">0</span>d accumulated</span>
   <span>Z = (PE − mean) ÷ std · Daily repo data preferred over annual bootstrap</span>
 </footer>
 </div>
 
 <script>
-const API_KEY = 'emuhuS5sNwXWTgW8QWqL3Ypqpv4YOutn';
-const BASE = 'https://financialmodelingprep.com/stable';
+const FMP_KEY   = 'emuhuS5sNwXWTgW8QWqL3Ypqpv4YOutn';
+const FH_KEY    = 'd79gsthr01qqpmhgo77gd79gsthr01qqpmhgo780';
+const FMP_BASE  = 'https://financialmodelingprep.com/stable';
+const FH_BASE   = 'https://finnhub.io/api/v1';
 const DATA_BASE = 'https://raw.githubusercontent.com/scurto36/pe-dashboard/main/data';
-const CACHE_KEY = 'pe_live_v1'; // localStorage for today's live fetch only
 
 const SECTORS = {
   'Tech':     ['MSFT','NVDA','ADBE','CRM','AAPL','AMZN','TSM','ASML','GOOGL','WIX','DELL','PLAB','IFX'],
@@ -305,10 +294,10 @@ const TSEC = {};
 Object.entries(SECTORS).forEach(([s,ts])=>ts.forEach(t=>TSEC[t]=s));
 const ALL = Object.values(SECTORS).flat();
 const TOTAL = ALL.length;
-const WINDOWS = [1, 2]; // years
+const WINDOWS = [1, 2];
 
 let SD = {}, activeSec = 'All', primW = 1, lbW = 1, thresh = 1.0, secAvgZ = {};
-let repoDaily = {}; // { ticker: [{date, ttmPE, fwdPE}] }
+let repoDaily = {};
 
 const sleep = ms => new Promise(r=>setTimeout(r,ms));
 const today = () => new Date().toISOString().split('T')[0];
@@ -323,82 +312,84 @@ async function fetchRepoData(ticker) {
   } catch { return []; }
 }
 
-// ── LIVE API ───────────────────────────────────────────────
+// ── API HELPERS ────────────────────────────────────────────
 async function apiFetch(url) {
   try { const r=await fetch(url); if(!r.ok) return null; return await r.json(); }
   catch { return null; }
 }
 
+// ── FMP CALLS ──────────────────────────────────────────────
 async function getRatiosTTM(t) {
-  const d=await apiFetch(`${BASE}/ratios-ttm?symbol=${t}&apikey=${API_KEY}`);
+  const d=await apiFetch(`${FMP_BASE}/ratios-ttm?symbol=${t}&apikey=${FMP_KEY}`);
   return (Array.isArray(d)&&d[0])?d[0]:null;
 }
-
 async function getAnnualRatios(t) {
-  const d=await apiFetch(`${BASE}/ratios?symbol=${t}&limit=6&apikey=${API_KEY}`);
+  const d=await apiFetch(`${FMP_BASE}/ratios?symbol=${t}&limit=6&apikey=${FMP_KEY}`);
   if(!Array.isArray(d)||!d.length) return [];
   return d.map(x=>({year:new Date(x.date||'').getFullYear(),pe:x.priceToEarningsRatio}))
     .filter(x=>x.pe&&isFinite(x.pe)&&x.pe>0&&x.pe<500).reverse();
 }
-
 async function getQuote(t) {
-  const d=await apiFetch(`${BASE}/quote?symbol=${t}&apikey=${API_KEY}`);
+  const d=await apiFetch(`${FMP_BASE}/quote?symbol=${t}&apikey=${FMP_KEY}`);
   return (Array.isArray(d)&&d[0])?d[0]:null;
 }
-
-async function getFwdPE(t, price) {
-  if(!price) return null;
-  const d=await apiFetch(`${BASE}/analyst-estimates?symbol=${t}&period=annual&limit=3&apikey=${API_KEY}`);
-  if(!Array.isArray(d)||!d[0]) return null;
-  const now=new Date();
-  const est=d.find(x=>new Date(x.date)>now)||d[0];
-  const eps=est.estimatedEpsAvg||est.estimatedEps||est.epsAvg||est.eps;
-  if(!eps||eps<=0) return null;
-  const fpe=+(price/eps).toFixed(1);
-  return (fpe>0&&fpe<500)?fpe:null;
-}
-
 async function getEarnings(t) {
   const td=today(), fut=new Date(); fut.setDate(fut.getDate()+45);
   const to=fut.toISOString().split('T')[0];
-  const d=await apiFetch(`${BASE}/earnings-calendar?symbol=${t}&from=${td}&to=${to}&apikey=${API_KEY}`);
+  const d=await apiFetch(`${FMP_BASE}/earnings-calendar?symbol=${t}&from=${td}&to=${to}&apikey=${FMP_KEY}`);
   return (Array.isArray(d)&&d.length)?d[0].date:null;
 }
 
+// ── FINNHUB: single call, all enrichment ──────────────────
+async function getFinnhubMetrics(t) {
+  const d = await apiFetch(`${FH_BASE}/stock/metric?symbol=${t}&metric=all&token=${FH_KEY}`);
+  if (!d || !d.metric) return null;
+  const m = d.metric;
+  const safe = (v, lo=-9999, hi=9999) => {
+    if (v===null||v===undefined||!isFinite(v)) return null;
+    if (v<lo||v>hi) return null;
+    return +v;
+  };
+  return {
+    fwdPE:              safe(m.forwardPE,            0,    500),
+    fhTTMPE:            safe(m.peTTM,                0,    500),
+    pegTTM:             safe(m.pegTTM,             -50,    50),
+    evEbitdaTTM:        safe(m.evEbitdaTTM,          0,  1000),
+    epsGrowthTTMYoy:    safe(m.epsGrowthTTMYoy,   -500,  2000),
+    epsGrowth3Y:        safe(m.epsGrowth3Y,        -500,  2000),
+    revenueGrowthTTM:   safe(m.revenueGrowthTTMYoy,-100,  2000),
+    grossMarginTTM:     safe(m.grossMarginTTM,     -100,   100),
+    netProfitMarginTTM: safe(m.netProfitMarginTTM, -100,   100),
+    roeTTM:             safe(m.roeTTM,             -500,  1000),
+    beta:               safe(m.beta,                 -5,    10),
+    week52High:         safe(m['52WeekHigh'],         0,   1e6),
+    week52Low:          safe(m['52WeekLow'],          0,   1e6),
+  };
+}
+
 // ── SERIES BUILDER ─────────────────────────────────────────
-// Prefer repo daily data; fall back to annual history
 function getSeries(ticker, years) {
   const cutoff = new Date();
   cutoff.setFullYear(cutoff.getFullYear() - years);
   const cs = cutoff.toISOString().split('T')[0];
-
-  // Try repo daily first
-  const daily = (repoDaily[ticker] || [])
-    .filter(d => d.date >= cs && d.ttmPE && d.ttmPE > 0 && d.ttmPE < 500)
-    .map(d => d.ttmPE);
-
+  const daily = (repoDaily[ticker]||[])
+    .filter(d=>d.date>=cs&&d.ttmPE&&d.ttmPE>0&&d.ttmPE<500)
+    .map(d=>d.ttmPE);
   if (daily.length >= 3) return { pts: daily, source: 'daily' };
-
-  // Fall back to annual
   const ann = new Date().getFullYear();
-  const annPts = (SD[ticker]?._annual || [])
-    .filter(d => d.year >= ann - years)
-    .map(d => d.pe)
-    .filter(v => v > 0 && v < 500);
-
+  const annPts = (SD[ticker]?._annual||[])
+    .filter(d=>d.year>=ann-years).map(d=>d.pe).filter(v=>v>0&&v<500);
   return { pts: annPts, source: 'annual' };
 }
-
 function getFwdSeries(ticker, years) {
   const cutoff = new Date();
   cutoff.setFullYear(cutoff.getFullYear() - years);
   const cs = cutoff.toISOString().split('T')[0];
-  return (repoDaily[ticker] || [])
-    .filter(d => d.date >= cs && d.fwdPE && d.fwdPE > 0 && d.fwdPE < 500)
-    .map(d => d.fwdPE);
+  return (repoDaily[ticker]||[])
+    .filter(d=>d.date>=cs&&d.fwdPE&&d.fwdPE>0&&d.fwdPE<500)
+    .map(d=>d.fwdPE);
 }
-
-function dayCount(ticker) { return (repoDaily[ticker] || []).length; }
+function dayCount(ticker) { return (repoDaily[ticker]||[]).length; }
 
 // ── STATS ──────────────────────────────────────────────────
 function stats(s) {
@@ -420,42 +411,57 @@ function zpct(z){ if(z===null) return null; return ((clamp(z)+1)/4)*100; }
 
 // ── PROCESS TICKER ─────────────────────────────────────────
 async function procTicker(t) {
-  const [ratios, annual, quote, earnDate] = await Promise.all([
-    getRatiosTTM(t), getAnnualRatios(t), getQuote(t), getEarnings(t)
+  const [ratios, annual, quote, earnDate, fhm] = await Promise.all([
+    getRatiosTTM(t), getAnnualRatios(t), getQuote(t), getEarnings(t), getFinnhubMetrics(t)
   ]);
-  const price = quote?.price ?? null;
-  const name = quote?.name ?? t;
-  const ttmPE = (()=>{ const v=ratios?.priceToEarningsRatioTTM; return (v&&isFinite(v)&&v>0&&v<500)?+v.toFixed(1):null; })();
-  const fwdPE = await getFwdPE(t, price);
 
-  // Store annual for fallback
+  const price = quote?.price ?? null;
+  const name  = quote?.name  ?? t;
+  const ttmPE = (()=>{ const v=ratios?.priceToEarningsRatioTTM; return (v&&isFinite(v)&&v>0&&v<500)?+v.toFixed(1):null; })();
+
+  const fwdPE             = fhm?.fwdPE             ?? null;
+  const fhTTMPE           = fhm?.fhTTMPE           ?? null;
+  const pegTTM            = fhm?.pegTTM            ?? null;
+  const evEbitdaTTM       = fhm?.evEbitdaTTM       ?? null;
+  const epsGrowthTTMYoy   = fhm?.epsGrowthTTMYoy   ?? null;
+  const epsGrowth3Y       = fhm?.epsGrowth3Y       ?? null;
+  const revenueGrowthTTM  = fhm?.revenueGrowthTTM  ?? null;
+  const grossMarginTTM    = fhm?.grossMarginTTM    ?? null;
+  const netProfitMarginTTM= fhm?.netProfitMarginTTM?? null;
+  const roeTTM            = fhm?.roeTTM            ?? null;
+  const beta              = fhm?.beta              ?? null;
+  const week52High        = fhm?.week52High        ?? null;
+  const week52Low         = fhm?.week52Low         ?? null;
+
+  // PE cross-check: >15% divergence between FMP and Finnhub TTM PE
+  let peCrossCheck = false;
+  if (ttmPE && fhTTMPE && ttmPE>0 && fhTTMPE>0) {
+    peCrossCheck = Math.abs(ttmPE - fhTTMPE) / ttmPE > 0.15;
+  }
+
   SD[t] = SD[t] || {};
   SD[t]._annual = annual;
 
-  // Merge today's live fetch into repoDaily so today is always current
+  // Merge today into repoDaily
   if (ttmPE !== null) {
     if (!repoDaily[t]) repoDaily[t] = [];
-    repoDaily[t] = repoDaily[t].filter(x => x.date !== today());
+    repoDaily[t] = repoDaily[t].filter(x=>x.date!==today());
     repoDaily[t].push({ date: today(), ttmPE, fwdPE });
-    repoDaily[t].sort((a,b) => a.date.localeCompare(b.date));
+    repoDaily[t].sort((a,b)=>a.date.localeCompare(b.date));
   }
 
-  // Build windows for [1, 2] years
   const wins = {}, fwins = {};
   WINDOWS.forEach(y => {
     const { pts, source } = getSeries(t, y);
     const st = stats(pts);
-    wins[y] = st && ttmPE !== null
-      ? { z: zscore(ttmPE, st.mean, st.std), mean: st.mean, std: st.std, pts: pts.length, source }
-      : { z: null, mean: null, std: null, pts: pts.length, source };
-
-    // Forward PE z-score — use TTM mean/std as baseline
+    wins[y] = st && ttmPE!==null
+      ? { z: zscore(ttmPE,st.mean,st.std), mean:st.mean, std:st.std, pts:pts.length, source }
+      : { z:null, mean:null, std:null, pts:pts.length, source };
     const fpts = getFwdSeries(t, y);
-    const fst = fpts.length >= 3 ? stats(fpts) : null;
-    if (fwdPE !== null && wins[y].mean !== null && wins[y].std !== null) {
-      // Use fwd-specific stats if available, else use TTM baseline
-      const fm = fst ? fst.mean : wins[y].mean;
-      const fs2 = fst ? fst.std : wins[y].std;
+    const fst  = fpts.length>=3 ? stats(fpts) : null;
+    if (fwdPE!==null && wins[y].mean!==null && wins[y].std!==null) {
+      const fm  = fst ? fst.mean : wins[y].mean;
+      const fs2 = fst ? fst.std  : wins[y].std;
       fwins[y] = { z: zscore(fwdPE, fm, fs2) };
     } else {
       fwins[y] = { z: null };
@@ -463,129 +469,141 @@ async function procTicker(t) {
   });
 
   let dq = 'none';
-  if (ttmPE !== null && WINDOWS.some(y => getSeries(t,y).pts?.length >= 2 || getSeries(t,y).pts >= 2)) dq = fwdPE !== null ? 'full' : 'partial';
-  else if (ttmPE !== null) dq = 'partial';
+  if (ttmPE!==null) dq = fwdPE!==null ? 'full' : 'partial';
 
   let earnSoon = false;
   if (earnDate) { const df=(new Date(earnDate)-new Date())/86400000; if(df>=0&&df<=30) earnSoon=true; }
 
   let pct = null;
-  const all2 = getSeries(t, 2).pts;
-  if (ttmPE && all2.length >= 5) pct = Math.round(all2.filter(p=>p>=ttmPE).length/all2.length*100);
+  const all2 = getSeries(t,2).pts;
+  if (ttmPE && all2.length>=5) pct = Math.round(all2.filter(p=>p>=ttmPE).length/all2.length*100);
 
-  return { ticker:t, name, sector:TSEC[t], ttmPE, fwdPE, price, wins, fwins, dq, earnSoon, earnDate, pct };
+  return {
+    ticker:t, name, sector:TSEC[t], ttmPE, fwdPE, price, wins, fwins, dq, peCrossCheck,
+    earnSoon, earnDate, pct,
+    pegTTM, evEbitdaTTM, epsGrowthTTMYoy, epsGrowth3Y, revenueGrowthTTM,
+    grossMarginTTM, netProfitMarginTTM, roeTTM, beta, week52High, week52Low, fhTTMPE,
+  };
 }
 
 // ── RENDER ─────────────────────────────────────────────────
 function renderAll() {
-  Object.keys(SECTORS).forEach(s => {
-    const zs = SECTORS[s].map(t=>SD[t]?.wins[primW]?.z).filter(z=>z!=null);
-    secAvgZ[s] = zs.length ? +(zs.reduce((a,b)=>a+b,0)/zs.length).toFixed(2) : null;
+  Object.keys(SECTORS).forEach(s=>{
+    const zs=SECTORS[s].map(t=>SD[t]?.wins[primW]?.z).filter(z=>z!=null);
+    secAvgZ[s]=zs.length?+(zs.reduce((a,b)=>a+b,0)/zs.length).toFixed(2):null;
   });
-  const allZ = ALL.map(t=>SD[t]?.wins[primW]?.z).filter(z=>z!=null);
-  const pavgZ = allZ.length ? +(allZ.reduce((a,b)=>a+b,0)/allZ.length).toFixed(2) : null;
-  const vis = (activeSec==='All' ? ALL : SECTORS[activeSec]||[]).map(t=>SD[t]).filter(Boolean);
+  const allZ=ALL.map(t=>SD[t]?.wins[primW]?.z).filter(z=>z!=null);
+  const pavgZ=allZ.length?+(allZ.reduce((a,b)=>a+b,0)/allZ.length).toFixed(2):null;
+  const vis=(activeSec==='All'?ALL:SECTORS[activeSec]||[]).map(t=>SD[t]).filter(Boolean);
 
-  const cheap = vis.filter(d=>{const z=d.wins[primW]?.z;return z!==null&&z<thresh;}).length;
-  const exp   = vis.filter(d=>{const z=d.wins[primW]?.z;return z!==null&&z>=thresh;}).length;
-  const na    = vis.filter(d=>d.wins[primW]?.z===null).length;
-  const es    = vis.filter(d=>d.earnSoon).length;
+  const cheap=vis.filter(d=>{const z=d.wins[primW]?.z;return z!==null&&z<thresh;}).length;
+  const exp  =vis.filter(d=>{const z=d.wins[primW]?.z;return z!==null&&z>=thresh;}).length;
+  const na   =vis.filter(d=>d.wins[primW]?.z===null).length;
+  const es   =vis.filter(d=>d.earnSoon).length;
 
   document.getElementById('st').textContent  = vis.length;
-  document.getElementById('saz').textContent = pavgZ!==null ? pavgZ+'σ' : '—';
+  document.getElementById('saz').textContent = pavgZ!==null?pavgZ+'σ':'—';
   document.getElementById('sch').textContent = cheap;
   document.getElementById('sex').textContent = exp;
   document.getElementById('sea').textContent = es;
   document.getElementById('sna').textContent = na;
 
-  const ab = document.getElementById('ab');
-  if(exp>0){ ab.style.display='block'; document.getElementById('abtxt').textContent=`${exp} stock${exp>1?'s':''} above ${thresh.toFixed(2)}σ`; }
+  const ab=document.getElementById('ab');
+  if(exp>0){ab.style.display='block';document.getElementById('abtxt').textContent=`${exp} stock${exp>1?'s':''} above ${thresh.toFixed(2)}σ`;}
   else ab.style.display='none';
 
-  const cavgZ = activeSec==='All' ? pavgZ : secAvgZ[activeSec];
-  document.getElementById('savgind').textContent = cavgZ!==null ? `${activeSec==='All'?'Portfolio':activeSec} avg: ${cavgZ>0?'+':''}${cavgZ}σ` : '';
+  const cavgZ=activeSec==='All'?pavgZ:secAvgZ[activeSec];
+  document.getElementById('savgind').textContent=cavgZ!==null?`${activeSec==='All'?'Portfolio':activeSec} avg: ${cavgZ>0?'+':''}${cavgZ}σ`:'';
 
-  const maxDays = Math.max(...ALL.map(t=>dayCount(t)), 0);
-  document.getElementById('dbb').textContent = `DB: ${maxDays}d`;
-  document.getElementById('dbdays').textContent = maxDays;
+  const maxDays=Math.max(...ALL.map(t=>dayCount(t)),0);
+  document.getElementById('dbb').textContent=`DB: ${maxDays}d`;
+  document.getElementById('dbdays').textContent=maxDays;
 
   renderTabs(); renderList(); renderLB(vis);
 }
 
 function renderTabs() {
-  const el = document.getElementById('stabs');
-  el.innerHTML = ['All',...Object.keys(SECTORS)].map(s => {
-    const z = s==='All' ? null : secAvgZ[s];
-    const zs = z!==null ? ` <span class="sz" style="color:${zcol(z)}">${z>0?'+':''}${z}σ</span>` : '';
+  const el=document.getElementById('stabs');
+  el.innerHTML=['All',...Object.keys(SECTORS)].map(s=>{
+    const z=s==='All'?null:secAvgZ[s];
+    const zs=z!==null?` <span class="sz" style="color:${zcol(z)}">${z>0?'+':''}${z}σ</span>`:'';
     return `<div class="stab ${activeSec===s?'active':''}" onclick="setSec('${s}')">${s}${zs}</div>`;
   }).join('');
 }
 
 function renderList() {
-  const el = document.getElementById('slist');
-  const secs = activeSec==='All' ? Object.keys(SECTORS) : [activeSec];
-  let html = '';
-  secs.forEach(sec => {
-    const ts = SECTORS[sec].filter(t=>SD[t]); if(!ts.length) return;
-    const az=secAvgZ[sec], azc=az!==null?zcol(az):'var(--muted)', azs=az!==null?`${az>0?'+':''}${az}σ avg`:'— avg';
-    html += `<div><div class="shdr"><span class="sname">${sec}</span><span class="savgz" style="color:${azc}">${azs}</span><span class="scnt">${ts.length} stocks</span></div>`;
+  const el=document.getElementById('slist');
+  const secs=activeSec==='All'?Object.keys(SECTORS):[activeSec];
+  let html='';
+  secs.forEach(sec=>{
+    const ts=SECTORS[sec].filter(t=>SD[t]); if(!ts.length) return;
+    const az=secAvgZ[sec],azc=az!==null?zcol(az):'var(--muted)',azs=az!==null?`${az>0?'+':''}${az}σ avg`:'— avg';
+    html+=`<div><div class="shdr"><span class="sname">${sec}</span><span class="savgz" style="color:${azc}">${azs}</span><span class="scnt">${ts.length} stocks</span></div>`;
     ts.slice().sort((a,b)=>{const za=SD[a]?.wins[primW]?.z??99,zb=SD[b]?.wins[primW]?.z??99;return za-zb;})
-      .forEach(t=>{ html+=renderRow(SD[t]); });
-    html += '</div>';
+      .forEach(t=>{html+=renderRow(SD[t]);});
+    html+='</div>';
   });
-  el.innerHTML = html;
+  el.innerHTML=html;
 }
 
 function renderRow(d) {
-  const {ticker:t,name,ttmPE,fwdPE,wins,fwins,dq,earnSoon,earnDate,pct} = d;
-  const pz = wins[primW]?.z ?? null;
-  const outCnt = WINDOWS.filter(w=>{const z=wins[w]?.z;return z!==null&&z>=thresh;}).length;
+  const {ticker:t,name,ttmPE,fwdPE,wins,fwins,dq,peCrossCheck,earnSoon,earnDate,pct,pegTTM,fhTTMPE}=d;
+  const pz=wins[primW]?.z??null;
+  const outCnt=WINDOWS.filter(w=>{const z=wins[w]?.z;return z!==null&&z>=thresh;}).length;
+  const isPegGrowth=pz!==null&&pz>=thresh&&pegTTM!==null&&pegTTM>0&&pegTTM<1;
+
   let rc='',tc='';
-  if(outCnt>=2){rc='sex';tc='exp';}
+  if(isPegGrowth){rc='sgrow';tc='grow';}
+  else if(outCnt>=2){rc='sex';tc='exp';}
   else if(outCnt===1){tc='amb';}
   else if(pz!==null&&pz<0){rc='sch';tc='cheap';}
 
-  const dqc = dq==='full'?'dqf':dq==='partial'?'dqp':'dqn';
-  const dqtip = dq==='full'?'Full data':dq==='partial'?'TTM only':'No PE data';
-  const eb = earnSoon ? `<span class="ebdg" title="Earnings: ${earnDate}">E</span>` : '';
-  const tpct = ((thresh+1)/4)*100;
+  let dqc,dqtip;
+  if(peCrossCheck){dqc='dqx';dqtip=`PE cross-check: FMP=${ttmPE} vs Finnhub=${fhTTMPE?.toFixed(1)} (>15% divergence)`;}
+  else if(dq==='full'){dqc='dqf';dqtip='Full data';}
+  else if(dq==='partial'){dqc='dqp';dqtip='TTM only';}
+  else{dqc='dqn';dqtip='No PE data';}
 
-  let dots = `<div class="btrack"></div><div class="tline" style="left:${tpct}%"></div>`;
-  const wl = {1:'1Y',2:'2Y'};
+  const eb=earnSoon?`<span class="ebdg" title="Earnings: ${earnDate}">E</span>`:'';
+  const tpct=((thresh+1)/4)*100;
 
-  WINDOWS.forEach(w => {
-    const wz=wins[w]?.z??null, fz=fwins[w]?.z??null, ip=w===primW;
-    const m=wins[w]?.mean, s=wins[w]?.std, src=wins[w]?.source;
+  let dots=`<div class="btrack"></div><div class="tline" style="left:${tpct}%"></div>`;
+  const wl={1:'1Y',2:'2Y'};
+
+  WINDOWS.forEach(w=>{
+    const wz=wins[w]?.z??null,fz=fwins[w]?.z??null,ip=w===primW;
+    const m=wins[w]?.mean,s=wins[w]?.std,src=wins[w]?.source;
     if(wz!==null){
-      const pp=zpct(wz), col=zcol(wz);
-      const srcLabel = src==='daily' ? '(live daily)' : '(annual hist)';
+      const pp=zpct(wz),col=zcol(wz);
+      const srcLabel=src==='daily'?'(live daily)':'(annual hist)';
       const tip=`${t} · ${wl[w]} TTM ${srcLabel}\nZ: ${wz>0?'+':''}${wz}σ  PE: ${ttmPE}x\n${wl[w]} mean: ${m}x  std: ${s}\n${pct!==null?`Higher than ${pct}% of history`:''}`;
       let sh;
       if(w===1) sh=`<circle cx="5" cy="5" r="${ip?4:3}" fill="${col}" ${!ip?'opacity="0.5"':''}/>`;
       else sh=`<polygon points="5,${ip?1:1.5} ${ip?9:8.5},5 5,${ip?9:8.5} ${ip?1:1.5},5" fill="${col}" ${!ip?'opacity="0.5"':''}/>`;
-      dots += `<div class="zdot" style="left:${pp}%"><svg width="10" height="10" viewBox="0 0 10 10">${sh}</svg><span class="tip">${tip}</span></div>`;
+      dots+=`<div class="zdot" style="left:${pp}%"><svg width="10" height="10" viewBox="0 0 10 10">${sh}</svg><span class="tip">${tip}</span></div>`;
     }
     if(fz!==null){
-      const fp=zpct(fz), fc=zcol(fz);
-      const ftip=`${t} · ${wl[w]} Fwd\nZ: ${fz>0?'+':''}${fz}σ  Fwd PE: ${fwdPE}x\n${wl[w]} mean: ${m}x`;
+      const fp=zpct(fz),fc=zcol(fz);
+      const pegNote=pegTTM!==null?`  PEG: ${pegTTM}`:'';
+      const ftip=`${t} · ${wl[w]} Fwd\nZ: ${fz>0?'+':''}${fz}σ  Fwd PE: ${fwdPE}x\n${wl[w]} mean: ${m}x${pegNote}`;
       let fs;
       if(w===1) fs=`<circle cx="5" cy="5" r="3.5" fill="none" stroke="${fc}" stroke-width="1.5" ${!ip?'opacity="0.4"':''}/>`;
       else fs=`<polygon points="5,1.5 8.5,5 5,8.5 1.5,5" fill="none" stroke="${fc}" stroke-width="1.5" ${!ip?'opacity="0.4"':''}/>`;
-      dots += `<div class="zdot" style="left:${fp}%;margin-top:3px"><svg width="10" height="10" viewBox="0 0 10 10">${fs}</svg><span class="tip">${ftip}</span></div>`;
+      dots+=`<div class="zdot" style="left:${fp}%;margin-top:3px"><svg width="10" height="10" viewBox="0 0 10 10">${fs}</svg><span class="tip">${ftip}</span></div>`;
       if(wz!==null&&Math.abs(fz-wz)>0.25){
-        const ap=(zpct(wz)+zpct(fz))/2, ar=fz<wz?'↓':'↑', ac=fz<wz?'var(--green)':'var(--red)';
-        dots += `<div class="garrow" style="left:${ap}%;color:${ac}">${ar}</div>`;
+        const ap=(zpct(wz)+zpct(fz))/2,ar=fz<wz?'↓':'↑',ac=fz<wz?'var(--green)':'var(--red)';
+        dots+=`<div class="garrow" style="left:${ap}%;color:${ac}">${ar}</div>`;
       }
     }
   });
 
-  const pzs = pz!==null ? `${pz>0?'+':''}${pz}σ` : '—';
-  const fpz = fwins[primW]?.z??null, fpzs = fpz!==null ? `${fpz>0?'+':''}${fpz}σ` : '—';
-  const pvh = `<div class="pr2"><span class="pl">TTM</span><span class="pn">${ttmPE!==null?ttmPE+'x':'—'}</span><span class="pz2" style="color:${zcol(pz)}">${pzs}</span></div>
+  const pzs=pz!==null?`${pz>0?'+':''}${pz}σ`:'—';
+  const fpz=fwins[primW]?.z??null,fpzs=fpz!==null?`${fpz>0?'+':''}${fpz}σ`:'—';
+  const pvh=`<div class="pr2"><span class="pl">TTM</span><span class="pn">${ttmPE!==null?ttmPE+'x':'—'}</span><span class="pz2" style="color:${zcol(pz)}">${pzs}</span></div>
     <div class="pr2"><span class="pl" style="color:var(--muted2)">Fwd</span><span class="pn" style="color:var(--muted)">${fwdPE!==null?fwdPE+'x':'—'}</span><span class="pz2" style="color:${zcol(fpz)}">${fpzs}</span></div>`;
 
-  const dc = dayCount(t), cp = Math.min(dc/120*100,100);
-  const covh = `<div class="covb"><div class="covl">${dc}d</div><div class="covt"><div class="covf" style="width:${cp}%"></div></div></div>`;
+  const dc=dayCount(t),cp=Math.min(dc/120*100,100);
+  const covh=`<div class="covb"><div class="covl">${dc}d</div><div class="covt"><div class="covf" style="width:${cp}%"></div></div></div>`;
 
   return `<div class="srw" id="wrap-${t}">
     <div class="sr ${rc}" id="row-${t}">
@@ -602,10 +620,10 @@ function renderRow(d) {
 }
 
 function renderLB(vis) {
-  const ranked = vis.filter(d=>d.fwins[lbW]?.z!==null).sort((a,b)=>(a.fwins[lbW].z??99)-(b.fwins[lbW].z??99));
-  const c5=ranked.slice(0,5), e5=ranked.slice(-5).reverse();
+  const ranked=vis.filter(d=>d.fwins[lbW]?.z!==null).sort((a,b)=>(a.fwins[lbW].z??99)-(b.fwins[lbW].z??99));
+  const c5=ranked.slice(0,5),e5=ranked.slice(-5).reverse();
   const row=(d,i,isE)=>{
-    const fz=d.fwins[lbW]?.z??null, tz=d.wins[lbW]?.z??null;
+    const fz=d.fwins[lbW]?.z??null,tz=d.wins[lbW]?.z??null;
     const col=isE?'var(--red)':'var(--green)';
     return `<div class="lbrow" onclick="scrollToRow('${d.ticker}')">
       <span class="lbrk">${i}</span><span class="lbtk" style="color:${col}">${d.ticker}</span>
@@ -613,14 +631,14 @@ function renderLB(vis) {
       <span class="lbz" style="color:${col}">${fz!==null?`${fz>0?'+':''}${fz}σ`:'—'}</span>
     </div>`;
   };
-  const nd = '<div style="padding:6px 13px;font-family:var(--mono);font-size:10px;color:var(--muted)">No data yet</div>';
-  document.getElementById('lbc').innerHTML = c5.map((d,i)=>row(d,i+1,false)).join('') || nd;
-  document.getElementById('lbe').innerHTML = e5.map((d,i)=>row(d,i+1,true)).join('')  || nd;
+  const nd='<div style="padding:6px 13px;font-family:var(--mono);font-size:10px;color:var(--muted)">No data yet</div>';
+  document.getElementById('lbc').innerHTML=c5.map((d,i)=>row(d,i+1,false)).join('')||nd;
+  document.getElementById('lbe').innerHTML=e5.map((d,i)=>row(d,i+1,true)).join('')||nd;
 }
 
 // ── ANALYSIS PANEL ─────────────────────────────────────────
 function togAn(t) {
-  const panel=document.getElementById(`ap-${t}`), tog=document.getElementById(`atog-${t}`);
+  const panel=document.getElementById(`ap-${t}`),tog=document.getElementById(`atog-${t}`);
   if(!panel||!tog) return;
   const open=panel.classList.contains('open');
   if(open){panel.classList.remove('open');tog.classList.remove('open');return;}
@@ -633,30 +651,43 @@ function togAn(t) {
     panel.innerHTML=`<span class="sigtag" style="color:var(--muted);background:rgba(90,106,122,0.15)">NO DATA</span><div>No earnings data for ${t}. Common for pre-revenue biotech, ETFs, and foreign-listed securities.</div>`;
     return;
   }
-  const {ttmPE,fwdPE,wins,fwins,earnSoon,earnDate,pct}=d;
-  const pz=wins[primW]?.z??null, fz=fwins[primW]?.z??null;
-  const m=wins[primW]?.mean, s=wins[primW]?.std, src=wins[primW]?.source;
-  const wl={1:'1-year',2:'2-year'}[primW];
-  const dc=dayCount(t);
-  const outCnt=WINDOWS.filter(w=>{const z=wins[w]?.z;return z!==null&&z>=thresh;}).length;
 
+  const {ttmPE,fwdPE,wins,fwins,earnSoon,earnDate,pct,
+    pegTTM,evEbitdaTTM,epsGrowthTTMYoy,revenueGrowthTTM,
+    grossMarginTTM,roeTTM,beta,week52High,week52Low,
+    peCrossCheck,fhTTMPE}=d;
+
+  const pz =wins[primW]?.z??null;
+  const fz =fwins[primW]?.z??null;
+  const m  =wins[primW]?.mean;
+  const src=wins[primW]?.source;
+  const wl ={1:'1-year',2:'2-year'}[primW];
+  const dc =dayCount(t);
+  const outCnt=WINDOWS.filter(w=>{const z=wins[w]?.z;return z!==null&&z>=thresh;}).length;
+  const isPegGrowth=pz!==null&&pz>=thresh&&pegTTM!==null&&pegTTM>0&&pegTTM<1;
+
+  // Verdict
   let tag,ts2;
   if(pz===null){tag='LIMITED DATA';ts2='color:var(--muted);background:rgba(90,106,122,0.15)';}
+  else if(isPegGrowth){tag='EXPENSIVE · GROWING';ts2='color:var(--amber);background:rgba(240,165,0,0.12)';}
   else if(outCnt>=2){tag='EXPENSIVE';ts2='color:var(--red);background:rgba(255,64,96,0.12)';}
   else if(pz<0){tag='CHEAP';ts2='color:var(--green);background:rgba(46,204,138,0.12)';}
   else if(pz<thresh){tag='FAIR VALUE';ts2='color:var(--amber);background:rgba(240,165,0,0.12)';}
   else{tag='EXPENSIVE';ts2='color:var(--red);background:rgba(255,64,96,0.12)';}
 
+  // Narrative
   let txt='';
-  const srcNote = src==='daily' ? `(${dc} daily observations)` : `(annual history bootstrap)`;
+  const srcNote=src==='daily'?`(${dc} daily obs.)`:'(annual bootstrap)';
 
   if(pz===null) txt+=`Insufficient history to compute a ${wl} z-score. `;
-  else if(outCnt>=2) txt+=`${t} is trading above its ${wl} average PE across both timeframes — high-conviction expensive signal ${srcNote}. `;
-  else if(pz<0) txt+=`${t} is trading below its ${wl} average PE of ${m}x (current: ${ttmPE}x, z: ${pz}σ) ${srcNote} — cheap by its own history. `;
+  else if(isPegGrowth) txt+=`${t} trades above its ${wl} average PE (z: +${pz}σ) but a PEG of ${pegTTM.toFixed(2)} signals earnings growth is outpacing the premium — the price may be justified. `;
+  else if(outCnt>=2) txt+=`${t} is above its ${wl} average PE across both timeframes — high-conviction expensive signal ${srcNote}. `;
+  else if(pz<0) txt+=`${t} is below its ${wl} average PE of ${m}x (current: ${ttmPE}x, z: ${pz}σ) ${srcNote} — cheap by its own history. `;
   else txt+=`${t} is near its ${wl} average PE of ${m}x (current: ${ttmPE}x, z: ${pz>0?'+':''}${pz}σ) ${srcNote}. `;
 
-  if(pct!==null) txt+=`Today's PE of ${ttmPE}x is higher than ${pct}% of its available PE history. `;
+  if(pct!==null) txt+=`Today's PE is higher than ${pct}% of available history. `;
 
+  // Timeframe agreement
   const vzs=WINDOWS.map(w=>wins[w]?.z).filter(z=>z!==null);
   if(vzs.length>=2){
     const agree=vzs.every(z=>z>=thresh)||vzs.every(z=>z<thresh);
@@ -664,24 +695,87 @@ function togAn(t) {
     else txt+=`Mixed signals across timeframes (${WINDOWS.map(w=>wins[w]?.z!==null?`${w}Y:${wins[w].z>0?'+':''}${wins[w].z}σ`:`${w}Y:N/A`).join(', ')}) — lower conviction. `;
   }
 
+  // PEG (when not already the headline)
+  if(!isPegGrowth&&pegTTM!==null){
+    if(pegTTM<1) txt+=`PEG of ${pegTTM.toFixed(2)} — growth more than covers the multiple. `;
+    else if(pegTTM<2) txt+=`PEG of ${pegTTM.toFixed(2)} — moderate growth relative to PE. `;
+    else txt+=`PEG of ${pegTTM.toFixed(2)} — elevated; growth may not justify the current multiple. `;
+  }
+
+  // EPS growth
+  if(epsGrowthTTMYoy!==null){
+    const g=epsGrowthTTMYoy;
+    if(g>50) txt+=`EPS grew ${g.toFixed(0)}% YoY — strong earnings acceleration supports a higher multiple. `;
+    else if(g>10) txt+=`EPS up ${g.toFixed(0)}% YoY — healthy growth trajectory. `;
+    else if(g<0) txt+=`EPS declined ${Math.abs(g).toFixed(0)}% YoY — contraction adds risk to the current valuation. `;
+  }
+
+  // Revenue growth
+  if(revenueGrowthTTM!==null&&revenueGrowthTTM>20) txt+=`Revenue growing ${revenueGrowthTTM.toFixed(0)}% TTM — top-line momentum intact. `;
+
+  // Margin quality
+  if(grossMarginTTM!==null){
+    if(grossMarginTTM>60) txt+=`Gross margin of ${grossMarginTTM.toFixed(0)}% reflects strong pricing power. `;
+    else if(grossMarginTTM<20) txt+=`Thin gross margins (${grossMarginTTM.toFixed(0)}%) limit earnings upside. `;
+  }
+
+  // EV/EBITDA cross-check
+  if(evEbitdaTTM!==null&&TSEC[t]!=='ETF'){
+    if(evEbitdaTTM>25) txt+=`EV/EBITDA of ${evEbitdaTTM.toFixed(1)}x confirms elevated valuation beyond PE alone. `;
+    else if(evEbitdaTTM<10) txt+=`EV/EBITDA of ${evEbitdaTTM.toFixed(1)}x is low — PE may be overstating expensiveness. `;
+  }
+
+  // Beta
+  if(beta!==null){
+    if(beta>1.5) txt+=`High beta (${beta.toFixed(2)}) — PE z-scores will swing more than the market; signals are noisier. `;
+    else if(beta<0.6) txt+=`Low beta (${beta.toFixed(2)}) — defensive profile; PE signals tend to be more reliable. `;
+  }
+
+  // TTM vs Fwd gap
   if(fwdPE!==null&&fz!==null&&pz!==null){
     const gap=pz-fz;
     if(gap>0.4) txt+=`Forward PE z (${fz>0?'+':''}${fz}σ) is lower than TTM — market expects earnings growth to close the gap. `;
     else if(gap<-0.4) txt+=`Forward PE z (${fz>0?'+':''}${fz}σ) is higher than TTM — analysts expect earnings to decline. `;
     else txt+=`TTM and Forward PE z-scores are aligned — stable earnings expectations. `;
-  } else if(!fwdPE) txt+=`No analyst forward estimates available. `;
+  } else if(!fwdPE){
+    txt+=`No analyst forward estimates available. `;
+  }
 
-  if(earnSoon) txt+=`⚠ Earnings due ${earnDate} — signals may shift after report. `;
-  if(dc<30) txt+=`Daily database has ${dc} day${dc!==1?'s':''} recorded — z-scores currently using annual history bootstrap. Live 30d window unlocks after 30 trading days. `;
+  // 52-week context
+  if(week52High!==null&&week52Low!==null&&d.price){
+    const range=week52High-week52Low;
+    if(range>0){
+      const pos=(d.price-week52Low)/range;
+      if(pos>0.85) txt+=`Trading near its 52-week high — momentum strong but limited technical cushion above. `;
+      else if(pos<0.2) txt+=`Trading near its 52-week low — PE may reflect price collapse rather than earnings expansion. `;
+    }
+  }
+
+  if(earnSoon) txt+=`⚠ Earnings due ${earnDate} — signals subject to revision after report. `;
+  if(dc<30) txt+=`Daily database has ${dc} day${dc!==1?'s':''} — using annual bootstrap until 30 days accumulated. `;
+  if(peCrossCheck) txt+=`⚠ FMP and Finnhub TTM PE diverge >15% (FMP: ${ttmPE}x vs Finnhub: ${fhTTMPE?.toFixed(1)}x) — treat z-score with caution. `;
+
+  // Fundamentals strip
+  const fItems=[
+    pegTTM!==null         ?{k:'PEG',      v:pegTTM.toFixed(2)}:null,
+    evEbitdaTTM!==null    ?{k:'EV/EBITDA',v:evEbitdaTTM.toFixed(1)+'x'}:null,
+    epsGrowthTTMYoy!==null?{k:'EPS g YoY',v:(epsGrowthTTMYoy>0?'+':'')+epsGrowthTTMYoy.toFixed(0)+'%'}:null,
+    revenueGrowthTTM!==null?{k:'Rev g',   v:(revenueGrowthTTM>0?'+':'')+revenueGrowthTTM.toFixed(0)+'%'}:null,
+    grossMarginTTM!==null ?{k:'Gross M',  v:grossMarginTTM.toFixed(0)+'%'}:null,
+    roeTTM!==null         ?{k:'ROE',      v:roeTTM.toFixed(0)+'%'}:null,
+    beta!==null           ?{k:'Beta',     v:beta.toFixed(2)}:null,
+  ].filter(Boolean);
+  const fundHtml=fItems.length?`<div class="afund">${fItems.map(x=>`<span><span class="afk">${x.k}</span><span class="afv">${x.v}</span></span>`).join('')}</div>`:'';
 
   const meta=[
     pz!==null?`TTM z: ${pz>0?'+':''}${pz}σ (${wl})`:'TTM: no data',
     fz!==null?`Fwd z: ${fz>0?'+':''}${fz}σ`:'Fwd: no data',
-    ttmPE?`PE: ${ttmPE}x`:'', fwdPE?`Fwd: ${fwdPE}x`:'',
-    `${dc}d in repo`, src==='daily'?'✓ live data':'~ annual bootstrap'
+    ttmPE?`PE: ${ttmPE}x`:'',fwdPE?`Fwd: ${fwdPE}x`:'',
+    `${dc}d in repo`,src==='daily'?'✓ live data':'~ annual bootstrap',
+    peCrossCheck?'⚠ cross-check flag':'',
   ].filter(Boolean).join(' · ');
 
-  panel.innerHTML=`<span class="sigtag" style="${ts2}">${tag}</span><div>${txt}</div><div class="ameta"><span>${meta}</span></div>`;
+  panel.innerHTML=`<span class="sigtag" style="${ts2}">${tag}</span><div>${txt}</div>${fundHtml}<div class="ameta"><span>${meta}</span></div>`;
 }
 
 // ── CONTROLS ───────────────────────────────────────────────
@@ -706,26 +800,20 @@ function toggleLB(){document.getElementById('lbpanel').classList.toggle('lbopen'
 
 // ── LOAD ───────────────────────────────────────────────────
 async function initLoad(isRef=false) {
-  const btn=document.getElementById('rfbtn'); btn.disabled=true; btn.textContent='↻ Loading...';
-  SD={}; repoDaily={};
-  const ls=document.getElementById('ls'), mc=document.getElementById('mc');
-  ls.classList.remove('hidden'); ls.style.opacity='1'; mc.style.opacity='0';
+  const btn=document.getElementById('rfbtn');btn.disabled=true;btn.textContent='↻ Loading...';
+  SD={};repoDaily={};
+  const ls=document.getElementById('ls'),mc=document.getElementById('mc');
+  ls.classList.remove('hidden');ls.style.opacity='1';mc.style.opacity='0';
 
-  // Phase 1: fetch all repo JSON files in parallel (fast)
   document.getElementById('ltick').textContent='Loading repo history...';
   document.getElementById('lnote').textContent='Fetching daily PE database from GitHub...';
-  const repoFetches = ALL.map(async t => {
-    const data = await fetchRepoData(t);
-    repoDaily[t] = data;
-  });
-  await Promise.all(repoFetches);
+  await Promise.all(ALL.map(async t=>{repoDaily[t]=await fetchRepoData(t);}));
 
-  const maxDays = Math.max(...ALL.map(t=>dayCount(t)), 0);
-  document.getElementById('lnote').textContent = maxDays > 0
-    ? `Repo database: ${maxDays} day${maxDays!==1?'s':''} of daily PE loaded`
-    : 'First run — bootstrapping from annual PE history';
+  const maxDays=Math.max(...ALL.map(t=>dayCount(t)),0);
+  document.getElementById('lnote').textContent=maxDays>0
+    ?`Repo database: ${maxDays}d of daily PE loaded`
+    :'First run — bootstrapping from annual PE history';
 
-  // Phase 2: fetch live data ticker by ticker
   for(let i=0;i<ALL.length;i++){
     const t=ALL[i];
     document.getElementById('ltick').textContent=`Live fetch: ${t}...`;
@@ -733,7 +821,7 @@ async function initLoad(isRef=false) {
     document.getElementById('lbar').style.width=`${(i/TOTAL)*100}%`;
     SD[t]=await procTicker(t);
     if(i%4===0||i===TOTAL-1) renderAll();
-    if(i<ALL.length-1) await sleep(100);
+    if(i<ALL.length-1) await sleep(120);
   }
 
   document.getElementById('lbar').style.width='100%';
@@ -744,7 +832,7 @@ async function initLoad(isRef=false) {
   setTimeout(()=>ls.classList.add('hidden'),400);
   mc.style.opacity='1';
   document.getElementById('lup').textContent='Updated '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-  btn.disabled=false; btn.textContent='↻ Refresh';
+  btn.disabled=false;btn.textContent='↻ Refresh';
   renderAll();
 }
 
