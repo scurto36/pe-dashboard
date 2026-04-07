@@ -21,6 +21,27 @@
         "divergence": 0.145,
         "flagged": false
       }
+    },
+    {
+      "date": "2026-04-07",
+      "ttmPE": 36.32,
+      "fwdPE": 23.347200917380086,
+      "pegTTM": null,
+      "evEbitdaTTM": 19.9423,
+      "epsGrowthTTMYoy": -37.71,
+      "epsGrowth3Y": null,
+      "revenueGrowthTTM": 8.34,
+      "grossMarginTTM": 42.5,
+      "netProfitMarginTTM": 9.08,
+      "roeTTM": 16.78,
+      "beta": 1.1956334,
+      "week52High": 412.7,
+      "week52Low": 161.35,
+      "peCrossCheck": {
+        "fhTTMPE": 42.9518,
+        "divergence": 0.183,
+        "flagged": true
+      }
     }
   ]
 }
