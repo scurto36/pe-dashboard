@@ -535,9 +535,11 @@ async function procTicker(t) {
   const ttmPct = seriesPct(ttmPE, fullPts);
   const fwdPct = seriesPct(fwdPE, fullPts);
 
-  // Bar range from full history
-  const barP5  = pctile(fullPts, 5)  ?? (fullSt ? fullSt.mean * 0.5 : null);
-  const barP95 = pctile(fullPts, 95) ?? (fullSt ? fullSt.mean * 1.5 : null);
+  // Bar range — cap at 80x max to prevent extreme outliers distorting scale
+  const clampedPts = fullPts.filter(v => v <= 80);
+  const ptsForRange = clampedPts.length >= 2 ? clampedPts : fullPts;
+  const barP5  = Math.max(0,  pctile(ptsForRange, 5)  ?? (fullSt ? fullSt.mean * 0.5 : 10));
+  const barP95 = Math.min(80, pctile(ptsForRange, 95) ?? (fullSt ? fullSt.mean * 1.5 : 60));
 
   // Notch avg PE per window
   const dc = dayCount(t);
@@ -687,7 +689,8 @@ function renderRow(d) {
   const hasRange = barP5!==null && barP95!==null && barP95>barP5;
   function peToBarPct(pe) {
     if (!hasRange || pe===null) return null;
-    return Math.max(2, Math.min(98, ((pe - barP5) / (barP95 - barP5)) * 100));
+    const clamped = Math.min(pe, 80); // cap at 80x
+    return Math.max(2, Math.min(98, ((clamped - barP5) / (barP95 - barP5)) * 100));
   }
 
   let barHtml = `<div class="btrack"></div>`;
