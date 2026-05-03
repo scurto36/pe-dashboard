@@ -1,5 +1,6 @@
 // scripts/fetch-pe.js
 // Runs in GitHub Actions — fetches TTM PE (FMP) + enriched fundamentals (Finnhub) daily
+// Also calculates true rolling PE history from quarterly EPS + daily prices
 import fetch from 'node-fetch';
 import fs from 'fs';
 import path from 'path';
@@ -22,6 +23,12 @@ const DATA_DIR = './data';
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const today = () => new Date().toISOString().split('T')[0];
 
+const twoYearsAgo = () => {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() - 2);
+  return d.toISOString().split('T')[0];
+};
+
 async function apiFetch(url) {
   try {
     const r = await fetch(url);
@@ -33,7 +40,6 @@ async function apiFetch(url) {
   }
 }
 
-// ── FMP: TTM PE ────────────────────────────────────────────
 async function getTTMPE(ticker) {
   const d = await apiFetch(`${FMP_BASE}/ratios-ttm?symbol=${ticker}&apikey=${FMP_KEY}`);
   if (!Array.isArray(d) || !d[0]) return null;
@@ -41,50 +47,74 @@ async function getTTMPE(ticker) {
   return (v && isFinite(v) && v > 0 && v < 500) ? +v.toFixed(2) : null;
 }
 
-// ── Finnhub: all enrichment in one call ───────────────────
+async function getQuarterlyEPS(ticker) {
+  const d = await apiFetch(`${FMP_BASE}/income-statement?symbol=${ticker}&period=quarter&limit=10&apikey=${FMP_KEY}`);
+  if (!Array.isArray(d) || !d.length) return [];
+  return d.map(q => ({
+    date: q.date,
+    eps: q.epsDiluted ?? q.eps ?? null,
+  })).filter(q => q.eps !== null && isFinite(q.eps));
+}
+
+async function getDailyPrices(ticker) {
+  const from = twoYearsAgo();
+  const d = await apiFetch(`${FMP_BASE}/historical-price-eod/light?symbol=${ticker}&from=${from}&apikey=${FMP_KEY}`);
+  if (!Array.isArray(d) || !d.length) return [];
+  return d.map(p => ({ date: p.date, price: p.price }))
+    .filter(p => p.price && isFinite(p.price) && p.price > 0)
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+
+function calcRollingPE(quarters, prices) {
+  if (!quarters.length || !prices.length) return [];
+  const rollingPEs = [];
+  for (const p of prices) {
+    const trailing = quarters.filter(q => q.date <= p.date).slice(0, 4);
+    if (trailing.length < 4) continue;
+    const ttmEPS = trailing.reduce((a, q) => a + q.eps, 0);
+    if (ttmEPS <= 0) continue;
+    const pe = +(p.price / ttmEPS).toFixed(2);
+    if (pe > 0 && pe < 500) {
+      rollingPEs.push({ date: p.date, pe });
+    }
+  }
+  return rollingPEs;
+}
+
 async function getFinnhubData(ticker) {
   const d = await apiFetch(`${FH_BASE}/stock/metric?symbol=${ticker}&metric=all&token=${FH_KEY}`);
   if (!d || !d.metric) return null;
   const m = d.metric;
-
   const safe = (v, min = -9999, max = 9999) => {
     if (v === null || v === undefined || !isFinite(v)) return null;
     if (v < min || v > max) return null;
     return +v;
   };
-
   return {
-    // Core valuation
-    fwdPE:        safe(m.forwardPE,       0, 500),
-    fhTTMPE:      safe(m.peTTM,           0, 500),   // for cross-check vs FMP
-    pegTTM:       safe(m.pegTTM,          -50, 50),
-    evEbitdaTTM:  safe(m.evEbitdaTTM,     0, 1000),
-
-    // Growth
-    epsGrowthTTMYoy:  safe(m.epsGrowthTTMYoy,       -500, 2000),
-    epsGrowth3Y:      safe(m.epsGrowth3Y,            -500, 2000),
-    revenueGrowthTTM: safe(m.revenueGrowthTTMYoy,   -100, 2000),
-
-    // Quality / margins
-    grossMarginTTM:      safe(m.grossMarginTTM,      -100, 100),
-    netProfitMarginTTM:  safe(m.netProfitMarginTTM,  -100, 100),
-    roeTTM:              safe(m.roeTTM,              -500, 1000),
-
-    // Risk
-    beta: safe(m.beta, -5, 10),
-
-    // 52-week range (for analysis text only)
-    week52High: safe(m['52WeekHigh'], 0, 1000000),
-    week52Low:  safe(m['52WeekLow'],  0, 1000000),
+    fwdPE:               safe(m.forwardPE,            0, 500),
+    fhTTMPE:             safe(m.peTTM,                0, 500),
+    pegTTM:              safe(m.pegTTM,             -50,  50),
+    evEbitdaTTM:         safe(m.evEbitdaTTM,          0, 1000),
+    epsGrowthTTMYoy:     safe(m.epsGrowthTTMYoy,   -500, 2000),
+    epsGrowth3Y:         safe(m.epsGrowth3Y,        -500, 2000),
+    revenueGrowthTTM:    safe(m.revenueGrowthTTMYoy,-100, 2000),
+    grossMarginTTM:      safe(m.grossMarginTTM,     -100,  100),
+    netProfitMarginTTM:  safe(m.netProfitMarginTTM, -100,  100),
+    roeTTM:              safe(m.roeTTM,             -500, 1000),
+    beta:                safe(m.beta,                 -5,   10),
+    week52High:          safe(m['52WeekHigh'],         0, 1e6),
+    week52Low:           safe(m['52WeekLow'],          0, 1e6),
   };
 }
 
-// ── File helpers ───────────────────────────────────────────
 function loadTickerFile(ticker) {
   const fp = path.join(DATA_DIR, `${ticker}.json`);
-  if (!fs.existsSync(fp)) return { ticker, daily: [] };
-  try { return JSON.parse(fs.readFileSync(fp, 'utf8')); }
-  catch { return { ticker, daily: [] }; }
+  if (!fs.existsSync(fp)) return { ticker, daily: [], rollingPE: [] };
+  try {
+    const data = JSON.parse(fs.readFileSync(fp, 'utf8'));
+    if (!data.rollingPE) data.rollingPE = [];
+    return data;
+  } catch { return { ticker, daily: [], rollingPE: [] }; }
 }
 
 function saveTickerFile(ticker, data) {
@@ -92,30 +122,29 @@ function saveTickerFile(ticker, data) {
   fs.writeFileSync(fp, JSON.stringify(data, null, 2));
 }
 
-// ── Main ticker processor ──────────────────────────────────
 async function processTicker(ticker) {
   console.log(`  ${ticker}...`);
-
-  const [ttmPE, fhData] = await Promise.all([
+  const [ttmPE, fhData, quarters, prices] = await Promise.all([
     getTTMPE(ticker),
     getFinnhubData(ticker),
+    getQuarterlyEPS(ticker),
+    getDailyPrices(ticker),
   ]);
 
-  const fwdPE       = fhData?.fwdPE       ?? null;
-  const fhTTMPE     = fhData?.fhTTMPE     ?? null;
-  const pegTTM      = fhData?.pegTTM      ?? null;
-  const evEbitdaTTM = fhData?.evEbitdaTTM ?? null;
-  const epsGrowthTTMYoy  = fhData?.epsGrowthTTMYoy  ?? null;
-  const epsGrowth3Y      = fhData?.epsGrowth3Y      ?? null;
-  const revenueGrowthTTM = fhData?.revenueGrowthTTM ?? null;
-  const grossMarginTTM   = fhData?.grossMarginTTM   ?? null;
+  const fwdPE              = fhData?.fwdPE              ?? null;
+  const fhTTMPE            = fhData?.fhTTMPE            ?? null;
+  const pegTTM             = fhData?.pegTTM             ?? null;
+  const evEbitdaTTM        = fhData?.evEbitdaTTM        ?? null;
+  const epsGrowthTTMYoy    = fhData?.epsGrowthTTMYoy    ?? null;
+  const epsGrowth3Y        = fhData?.epsGrowth3Y        ?? null;
+  const revenueGrowthTTM   = fhData?.revenueGrowthTTM   ?? null;
+  const grossMarginTTM     = fhData?.grossMarginTTM     ?? null;
   const netProfitMarginTTM = fhData?.netProfitMarginTTM ?? null;
-  const roeTTM           = fhData?.roeTTM           ?? null;
-  const beta             = fhData?.beta             ?? null;
-  const week52High       = fhData?.week52High       ?? null;
-  const week52Low        = fhData?.week52Low        ?? null;
+  const roeTTM             = fhData?.roeTTM             ?? null;
+  const beta               = fhData?.beta               ?? null;
+  const week52High         = fhData?.week52High         ?? null;
+  const week52Low          = fhData?.week52Low          ?? null;
 
-  // Cross-check: flag if FMP and Finnhub TTM PE diverge > 15%
   let peCrossCheck = null;
   if (ttmPE && fhTTMPE && ttmPE > 0 && fhTTMPE > 0) {
     const divergence = Math.abs(ttmPE - fhTTMPE) / ttmPE;
@@ -126,48 +155,37 @@ async function processTicker(ticker) {
     };
   }
 
+  const rollingPE = calcRollingPE(quarters, prices);
+  const sorted = [...rollingPE].sort((a,b) => b.date.localeCompare(a.date));
+  const avg1Y = sorted.slice(0,252).reduce((a,p)=>a+p.pe,0) / Math.min(sorted.length,252);
+  const avg2Y = sorted.reduce((a,p)=>a+p.pe,0) / (sorted.length||1);
+
   const entry = {
-    date: today(),
-    ttmPE,
-    fwdPE,
-    pegTTM,
-    evEbitdaTTM,
-    epsGrowthTTMYoy,
-    epsGrowth3Y,
-    revenueGrowthTTM,
-    grossMarginTTM,
-    netProfitMarginTTM,
-    roeTTM,
-    beta,
-    week52High,
-    week52Low,
-    peCrossCheck,
+    date: today(), ttmPE, fwdPE, pegTTM, evEbitdaTTM,
+    epsGrowthTTMYoy, epsGrowth3Y, revenueGrowthTTM,
+    grossMarginTTM, netProfitMarginTTM, roeTTM,
+    beta, week52High, week52Low, peCrossCheck,
   };
 
-  console.log(`    TTM: ${ttmPE ?? 'N/A'}  Fwd: ${fwdPE ?? 'N/A'}  PEG: ${pegTTM ?? 'N/A'}  Beta: ${beta ?? 'N/A'}  EPS g: ${epsGrowthTTMYoy ?? 'N/A'}%`);
-  if (peCrossCheck?.flagged) {
-    console.warn(`    ⚠ PE cross-check: FMP=${ttmPE} FH=${fhTTMPE} divergence=${(peCrossCheck.divergence*100).toFixed(1)}%`);
-  }
+  console.log(`    TTM: ${ttmPE??'N/A'}  Fwd: ${fwdPE??'N/A'}  Rolling PE days: ${rollingPE.length}  1Y avg: ${avg1Y.toFixed(1)}  2Y avg: ${avg2Y.toFixed(1)}`);
+  if (peCrossCheck?.flagged) console.warn(`    ⚠ PE cross-check: FMP=${ttmPE} FH=${fhTTMPE}`);
 
   const file = loadTickerFile(ticker);
   file.daily = file.daily.filter(x => x.date !== today());
   file.daily.push(entry);
-  file.daily.sort((a, b) => a.date.localeCompare(b.date));
+  file.daily.sort((a,b) => a.date.localeCompare(b.date));
   if (file.daily.length > 365) file.daily = file.daily.slice(-365);
+  file.rollingPE = rollingPE;
   saveTickerFile(ticker, file);
-
   return entry;
 }
 
-// ── Main ───────────────────────────────────────────────────
 async function main() {
   if (!FMP_KEY) { console.error('FMP_API_KEY not set'); process.exit(1); }
   if (!FH_KEY)  { console.error('FINNHUB_API_KEY not set'); process.exit(1); }
   if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR);
-
-  console.log(`\nFetching PE + fundamentals for ${TICKERS.length} tickers — ${today()}\n`);
+  console.log(`\nFetching PE + fundamentals + rolling history for ${TICKERS.length} tickers — ${today()}\n`);
   let ok = 0, fail = 0, flagged = 0;
-
   for (let i = 0; i < TICKERS.length; i++) {
     const t = TICKERS[i];
     try {
@@ -178,10 +196,8 @@ async function main() {
       console.warn(`  ERROR ${t}: ${e.message}`);
       fail++;
     }
-    // Slightly longer sleep — two APIs in parallel, be respectful
-    if (i < TICKERS.length - 1) await sleep(400);
+    if (i < TICKERS.length - 1) await sleep(600);
   }
-
   console.log(`\nDone. ${ok} succeeded, ${fail} missing/failed, ${flagged} PE cross-check flags.`);
 }
 
