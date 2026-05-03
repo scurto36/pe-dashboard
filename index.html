@@ -602,30 +602,6 @@ function renderAll() {
   });
 
   Object.keys(SECTORS).forEach(s=>{
-    // Recompute wins live for active window so tab switching works
-    SECTORS[s].forEach(t => {
-      if (!SD[t]) return;
-      const dc2 = dayCount(t);
-      ALL_WINS.forEach(w => {
-        const hasData = (w === 30 || w === 90) ? dc2 >= w : true;
-        SD[t].wins[w] = hasData ? getWinData(t, w, SD[t].ttmPE, SD[t].fwdPE) : { pts:[], pct:null, avgPE:null, z:null, fz:null, fpct:null, p5:null, p95:null, source:'none', hasData:false };
-        SD[t].wins[w].hasData = hasData;
-      });
-    });
-  });
-
-  // Recompute wins for adHoc tickers too
-  adHoc.forEach(t => {
-    if (!SD[t]) return;
-    const dc2 = dayCount(t);
-    ALL_WINS.forEach(w => {
-      const hasData = (w === 30 || w === 90) ? dc2 >= w : true;
-      SD[t].wins[w] = hasData ? getWinData(t, w, SD[t].ttmPE, SD[t].fwdPE) : { pts:[], pct:null, avgPE:null, z:null, fz:null, fpct:null, p5:null, p95:null, source:'none', hasData:false };
-      SD[t].wins[w].hasData = hasData;
-    });
-  });
-
-  Object.keys(SECTORS).forEach(s=>{
     const pcts=SECTORS[s].map(t=>SD[t]?.wins[primW]?.pct).filter(p=>p!=null);
     secAvgPct[s]=pcts.length?Math.round(pcts.reduce((a,b)=>a+b,0)/pcts.length):null;
   });
