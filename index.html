@@ -155,7 +155,7 @@ button.hbtn:disabled { opacity: 0.4; cursor: not-allowed; }
 .afv { font-family: var(--mono); font-size: 9px; color: #fff; margin-left: 3px; }
 
 /* ── RANKINGS ── */
-.lb { width: 270px; flex-shrink: 0; border-left: 1px solid var(--border); display: flex; flex-direction: column; }
+.lb { width: 300px; flex-shrink: 0; border-left: 1px solid var(--border); display: flex; flex-direction: column; }
 .lbh { padding: 9px 13px; border-bottom: 1px solid var(--border); background: var(--bg2); display: flex; align-items: center; justify-content: space-between; }
 .lbtitle { font-family: var(--mono); font-size: 10px; color: #fff; letter-spacing: 0.1em; text-transform: uppercase; }
 .lbwt { display: flex; border: 1px solid var(--border2); border-radius: 2px; overflow: hidden; }
@@ -282,12 +282,20 @@ footer { padding: 9px 22px; border-top: 1px solid var(--border); font-family: va
     </div>
     <div class="lbbody">
       <div class="lbsec">
-        <div class="lbst" style="color:var(--green)">▼ Most Cheap (Fwd PE)</div>
-        <div id="lbc"></div>
+        <div class="lbst" style="color:var(--green)">▼ TTM Most Cheap</div>
+        <div id="lbc-ttm"></div>
       </div>
       <div class="lbsec">
-        <div class="lbst" style="color:var(--red)">▲ Most Expensive (Fwd PE)</div>
-        <div id="lbe"></div>
+        <div class="lbst" style="color:var(--red)">▲ TTM Most Expensive</div>
+        <div id="lbe-ttm"></div>
+      </div>
+      <div class="lbsec">
+        <div class="lbst" style="color:var(--green)">▼ Fwd Most Cheap</div>
+        <div id="lbc-fwd"></div>
+      </div>
+      <div class="lbsec">
+        <div class="lbst" style="color:var(--red)">▲ Fwd Most Expensive</div>
+        <div id="lbe-fwd"></div>
       </div>
     </div>
   </div>
@@ -436,15 +444,9 @@ function getDailySeries(ticker, days) {
   return (repoDaily[ticker]||[]).filter(d=>d.date>=cs&&d.ttmPE&&d.ttmPE>0&&d.ttmPE<500).map(d=>d.ttmPE);
 }
 function getAnnualSeries(ticker, years) {
-  const cutoff = new Date();
-  cutoff.setFullYear(cutoff.getFullYear() - years);
-  const cs = cutoff.toISOString().split('T')[0];
-  const daily = (repoDaily[ticker]||[])
-    .filter(d=>d.date>=cs&&d.ttmPE&&d.ttmPE>0&&d.ttmPE<500).map(d=>d.ttmPE);
-  if (daily.length >= 3) return { pts: daily, source: 'daily' };
   const annY = new Date().getFullYear();
   const annPts = (SD[ticker]?._annual||[])
-    .filter(d=>d.year>=annY-years).map(d=>d.pe).filter(v=>v>0&&v<500);
+    .filter(d => d.year >= annY - years).map(d => d.pe).filter(v => v > 0 && v < 500);
   return { pts: annPts, source: 'annual' };
 }
 function getFwdDailySeries(ticker, days) {
@@ -597,6 +599,30 @@ function renderAll() {
     if (w === 30 || w === 90) {
       b.classList.toggle('disabled', dc < w);
     }
+  });
+
+  Object.keys(SECTORS).forEach(s=>{
+    // Recompute wins live for active window so tab switching works
+    SECTORS[s].forEach(t => {
+      if (!SD[t]) return;
+      const dc2 = dayCount(t);
+      ALL_WINS.forEach(w => {
+        const hasData = (w === 30 || w === 90) ? dc2 >= w : true;
+        SD[t].wins[w] = hasData ? getWinData(t, w, SD[t].ttmPE, SD[t].fwdPE) : { pts:[], pct:null, avgPE:null, z:null, fz:null, fpct:null, p5:null, p95:null, source:'none', hasData:false };
+        SD[t].wins[w].hasData = hasData;
+      });
+    });
+  });
+
+  // Recompute wins for adHoc tickers too
+  adHoc.forEach(t => {
+    if (!SD[t]) return;
+    const dc2 = dayCount(t);
+    ALL_WINS.forEach(w => {
+      const hasData = (w === 30 || w === 90) ? dc2 >= w : true;
+      SD[t].wins[w] = hasData ? getWinData(t, w, SD[t].ttmPE, SD[t].fwdPE) : { pts:[], pct:null, avgPE:null, z:null, fz:null, fpct:null, p5:null, p95:null, source:'none', hasData:false };
+      SD[t].wins[w].hasData = hasData;
+    });
   });
 
   Object.keys(SECTORS).forEach(s=>{
@@ -781,23 +807,46 @@ function renderRow(d) {
 }
 
 function renderLB(vis) {
-  const ranked = vis.filter(d => d.wins[lbW]?.fpct !== null && d.wins[lbW]?.hasData !== false)
-    .sort((a,b) => (a.wins[lbW].fpct ?? 99) - (b.wins[lbW].fpct ?? 99));
-  const c5 = ranked.slice(0,5), e5 = ranked.slice(-5).reverse();
-  const row = (d, i, isE) => {
-    const fp = d.wins[lbW]?.fpct ?? null;
-    const tp = d.wins[lbW]?.pct  ?? null;
+  const nd = '<div style="padding:6px 13px;font-family:var(--mono);font-size:10px;color:#fff;opacity:0.4">No data yet</div>';
+
+  const ttmRow = (d, i, isE) => {
+    const tp = d.wins[lbW]?.pct ?? null;
     const col = isE ? 'var(--red)' : 'var(--green)';
     return `<div class="lbrow" onclick="scrollToRow('${d.ticker}')">
       <span class="lbrk">${i}</span>
       <span class="lbtk" style="color:${col}">${d.ticker}</span>
-      <span class="lbfpct">${tp !== null ? `TTM ${ordinal(tp)}` : ''}</span>
-      <span class="lbpct" style="color:${col}">${fp !== null ? `Fwd ${ordinal(fp)}` : '—'}</span>
+      <span class="lbfpct">${d.ttmPE !== null ? d.ttmPE.toFixed(1)+'x' : ''}</span>
+      <span class="lbpct" style="color:${col}">${tp !== null ? ordinal(tp) : '—'}</span>
     </div>`;
   };
-  const nd = '<div style="padding:6px 13px;font-family:var(--mono);font-size:10px;color:var(--muted)">No data yet</div>';
-  document.getElementById('lbc').innerHTML = c5.map((d,i) => row(d,i+1,false)).join('') || nd;
-  document.getElementById('lbe').innerHTML = e5.map((d,i) => row(d,i+1,true)).join('')  || nd;
+
+  const fwdRow = (d, i, isE) => {
+    const fp = d.wins[lbW]?.fpct ?? null;
+    const col = isE ? 'var(--red)' : 'var(--green)';
+    return `<div class="lbrow" onclick="scrollToRow('${d.ticker}')">
+      <span class="lbrk">${i}</span>
+      <span class="lbtk" style="color:${col}">${d.ticker}</span>
+      <span class="lbfpct">${d.fwdPE !== null ? d.fwdPE.toFixed(1)+'x' : ''}</span>
+      <span class="lbpct" style="color:${col}">${fp !== null ? ordinal(fp) : '—'}</span>
+    </div>`;
+  };
+
+  // TTM rankings
+  const ttmRanked = vis.filter(d => d.wins[lbW]?.pct !== null && d.wins[lbW]?.hasData !== false)
+    .sort((a,b) => (a.wins[lbW].pct ?? 99) - (b.wins[lbW].pct ?? 99));
+  const ttmCheap = ttmRanked.slice(0,5);
+  const ttmExp   = ttmRanked.slice(-5).reverse();
+
+  // Fwd rankings — only include tickers with actual fwd PE data
+  const fwdRanked = vis.filter(d => d.wins[lbW]?.fpct !== null && d.wins[lbW]?.hasData !== false && d.fwdPE !== null)
+    .sort((a,b) => (a.wins[lbW].fpct ?? 99) - (b.wins[lbW].fpct ?? 99));
+  const fwdCheap = fwdRanked.slice(0,5);
+  const fwdExp   = fwdRanked.slice(-5).reverse();
+
+  document.getElementById('lbc-ttm').innerHTML = ttmCheap.map((d,i) => ttmRow(d,i+1,false)).join('') || nd;
+  document.getElementById('lbe-ttm').innerHTML = ttmExp.map((d,i)   => ttmRow(d,i+1,true)).join('')  || nd;
+  document.getElementById('lbc-fwd').innerHTML = fwdCheap.map((d,i) => fwdRow(d,i+1,false)).join('') || nd;
+  document.getElementById('lbe-fwd').innerHTML = fwdExp.map((d,i)   => fwdRow(d,i+1,true)).join('')  || nd;
 }
 
 // ── ANALYSIS PANEL ─────────────────────────────────────────
