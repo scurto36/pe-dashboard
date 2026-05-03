@@ -437,29 +437,29 @@ async function getFinnhubMetrics(t) {
 }
 
 // ── SERIES BUILDERS ────────────────────────────────────────
-function getDailySeries(ticker, days) {
+function getFullAnnualPts(ticker) {
+  // All available annual PE data — up to 6 years — used as static baseline
+  return (SD[ticker]?._annual||[]).map(d=>d.pe).filter(v=>v>0&&v<500);
+}
+function getDailyPts(ticker, days) {
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - days);
   const cs = cutoff.toISOString().split('T')[0];
   return (repoDaily[ticker]||[]).filter(d=>d.date>=cs&&d.ttmPE&&d.ttmPE>0&&d.ttmPE<500).map(d=>d.ttmPE);
 }
-function getAnnualSeries(ticker, years) {
-  const annY = new Date().getFullYear();
-  const annPts = (SD[ticker]?._annual||[])
-    .filter(d => d.year >= annY - years).map(d => d.pe).filter(v => v > 0 && v < 500);
-  return { pts: annPts, source: 'annual' };
-}
-function getFwdDailySeries(ticker, days) {
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - days);
-  const cs = cutoff.toISOString().split('T')[0];
-  return (repoDaily[ticker]||[]).filter(d=>d.date>=cs&&d.fwdPE&&d.fwdPE>0&&d.fwdPE<500).map(d=>d.fwdPE);
-}
-function getFwdAnnualSeries(ticker, years) {
-  const cutoff = new Date();
-  cutoff.setFullYear(cutoff.getFullYear() - years);
-  const cs = cutoff.toISOString().split('T')[0];
-  return (repoDaily[ticker]||[]).filter(d=>d.date>=cs&&d.fwdPE&&d.fwdPE>0&&d.fwdPE<500).map(d=>d.fwdPE);
+function getAvgForWindow(ticker, w) {
+  // Returns avg PE for a given window — used for notch position only
+  if (w === 30 || w === 90) {
+    const pts = getDailyPts(ticker, w);
+    const st = stats(pts);
+    return st ? st.mean : null;
+  } else {
+    const annY = new Date().getFullYear();
+    const pts = (SD[ticker]?._annual||[])
+      .filter(d => d.year >= annY - w).map(d=>d.pe).filter(v=>v>0&&v<500);
+    const st = stats(pts);
+    return st ? st.mean : null;
+  }
 }
 function dayCount(ticker) { return (repoDaily[ticker]||[]).length; }
 
@@ -472,7 +472,7 @@ function stats(s) {
 }
 function zscore(v,m,std){ if(!std||!v) return null; return +((v-m)/std).toFixed(2); }
 
-// percentile from raw series: what % of pts is currentVal above?
+// percentile: what % of history is val above?
 function seriesPct(val, pts) {
   if (!val || !pts || pts.length < 2) return null;
   const below = pts.filter(p => p <= val).length;
@@ -486,42 +486,6 @@ function pctile(pts, p) {
   const idx = (p/100) * (sorted.length - 1);
   const lo = Math.floor(idx), hi = Math.ceil(idx);
   return sorted[lo] + (sorted[hi]-sorted[lo]) * (idx-lo);
-}
-
-// ── WINDOW DATA BUILDER ────────────────────────────────────
-function getWinData(ticker, w, ttmPE, fwdPE) {
-  let pts, fpts, source;
-  if (w === 30 || w === 90) {
-    pts = getDailySeries(ticker, w);
-    fpts = getFwdDailySeries(ticker, w);
-    source = 'daily';
-  } else {
-    const s = getAnnualSeries(ticker, w);
-    pts = s.pts; source = s.source;
-    fpts = getFwdAnnualSeries(ticker, w);
-  }
-
-  const st = stats(pts);
-  const z = st && ttmPE ? zscore(ttmPE, st.mean, st.std) : null;
-  const pct = seriesPct(ttmPE, pts);
-  const avgPE = st ? st.mean : null;
-
-  const fst = fpts.length >= 3 ? stats(fpts) : null;
-  let fz = null, fpct = null;
-  if (fwdPE !== null) {
-    const fm = fst ? fst.mean : (st ? st.mean : null);
-    const fs = fst ? fst.std  : (st ? st.std  : null);
-    if (fm && fs) fz = zscore(fwdPE, fm, fs);
-    // Use TTM series as baseline for Fwd percentile — more stable than sparse Fwd history
-    fpct = seriesPct(fwdPE, pts.length >= 2 ? pts : (fpts.length >= 2 ? fpts : []));
-  }
-
-  // bar range
-  const allPts = [...pts];
-  const p5  = pctile(allPts, 5);
-  const p95 = pctile(allPts, 95);
-
-  return { pts, fpts, source, z, pct, avgPE, mean: st?.mean, std: st?.std, fz, fpct, p5, p95 };
 }
 
 // ── PROCESS TICKER ─────────────────────────────────────────
@@ -563,11 +527,24 @@ async function procTicker(t) {
     repoDaily[t].sort((a,b)=>a.date.localeCompare(b.date));
   }
 
-  const wins = {}, dc = dayCount(t);
+  // ── Static baseline: full annual history ──
+  const fullPts = getFullAnnualPts(t);
+  const fullSt  = stats(fullPts);
+
+  // Static percentiles — never change with tab switching
+  const ttmPct = seriesPct(ttmPE, fullPts);
+  const fwdPct = seriesPct(fwdPE, fullPts); // Fwd vs TTM history
+
+  // Bar range from full history
+  const barP5  = pctile(fullPts, 5)  ?? (fullSt ? fullSt.mean * 0.5 : null);
+  const barP95 = pctile(fullPts, 95) ?? (fullSt ? fullSt.mean * 1.5 : null);
+
+  // Notch avg PE per window — used only for notch position on bar
+  const dc = dayCount(t);
+  const notchAvg = {};
   ALL_WINS.forEach(w => {
-    const hasData = (w === 30 || w === 90) ? dc >= w : true;
-    wins[w] = hasData ? getWinData(t, w, ttmPE, fwdPE) : { pts:[], pct:null, avgPE:null, z:null, fz:null, fpct:null, p5:null, p95:null, source:'none', hasData:false };
-    wins[w].hasData = hasData;
+    const hasEnough = (w === 30 || w === 90) ? dc >= w : (fullPts.length >= 1);
+    notchAvg[w] = hasEnough ? getAvgForWindow(t, w) : null;
   });
 
   let dq = 'none';
@@ -577,8 +554,13 @@ async function procTicker(t) {
   if (earnDate) { const df=(new Date(earnDate)-new Date())/86400000; if(df>=0&&df<=30) earnSoon=true; }
 
   return {
-    ticker:t, name, sector:TSEC[t], ttmPE, fwdPE, price, wins, dq, peCrossCheck,
-    earnSoon, earnDate, pegTTM, evEbitdaTTM, epsGrowthTTMYoy, epsGrowth3Y, revenueGrowthTTM,
+    ticker:t, name, sector:TSEC[t], ttmPE, fwdPE, price,
+    ttmPct, fwdPct,           // static, never change
+    barP5, barP95,            // bar endpoints from full history
+    notchAvg,                 // avg PE per window for notch positions
+    fullPts, fullSt,          // full history
+    dq, peCrossCheck, earnSoon, earnDate,
+    pegTTM, evEbitdaTTM, epsGrowthTTMYoy, epsGrowth3Y, revenueGrowthTTM,
     grossMarginTTM, netProfitMarginTTM, roeTTM, beta, week52High, week52Low, fhTTMPE,
   };
 }
@@ -602,16 +584,16 @@ function renderAll() {
   });
 
   Object.keys(SECTORS).forEach(s=>{
-    const pcts=SECTORS[s].map(t=>SD[t]?.wins[primW]?.pct).filter(p=>p!=null);
+    const pcts=SECTORS[s].map(t=>SD[t]?.ttmPct).filter(p=>p!=null);
     secAvgPct[s]=pcts.length?Math.round(pcts.reduce((a,b)=>a+b,0)/pcts.length):null;
   });
-  const allPcts=ALL.map(t=>SD[t]?.wins[primW]?.pct).filter(p=>p!=null);
+  const allPcts=ALL.map(t=>SD[t]?.ttmPct).filter(p=>p!=null);
   const pavgPct=allPcts.length?Math.round(allPcts.reduce((a,b)=>a+b,0)/allPcts.length):null;
   const vis=(activeSec==='All'?ALL:SECTORS[activeSec]||[]).map(t=>SD[t]).filter(Boolean);
 
-  const cheap=vis.filter(d=>{const p=d.wins[primW]?.pct;return p!==null&&p<=(100-thrPct);}).length;
-  const exp  =vis.filter(d=>{const p=d.wins[primW]?.pct;return p!==null&&p>=thrPct;}).length;
-  const na   =vis.filter(d=>d.wins[primW]?.pct===null).length;
+  const cheap=vis.filter(d=>d.ttmPct!==null&&d.ttmPct<=(100-thrPct)).length;
+  const exp  =vis.filter(d=>d.ttmPct!==null&&d.ttmPct>=thrPct).length;
+  const na   =vis.filter(d=>d.ttmPct===null&&d.fwdPct===null).length;
   const es   =vis.filter(d=>d.earnSoon).length;
 
   const winLabel = {30:'30d',90:'90d',1:'1Y',2:'2Y'}[primW];
@@ -669,7 +651,7 @@ function renderList() {
     const ts=SECTORS[sec].filter(t=>SD[t]); if(!ts.length) return;
     const ap=secAvgPct[sec],apc=ap!==null?pctCol(ap):'var(--muted)',aps=ap!==null?`${ap}% avg`:'— avg';
     html+=`<div><div class="shdr"><span class="sname">${sec}</span><span class="savgz" style="color:${apc}">${aps}</span><span class="scnt">${ts.length} stocks</span></div>`;
-    ts.slice().sort((a,b)=>{const pa=SD[a]?.wins[primW]?.pct??99,pb=SD[b]?.wins[primW]?.pct??99;return pa-pb;})
+    ts.slice().sort((a,b)=>{const pa=SD[a]?.ttmPct??99,pb=SD[b]?.ttmPct??99;return pa-pb;})
       .forEach(t=>{html+=renderRow(SD[t]);});
     html+='</div>';
   });
@@ -677,19 +659,14 @@ function renderList() {
 }
 
 function renderRow(d) {
-  const {ticker:t,name,ttmPE,fwdPE,wins,dq,peCrossCheck,earnSoon,earnDate,pegTTM,fhTTMPE}=d;
-  const pw = wins[primW];
-  const pct = pw?.pct ?? null;
-  const fpct = pw?.fpct ?? null;
+  const {ticker:t, name, ttmPE, fwdPE, ttmPct, fwdPct, barP5, barP95, notchAvg, dq, peCrossCheck, earnSoon, earnDate, pegTTM, fhTTMPE} = d;
+  const dc2 = dayCount(t);
 
-  const isPegGrowth = pct!==null && pct>=thrPct && pegTTM!==null && pegTTM>0 && pegTTM<1;
-  const expCnt = ANNUAL_WINDOWS.filter(w=>{const p=wins[w]?.pct;return p!==null&&p>=thrPct;}).length;
-
+  const isPegGrowth = ttmPct!==null && ttmPct>=thrPct && pegTTM!==null && pegTTM>0 && pegTTM<1;
   let rc='', tc='';
   if(isPegGrowth){rc='sgrow';tc='grow';}
-  else if(expCnt>=2){rc='sex';tc='exp';}
-  else if(expCnt===1){tc='amb';}
-  else if(pct!==null&&pct<=(100-thrPct)){rc='sch';tc='cheap';}
+  else if(ttmPct!==null && ttmPct>=thrPct){rc='sex';tc='exp';}
+  else if(ttmPct!==null && ttmPct<=(100-thrPct)){rc='sch';tc='cheap';}
 
   let dqc,dqtip;
   if(peCrossCheck){dqc='dqx';dqtip=`PE cross-check: FMP=${ttmPE} vs Finnhub=${fhTTMPE?.toFixed(1)} (>15% divergence)`;}
@@ -697,47 +674,37 @@ function renderRow(d) {
   else if(dq==='partial'){dqc='dqp';dqtip='TTM only';}
   else{dqc='dqn';dqtip='No PE data';}
 
-  const eb=earnSoon?`<span class="ebdg" title="Earnings: ${earnDate}">E</span>`:'';
+  const eb = earnSoon ? `<span class="ebdg" title="Earnings: ${earnDate}">E</span>` : '';
 
-  // ── Build bar ──
-  // Use unified scale: 5th/95th across ALL windows so notches stay consistent
-  const allP5s  = ALL_WINS.map(w=>wins[w]?.p5 ).filter(v=>v!=null);
-  const allP95s = ALL_WINS.map(w=>wins[w]?.p95).filter(v=>v!=null);
-  const p5  = allP5s.length  ? Math.min(...allP5s)  : null;
-  const p95 = allP95s.length ? Math.max(...allP95s) : null;
-  const hasRange = p5!==null && p95!==null && p95>p5;
-
+  // Bar always uses full history range
+  const hasRange = barP5!==null && barP95!==null && barP95>barP5;
   function peToBarPct(pe) {
     if (!hasRange || pe===null) return null;
-    return Math.max(2, Math.min(98, ((pe - p5) / (p95 - p5)) * 100));
+    return Math.max(2, Math.min(98, ((pe - barP5) / (barP95 - barP5)) * 100));
   }
 
   let barHtml = `<div class="btrack"></div>`;
 
-  // Notches for each window
+  // All 4 notches — dimmed if no data, active tab shows label
   ALL_WINS.forEach(w => {
     const wc = WIN_CFG[w];
-    const wd = wins[w];
-    const avg = wd?.avgPE ?? null;
+    const avg = notchAvg ? notchAvg[w] : null;
     const active = w === primW;
-    const hasData = wd?.hasData !== false && avg !== null;
+    const hasData = avg !== null;
     const pos = peToBarPct(avg);
     if (pos === null) return;
-
     const dimClass = hasData ? '' : 'dim';
     const lblClass = active && hasData ? 'show' : '';
-    const lblTxt = avg ? avg.toFixed(1)+'x' : '';
-
     barHtml += `<div class="bnotch ${dimClass}" style="left:${pos}%;background:${wc.color}"></div>`;
-    barHtml += `<div class="bnotch-lbl ${lblClass}" style="left:${pos}%;color:${wc.color}">${wc.label} ${lblTxt}</div>`;
+    barHtml += `<div class="bnotch-lbl ${lblClass}" style="left:${pos}%;color:${wc.color}">${wc.label} ${avg.toFixed(1)}x</div>`;
   });
 
-  // TTM dot + value label above
+  // TTM dot — solid, label above
   if (ttmPE !== null) {
     const pos = peToBarPct(ttmPE);
     if (pos !== null) {
-      const col = pctCol(pct);
-      const tip = `${t} · TTM PE\nPE: ${ttmPE}x\nPercentile: ${pct!==null?pct+'th':'—'} (${WIN_CFG[primW].label})\n"Higher than ${pct??'—'}% of history"`;
+      const col = pctCol(ttmPct);
+      const tip = `${t} · TTM PE\nPE: ${ttmPE}x\nPercentile: ${ttmPct!==null?ordinal(ttmPct):'—'}\n"Higher than ${ttmPct??'—'}% of history"`;
       barHtml += `<div class="zdot" style="left:${pos}%">
         <div style="position:absolute;bottom:14px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:8px;color:${col};white-space:nowrap;">${ttmPE.toFixed(1)}x</div>
         <svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4" fill="${col}"/></svg>
@@ -746,12 +713,12 @@ function renderRow(d) {
     }
   }
 
-  // Fwd PE dot + value label above
+  // Fwd dot — hollow, label below
   if (fwdPE !== null) {
     const pos = peToBarPct(fwdPE);
     if (pos !== null) {
-      const fc = pctCol(fpct);
-      const tip = `${t} · Fwd PE\nFwd PE: ${fwdPE.toFixed(1)}x\nPercentile: ${fpct!==null?fpct+'th':'—'} (${WIN_CFG[primW].label})`;
+      const fc = pctCol(fwdPct);
+      const tip = `${t} · Fwd PE\nFwd PE: ${fwdPE.toFixed(1)}x\nPercentile: ${fwdPct!==null?ordinal(fwdPct):'—'}`;
       barHtml += `<div class="zdot" style="left:${pos}%;margin-top:4px">
         <div style="position:absolute;top:14px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:8px;color:${fc};white-space:nowrap;">${fwdPE.toFixed(1)}x</div>
         <svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="3.5" fill="none" stroke="${fc}" stroke-width="1.5"/></svg>
@@ -760,13 +727,13 @@ function renderRow(d) {
     }
   }
 
-  const pctStr  = pct  !== null ? ordinal(pct)  : '—';
-  const fpctStr = fpct !== null ? ordinal(fpct) : '—';
-  const pvh=`<div class="pr2"><span class="pl">TTM</span><span class="pn">${ttmPE!==null?ttmPE.toFixed(1)+'x':'—'}</span><span class="pz2" style="color:${pctCol(pct)}">${pctStr}</span></div>
-    <div class="pr2"><span class="pl">Fwd</span><span class="pn">${fwdPE!==null?fwdPE.toFixed(1)+'x':'—'}</span><span class="pz2" style="color:${pctCol(fpct)}">${fpctStr}</span></div>`;
+  const pctStr  = ttmPct !== null ? ordinal(ttmPct) : '—';
+  const fpctStr = fwdPct !== null ? ordinal(fwdPct) : '—';
+  const pvh = `<div class="pr2"><span class="pl">TTM</span><span class="pn">${ttmPE!==null?ttmPE.toFixed(1)+'x':'—'}</span><span class="pz2" style="color:${pctCol(ttmPct)}">${pctStr}</span></div>
+    <div class="pr2"><span class="pl">Fwd</span><span class="pn">${fwdPE!==null?fwdPE.toFixed(1)+'x':'—'}</span><span class="pz2" style="color:${pctCol(fwdPct)}">${fpctStr}</span></div>`;
 
-  const dc2=dayCount(t),cp=Math.min(dc2/120*100,100);
-  const covh=`<div class="covb"><div class="covl">${dc2}d</div><div class="covt"><div class="covf" style="width:${cp}%"></div></div></div>`;
+  const cp = Math.min(dc2/120*100,100);
+  const covh = `<div class="covb"><div class="covl">${dc2}d</div><div class="covt"><div class="covf" style="width:${cp}%"></div></div></div>`;
 
   return `<div class="srw" id="wrap-${t}">
     <div class="sr ${rc}" id="row-${t}">
@@ -786,43 +753,32 @@ function renderLB(vis) {
   const nd = '<div style="padding:6px 13px;font-family:var(--mono);font-size:10px;color:#fff;opacity:0.4">No data yet</div>';
 
   const ttmRow = (d, i, isE) => {
-    const tp = d.wins[lbW]?.pct ?? null;
     const col = isE ? 'var(--red)' : 'var(--green)';
     return `<div class="lbrow" onclick="scrollToRow('${d.ticker}')">
       <span class="lbrk">${i}</span>
       <span class="lbtk" style="color:${col}">${d.ticker}</span>
       <span class="lbfpct">${d.ttmPE !== null ? d.ttmPE.toFixed(1)+'x' : ''}</span>
-      <span class="lbpct" style="color:${col}">${tp !== null ? ordinal(tp) : '—'}</span>
+      <span class="lbpct" style="color:${col}">${d.ttmPct !== null ? ordinal(d.ttmPct) : '—'}</span>
     </div>`;
   };
 
   const fwdRow = (d, i, isE) => {
-    const fp = d.wins[lbW]?.fpct ?? null;
     const col = isE ? 'var(--red)' : 'var(--green)';
     return `<div class="lbrow" onclick="scrollToRow('${d.ticker}')">
       <span class="lbrk">${i}</span>
       <span class="lbtk" style="color:${col}">${d.ticker}</span>
       <span class="lbfpct">${d.fwdPE !== null ? d.fwdPE.toFixed(1)+'x' : ''}</span>
-      <span class="lbpct" style="color:${col}">${fp !== null ? ordinal(fp) : '—'}</span>
+      <span class="lbpct" style="color:${col}">${d.fwdPct !== null ? ordinal(d.fwdPct) : '—'}</span>
     </div>`;
   };
 
-  // TTM rankings
-  const ttmRanked = vis.filter(d => d.wins[lbW]?.pct !== null && d.wins[lbW]?.hasData !== false)
-    .sort((a,b) => (a.wins[lbW].pct ?? 99) - (b.wins[lbW].pct ?? 99));
-  const ttmCheap = ttmRanked.slice(0,5);
-  const ttmExp   = ttmRanked.slice(-5).reverse();
+  const ttmRanked = vis.filter(d => d.ttmPct !== null).sort((a,b) => a.ttmPct - b.ttmPct);
+  const fwdRanked = vis.filter(d => d.fwdPct !== null && d.fwdPE !== null).sort((a,b) => a.fwdPct - b.fwdPct);
 
-  // Fwd rankings — only include tickers with actual fwd PE data
-  const fwdRanked = vis.filter(d => d.wins[lbW]?.fpct !== null && d.wins[lbW]?.hasData !== false && d.fwdPE !== null)
-    .sort((a,b) => (a.wins[lbW].fpct ?? 99) - (b.wins[lbW].fpct ?? 99));
-  const fwdCheap = fwdRanked.slice(0,5);
-  const fwdExp   = fwdRanked.slice(-5).reverse();
-
-  document.getElementById('lbc-ttm').innerHTML = ttmCheap.map((d,i) => ttmRow(d,i+1,false)).join('') || nd;
-  document.getElementById('lbe-ttm').innerHTML = ttmExp.map((d,i)   => ttmRow(d,i+1,true)).join('')  || nd;
-  document.getElementById('lbc-fwd').innerHTML = fwdCheap.map((d,i) => fwdRow(d,i+1,false)).join('') || nd;
-  document.getElementById('lbe-fwd').innerHTML = fwdExp.map((d,i)   => fwdRow(d,i+1,true)).join('')  || nd;
+  document.getElementById('lbc-ttm').innerHTML = ttmRanked.slice(0,5).map((d,i) => ttmRow(d,i+1,false)).join('') || nd;
+  document.getElementById('lbe-ttm').innerHTML = ttmRanked.slice(-5).reverse().map((d,i) => ttmRow(d,i+1,true)).join('') || nd;
+  document.getElementById('lbc-fwd').innerHTML = fwdRanked.slice(0,5).map((d,i) => fwdRow(d,i+1,false)).join('') || nd;
+  document.getElementById('lbe-fwd').innerHTML = fwdRanked.slice(-5).reverse().map((d,i) => fwdRow(d,i+1,true)).join('') || nd;
 }
 
 // ── ANALYSIS PANEL ─────────────────────────────────────────
@@ -841,42 +797,37 @@ function togAn(t) {
     return;
   }
 
-  const {ttmPE,fwdPE,wins,earnSoon,earnDate,pegTTM,evEbitdaTTM,epsGrowthTTMYoy,revenueGrowthTTM,
+  const {ttmPE,fwdPE,ttmPct,fwdPct,notchAvg,fullSt,earnSoon,earnDate,pegTTM,evEbitdaTTM,epsGrowthTTMYoy,revenueGrowthTTM,
     grossMarginTTM,roeTTM,beta,week52High,week52Low,peCrossCheck,fhTTMPE}=d;
 
-  const pw   = wins[primW];
-  const pct  = pw?.pct  ?? null;
-  const fpct = pw?.fpct ?? null;
-  const avgPE= pw?.avgPE ?? null;
-  const src  = pw?.source ?? 'annual';
+  const pct  = ttmPct;
+  const fpct = fwdPct;
+  const avgPE = fullSt?.mean ?? null;
   const dc   = dayCount(t);
-  const wl   = {30:'30-day',90:'90-day',1:'1-year',2:'2-year'}[primW];
-  const expCnt = ANNUAL_WINDOWS.filter(w=>{const p=wins[w]?.pct;return p!==null&&p>=thrPct;}).length;
   const isPegGrowth = pct!==null&&pct>=thrPct&&pegTTM!==null&&pegTTM>0&&pegTTM<1;
 
   let tag,ts2;
   if(pct===null){tag='LIMITED DATA';ts2='color:var(--muted);background:rgba(90,106,122,0.15)';}
   else if(isPegGrowth){tag='EXPENSIVE · GROWING';ts2='color:var(--amber);background:rgba(240,165,0,0.12)';}
-  else if(expCnt>=2){tag='EXPENSIVE';ts2='color:var(--red);background:rgba(255,64,96,0.12)';}
+  else if(pct>=thrPct){tag='EXPENSIVE';ts2='color:var(--red);background:rgba(255,64,96,0.12)';}
   else if(pct<=(100-thrPct)){tag='CHEAP';ts2='color:var(--green);background:rgba(46,204,138,0.12)';}
-  else if(pct<thrPct){tag='FAIR VALUE';ts2='color:var(--amber);background:rgba(240,165,0,0.12)';}
-  else{tag='EXPENSIVE';ts2='color:var(--red);background:rgba(255,64,96,0.12)';}
+  else{tag='FAIR VALUE';ts2='color:var(--amber);background:rgba(240,165,0,0.12)';}
 
-  const srcNote = src==='daily'?`(${dc} daily obs.)`:'(annual bootstrap)';
+  const srcNote = dc >= 30 ? `(${dc} daily obs.)` : '(annual bootstrap)';
   let txt='';
 
-  if(pct===null) txt+=`Insufficient history to compute a ${wl} percentile. `;
-  else if(isPegGrowth) txt+=`${t} is at the ${pct}th percentile of its ${wl} PE history — historically expensive — but a PEG of ${pegTTM.toFixed(2)} suggests earnings growth may justify the premium. `;
-  else if(expCnt>=2) txt+=`${t}'s TTM PE is more expensive than ${pct}% of its history across multiple timeframes — high-conviction expensive signal ${srcNote}. `;
-  else if(pct<=(100-thrPct)) txt+=`${t}'s TTM PE is more expensive than only ${pct}% of its ${wl} history (current: ${ttmPE}x, avg: ${avgPE}x) ${srcNote} — cheap by its own history. `;
-  else txt+=`${t} is at the ${pct}th percentile of its ${wl} PE history (current: ${ttmPE}x, avg: ${avgPE}x) ${srcNote} — near fair value. `;
+  if(pct===null) txt+=`Insufficient history to compute a percentile. `;
+  else if(isPegGrowth) txt+=`${t} is at the ${ordinal(pct)} percentile of its PE history — historically expensive — but a PEG of ${pegTTM.toFixed(2)} suggests earnings growth may justify the premium. `;
+  else if(pct>=thrPct) txt+=`${t}'s TTM PE is more expensive than ${pct}% of its history ${srcNote} — expensive signal. `;
+  else if(pct<=(100-thrPct)) txt+=`${t}'s TTM PE is more expensive than only ${pct}% of its history (current: ${ttmPE}x, avg: ${avgPE}x) ${srcNote} — cheap by its own history. `;
+  else txt+=`${t} is at the ${ordinal(pct)} percentile of its PE history (current: ${ttmPE}x, avg: ${avgPE}x) ${srcNote} — near fair value. `;
 
-  // Timeframe agreement
-  const vpcts = ANNUAL_WINDOWS.map(w=>wins[w]?.pct).filter(p=>p!==null);
-  if(vpcts.length>=2){
-    const agree=vpcts.every(p=>p>=thrPct)||vpcts.every(p=>p<=(100-thrPct));
-    if(agree) txt+=`Both annual timeframes agree — high-conviction signal. `;
-    else txt+=`Mixed signals across timeframes (1Y: ${wins[1]?.pct??'N/A'}th, 2Y: ${wins[2]?.pct??'N/A'}th pct) — lower conviction. `;
+  // Notch context
+  const avg1Y = notchAvg?.[1] ?? null;
+  const avg2Y = notchAvg?.[2] ?? null;
+  if(avg1Y!==null && avg2Y!==null) {
+    if(avg1Y > avg2Y) txt += `1Y avg PE (${avg1Y.toFixed(1)}x) is above 2Y avg (${avg2Y.toFixed(1)}x) — recent valuation elevated vs longer history. `;
+    else if(avg1Y < avg2Y) txt += `1Y avg PE (${avg1Y.toFixed(1)}x) is below 2Y avg (${avg2Y.toFixed(1)}x) — recent valuation compressed vs longer history. `;
   }
 
   if(!isPegGrowth&&pegTTM!==null){
@@ -911,9 +862,9 @@ function togAn(t) {
 
   if(fwdPE!==null&&fpct!==null&&pct!==null){
     const gap=pct-fpct;
-    if(gap>10) txt+=`Fwd PE percentile (${fpct}th) is lower than TTM — market expects earnings to grow. `;
-    else if(gap<-10) txt+=`Fwd PE percentile (${fpct}th) is higher than TTM — analysts expect earnings decline. `;
-    else txt+=`TTM and Forward PE percentiles aligned (${pct}th vs ${fpct}th) — stable expectations. `;
+    if(gap>10) txt+=`Fwd PE (${ordinal(fpct)}) is lower than TTM — market expects earnings to grow. `;
+    else if(gap<-10) txt+=`Fwd PE (${ordinal(fpct)}) is higher than TTM — analysts expect earnings decline. `;
+    else txt+=`TTM and Forward PE percentiles aligned (${ordinal(pct)} vs ${ordinal(fpct)}) — stable expectations. `;
   } else if(!fwdPE) txt+=`No analyst forward estimates available. `;
 
   if(week52High!==null&&week52Low!==null&&d.price){
@@ -926,7 +877,7 @@ function togAn(t) {
   }
 
   if(earnSoon) txt+=`⚠ Earnings due ${earnDate} — signals subject to revision. `;
-  if(dc<30) txt+=`Daily database has ${dc} day${dc!==1?'s':''} — using annual bootstrap until 30 days accumulated. `;
+  if(dc<30) txt+=`Daily database has ${dc} day${dc!==1?'s':''} — accumulating until 30d/90d notches unlock. `;
   if(peCrossCheck) txt+=`⚠ FMP and Finnhub TTM PE diverge >15% (FMP: ${ttmPE}x vs Finnhub: ${fhTTMPE?.toFixed(1)}x) — treat with caution. `;
 
   const fItems=[
@@ -941,10 +892,10 @@ function togAn(t) {
   const fundHtml=fItems.length?`<div class="afund">${fItems.map(x=>`<span><span class="afk">${x.k}</span><span class="afv">${x.v}</span></span>`).join('')}</div>`:'';
 
   const meta=[
-    pct!==null?`TTM: ${pct}th pct (${wl})`:'TTM: no data',
-    fpct!==null?`Fwd: ${fpct}th pct`:'Fwd: no data',
-    ttmPE?`PE: ${ttmPE}x`:'',fwdPE?`Fwd: ${fwdPE.toFixed(1)}x`:'',
-    `${dc}d in repo`,src==='daily'?'✓ live data':'~ annual bootstrap',
+    pct!==null?`TTM: ${ordinal(pct)}`:'TTM: no data',
+    fpct!==null?`Fwd: ${ordinal(fpct)}`:'Fwd: no data',
+    ttmPE?`PE: ${ttmPE}x`:'', fwdPE?`Fwd: ${fwdPE.toFixed(1)}x`:'',
+    `${dc}d in repo`, dc>=30?'✓ live data':'~ annual bootstrap',
     peCrossCheck?'⚠ cross-check flag':'',
   ].filter(Boolean).join(' · ');
 
