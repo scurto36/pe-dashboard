@@ -11,6 +11,7 @@
   --text: #dde4ec; --muted: #4a5a6e; --muted2: #2e3d50;
   --accent: #3b8fff; --green: #2ecc8a; --red: #ff4060; --amber: #f0a500;
   --mono: 'IBM Plex Mono', monospace; --sans: 'IBM Plex Sans', sans-serif;
+  --c30: #38BDF8; --c90: #A78BFA; --c1y: #FB923C; --c2y: #34D399;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; overflow-x: hidden; }
@@ -33,12 +34,37 @@ button.hbtn { background: none; border: 1px solid var(--border2); color: var(--m
 button.hbtn:hover { border-color: var(--accent); color: var(--accent); }
 button.hbtn:disabled { opacity: 0.4; cursor: not-allowed; }
 
+/* search bar */
+.srchzone { display: flex; align-items: center; gap: 6px; }
+.srchbox { font-family: var(--mono); font-size: 11px; background: var(--bg2); border: 1px solid var(--border2); color: var(--text); padding: 4px 10px; width: 90px; letter-spacing: 0.08em; text-transform: uppercase; outline: none; transition: border-color 0.15s; border-radius: 2px; }
+.srchbox::placeholder { color: var(--muted2); text-transform: none; letter-spacing: 0; }
+.srchbox:focus { border-color: var(--accent); }
+.srchbtn { background: none; border: 1px solid var(--border2); color: var(--muted); font-family: var(--mono); font-size: 11px; padding: 4px 10px; cursor: pointer; transition: all 0.15s; border-radius: 2px; white-space: nowrap; }
+.srchbtn:hover { border-color: var(--accent); color: var(--accent); }
+.srchbtn:disabled { opacity: 0.4; cursor: not-allowed; }
+.srchstatus { font-family: var(--mono); font-size: 10px; color: var(--muted); white-space: nowrap; }
+
+/* ad hoc section */
+.adhoc-hdr { display: flex; align-items: center; gap: 10px; padding: 7px 22px 5px; background: rgba(59,143,255,0.06); border-bottom: 1px solid var(--border); border-top: 1px solid rgba(59,143,255,0.2); position: sticky; top: 0; z-index: 10; }
+.adhoc-row-wrap { position: relative; }
+.adhoc-remove { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-family: var(--mono); font-size: 10px; color: var(--muted2); background: none; border: none; cursor: pointer; padding: 2px 6px; transition: color 0.12s; z-index: 5; }
+.adhoc-remove:hover { color: var(--red); }
+
 .sum { display: flex; border-bottom: 1px solid var(--border); overflow-x: auto; }
 .si { flex: 1; min-width: 90px; padding: 10px 14px; border-right: 1px solid var(--border); }
 .si:last-child { border-right: none; }
 .sl { font-family: var(--mono); font-size: 9px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
 .sv { font-family: var(--mono); font-size: 15px; font-weight: 500; }
 .sv.g{color:var(--green)} .sv.r{color:var(--red)} .sv.a{color:var(--amber)} .sv.b{color:var(--accent)}
+
+/* threshold control */
+.thrzone { padding: 8px 22px; border-bottom: 1px solid var(--border); background: var(--bg2); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.thrlbl { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.07em; text-transform: uppercase; white-space: nowrap; }
+.thrbtns { display: flex; align-items: center; gap: 8px; }
+.thrb { font-family: var(--mono); font-size: 16px; width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--border2); background: none; color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.12s; line-height: 1; }
+.thrb:hover { border-color: var(--accent); color: var(--accent); }
+.thrval { font-family: var(--mono); font-size: 15px; font-weight: 500; color: var(--text); min-width: 48px; text-align: center; }
+.thrnote { font-family: var(--mono); font-size: 10px; color: var(--muted); white-space: nowrap; }
 
 #ab { display: none; padding: 6px 22px; background: rgba(255,64,96,0.08); border-bottom: 1px solid rgba(255,64,96,0.2); font-family: var(--mono); font-size: 11px; color: var(--red); cursor: pointer; }
 #ab:hover { background: rgba(255,64,96,0.12); }
@@ -52,28 +78,17 @@ button.hbtn:disabled { opacity: 0.4; cursor: not-allowed; }
 .wzone { padding: 7px 12px; border-left: 1px solid var(--border); display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
 .wlbl { font-family: var(--mono); font-size: 9px; color: var(--muted); letter-spacing: 0.07em; }
 .wtog { display: flex; border: 1px solid var(--border2); border-radius: 2px; overflow: hidden; }
-.wbtn { font-family: var(--mono); font-size: 10px; padding: 3px 9px; color: var(--muted); cursor: pointer; background: none; border: none; border-right: 1px solid var(--border2); transition: all 0.1s; }
+.wbtn { font-family: var(--mono); font-size: 10px; padding: 3px 9px; color: var(--muted); cursor: pointer; background: none; border: none; border-right: 1px solid var(--border2); transition: all 0.1s; white-space: nowrap; }
 .wbtn:last-child { border-right: none; }
 .wbtn.active { background: var(--accent); color: white; }
-
-.slzone { padding: 11px 22px; border-bottom: 1px solid var(--border); background: var(--bg2); display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-.sllbl { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.07em; text-transform: uppercase; white-space: nowrap; }
-.slwrap { flex: 1; min-width: 100px; position: relative; height: 34px; display: flex; align-items: center; }
-.sltrack { position: absolute; left: 0; right: 0; height: 4px; background: linear-gradient(to right, var(--green), var(--amber) 50%, var(--red)); border-radius: 2px; opacity: 0.3; }
-input[type=range].slinput { position: relative; width: 100%; -webkit-appearance: none; appearance: none; background: transparent; height: 4px; cursor: pointer; z-index: 2; }
-input[type=range].slinput::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--text); border: 2px solid var(--bg); box-shadow: 0 0 0 1px var(--border2); cursor: grab; }
-.slticks { position: absolute; left: 0; right: 0; top: 23px; display: flex; justify-content: space-between; pointer-events: none; }
-.sltick { font-family: var(--mono); font-size: 9px; color: var(--muted); }
-.slval { font-family: var(--mono); font-size: 14px; font-weight: 500; color: var(--text); min-width: 50px; text-align: right; white-space: nowrap; }
-.savgind { font-family: var(--mono); font-size: 10px; color: var(--muted); white-space: nowrap; }
-.mbsl { display: none; align-items: center; gap: 7px; }
-.msb { font-family: var(--mono); font-size: 18px; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border2); background: none; color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.12s; }
-.msb:hover { border-color: var(--accent); color: var(--accent); }
-button.rbtn { background: none; border: 1px solid var(--border2); color: var(--muted); font-family: var(--mono); font-size: 10px; padding: 4px 9px; cursor: pointer; transition: all 0.12s; white-space: nowrap; }
-button.rbtn:hover { border-color: var(--accent); color: var(--accent); }
+.wbtn.disabled { opacity: 0.35; cursor: not-allowed; }
+.wbtn.disabled:hover { background: none; color: var(--muted); }
 
 .leg { display: flex; gap: 14px; padding: 6px 22px; border-bottom: 1px solid var(--border); align-items: center; flex-wrap: wrap; }
 .li { display: flex; align-items: center; gap: 5px; font-family: var(--mono); font-size: 10px; color: var(--muted); }
+.notch-legend { display: flex; gap: 10px; margin-left: auto; flex-wrap: wrap; }
+.nl { font-family: var(--mono); font-size: 9px; display: flex; align-items: center; gap: 4px; }
+.nldot { width: 8px; height: 8px; border-radius: 1px; flex-shrink: 0; }
 
 .layout { display: flex; min-height: calc(100vh - 280px); }
 .slist { flex: 1; overflow-y: auto; }
@@ -92,9 +107,9 @@ button.rbtn:hover { border-color: var(--accent); color: var(--accent); }
 @keyframes pr { 0%,100%{border-left-color:var(--red)}50%{border-left-color:rgba(255,64,96,0.2)} }
 
 .sinf { width: 130px; flex-shrink: 0; }
-.stk { font-family: var(--mono); font-size: 13px; font-weight: 500; letter-spacing: 0.06em; }
+.stk { font-family: var(--mono); font-size: 13px; font-weight: 500; letter-spacing: 0.06em; color: #fff; }
 .stk.cheap{color:var(--green)} .stk.exp{color:var(--red)} .stk.amb{color:var(--amber)} .stk.grow{color:var(--amber)}
-.snm { font-size: 10px; color: var(--muted); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 125px; }
+.snm { font-size: 10px; color: #fff; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 125px; }
 
 .dqd { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
 .dqf { background: var(--green); opacity: 0.7; }
@@ -104,19 +119,25 @@ button.rbtn:hover { border-color: var(--accent); color: var(--accent); }
 
 .ebdg { font-family: var(--mono); font-size: 9px; padding: 1px 5px; background: rgba(240,165,0,0.15); color: var(--amber); border-radius: 2px; flex-shrink: 0; }
 
-.bzone { flex: 1; position: relative; height: 34px; display: flex; align-items: center; min-width: 0; }
-.btrack { position: absolute; left: 0; right: 0; height: 2px; background: var(--border2); border-radius: 1px; }
-.tline { position: absolute; top: 3px; bottom: 3px; width: 1px; border-left: 1px dashed rgba(255,255,255,0.16); pointer-events: none; }
+/* ── REDESIGNED BAR ── */
+.bzone { flex: 1; position: relative; height: 44px; display: flex; align-items: center; min-width: 0; }
+.btrack { position: absolute; left: 0; right: 0; height: 2px; background: var(--border2); border-radius: 1px; top: 50%; transform: translateY(-50%); }
+/* notch: a vertical tick on the bar */
+.bnotch { position: absolute; top: 50%; transform: translate(-50%, -50%); width: 2px; height: 14px; border-radius: 1px; pointer-events: none; transition: opacity 0.2s; }
+.bnotch.dim { opacity: 0.2; }
+/* notch label above bar */
+.bnotch-lbl { position: absolute; top: 2px; transform: translateX(-50%); font-family: var(--mono); font-size: 8px; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity 0.2s; }
+.bnotch-lbl.show { opacity: 1; }
+/* dots */
 .zdot { position: absolute; transform: translate(-50%,-50%); top: 50%; cursor: pointer; transition: left 0.3s ease; }
 .zdot:hover { z-index: 5; }
-.zdot .tip { display: none; position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); background: #1a2535; border: 1px solid var(--border2); padding: 6px 10px; font-family: var(--mono); font-size: 10px; color: var(--text); white-space: pre; z-index: 100; pointer-events: none; line-height: 1.6; border-radius: 2px; min-width: 155px; }
+.zdot .tip { display: none; position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); background: #1a2535; border: 1px solid var(--border2); padding: 6px 10px; font-family: var(--mono); font-size: 10px; color: var(--text); white-space: pre; z-index: 100; pointer-events: none; line-height: 1.6; border-radius: 2px; min-width: 160px; }
 .zdot:hover .tip { display: block; }
-.garrow { position: absolute; top: 50%; transform: translateY(-50%); font-size: 9px; pointer-events: none; opacity: 0.6; }
 
-.peval { width: 150px; flex-shrink: 0; display: flex; flex-direction: column; gap: 2px; font-family: var(--mono); font-size: 10px; }
+.peval { width: 155px; flex-shrink: 0; display: flex; flex-direction: column; gap: 2px; font-family: var(--mono); font-size: 10px; }
 .pr2 { display: flex; gap: 6px; align-items: center; }
-.pl { color: var(--muted); width: 26px; }
-.pn { color: var(--text); }
+.pl { color: #fff; width: 26px; }
+.pn { color: #fff; }
 .pz2 { font-size: 9px; padding: 0 3px; }
 
 .covb { width: 54px; flex-shrink: 0; }
@@ -136,13 +157,15 @@ button.rbtn:hover { border-color: var(--accent); color: var(--accent); }
 .afk { font-family: var(--mono); font-size: 9px; color: var(--muted2); }
 .afv { font-family: var(--mono); font-size: 9px; color: var(--text); margin-left: 3px; }
 
-.lb { width: 255px; flex-shrink: 0; border-left: 1px solid var(--border); display: flex; flex-direction: column; }
+/* ── RANKINGS ── */
+.lb { width: 270px; flex-shrink: 0; border-left: 1px solid var(--border); display: flex; flex-direction: column; }
 .lbh { padding: 9px 13px; border-bottom: 1px solid var(--border); background: var(--bg2); display: flex; align-items: center; justify-content: space-between; }
 .lbtitle { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
 .lbwt { display: flex; border: 1px solid var(--border2); border-radius: 2px; overflow: hidden; }
-.lbwb { font-family: var(--mono); font-size: 9px; padding: 3px 7px; color: var(--muted); cursor: pointer; background: none; border: none; border-right: 1px solid var(--border2); transition: all 0.1s; }
+.lbwb { font-family: var(--mono); font-size: 9px; padding: 3px 7px; color: var(--muted); cursor: pointer; background: none; border: none; border-right: 1px solid var(--border2); transition: all 0.1s; white-space: nowrap; }
 .lbwb:last-child { border-right: none; }
 .lbwb.active { background: var(--border2); color: var(--text); }
+.lbwb.disabled { opacity: 0.3; cursor: not-allowed; }
 button.lbx { background: none; border: 1px solid var(--border2); color: var(--muted); font-family: var(--mono); font-size: 10px; padding: 2px 7px; cursor: pointer; transition: all 0.1s; }
 button.lbx:hover { border-color: var(--accent); color: var(--accent); }
 .lbbody { flex: 1; overflow: auto; }
@@ -152,18 +175,14 @@ button.lbx:hover { border-color: var(--accent); color: var(--accent); }
 .lbrow:hover { background: var(--bg2); }
 .lbrk { font-family: var(--mono); font-size: 9px; color: var(--muted2); width: 14px; }
 .lbtk { font-family: var(--mono); font-size: 12px; font-weight: 500; flex: 1; }
-.lbz  { font-family: var(--mono); font-size: 11px; }
-.lbfz { font-family: var(--mono); font-size: 9px; color: var(--muted); }
+.lbpct { font-family: var(--mono); font-size: 11px; }
+.lbfpct { font-family: var(--mono); font-size: 9px; color: var(--muted); }
 
 footer { padding: 9px 22px; border-top: 1px solid var(--border); font-family: var(--mono); font-size: 9px; color: var(--muted); display: flex; gap: 14px; flex-wrap: wrap; }
 
 @media(max-width:768px){
   .lb{display:none}
-  .lb.lbopen{display:flex;position:fixed;right:0;top:0;bottom:0;z-index:200;background:var(--bg);box-shadow:-4px 0 20px rgba(0,0,0,0.6);width:260px}
-  input[type=range].slinput{display:none}
-  .slticks{display:none}
-  .mbsl{display:flex}
-  .slwrap{flex:0;min-width:0}
+  .lb.lbopen{display:flex;position:fixed;right:0;top:0;bottom:0;z-index:200;background:var(--bg);box-shadow:-4px 0 20px rgba(0,0,0,0.6);width:270px}
   .covb{display:none}
   .peval{width:110px}
   .sinf{width:95px}
@@ -192,13 +211,18 @@ footer { padding: 9px 22px; border-top: 1px solid var(--border); font-family: va
   <div class="hr">
     <span class="dbb" id="dbb">DB: 0d</span>
     <button id="lbtoggle" class="hbtn" onclick="toggleLB()">📊 Rankings</button>
+    <div class="srchzone">
+      <input class="srchbox" id="srchbox" type="text" placeholder="Add ticker…" maxlength="8" onkeydown="if(event.key==='Enter')addTicker()">
+      <button class="srchbtn" id="srchbtn" onclick="addTicker()">+ Add</button>
+      <span class="srchstatus" id="srchstatus"></span>
+    </div>
     <button id="rfbtn" class="hbtn" onclick="initLoad(true)">↻ Refresh</button>
   </div>
 </header>
 
 <div class="sum">
   <div class="si"><div class="sl">Holdings</div><div class="sv b" id="st">—</div></div>
-  <div class="si"><div class="sl">Avg Z</div><div class="sv a" id="saz">—</div></div>
+  <div class="si"><div class="sl">Avg Pct</div><div class="sv a" id="saz">—</div></div>
   <div class="si"><div class="sl">Cheap</div><div class="sv g" id="sch">—</div></div>
   <div class="si"><div class="sl">Expensive</div><div class="sv r" id="sex">—</div></div>
   <div class="si"><div class="sl">Earn Soon</div><div class="sv a" id="sea">—</div></div>
@@ -207,40 +231,41 @@ footer { padding: 9px 22px; border-top: 1px solid var(--border); font-family: va
 
 <div id="ab" onclick="jumpExp()">⚠ <span id="abtxt"></span> — click to review</div>
 
+<!-- Threshold control -->
+<div class="thrzone">
+  <span class="thrlbl">Threshold</span>
+  <div class="thrbtns">
+    <button class="thrb" onclick="nudgeThr(-5)">◄</button>
+    <span class="thrval" id="thrval">65%</span>
+    <button class="thrb" onclick="nudgeThr(5)">►</button>
+  </div>
+  <span class="thrnote" id="thrnote">above 65th pct = expensive · below 35th pct = cheap</span>
+</div>
+
 <div class="ctrl">
   <div class="stabs" id="stabs"></div>
   <div class="wzone">
     <span class="wlbl">PRIMARY</span>
     <div class="wtog" id="wtog">
-      <button class="wbtn active" data-w="1" onclick="setPrimary(1)">1Y</button>
-      <button class="wbtn" data-w="2" onclick="setPrimary(2)">2Y</button>
+      <button class="wbtn disabled" data-w="30" onclick="setPrimary(30,this)">30d</button>
+      <button class="wbtn disabled" data-w="90" onclick="setPrimary(90,this)">90d</button>
+      <button class="wbtn active" data-w="1" onclick="setPrimary(1,this)">1Y</button>
+      <button class="wbtn" data-w="2" onclick="setPrimary(2,this)">2Y</button>
     </div>
   </div>
-</div>
-
-<div class="slzone">
-  <span class="sllbl">σ Threshold</span>
-  <div class="slwrap">
-    <div class="sltrack"></div>
-    <input type="range" class="slinput" id="slid" min="0" max="2" step="0.05" value="1.0" oninput="onSl()">
-    <div class="slticks">
-      <span class="sltick">0σ</span><span class="sltick">0.5σ</span><span class="sltick">1.0σ</span><span class="sltick">1.5σ</span><span class="sltick">2.0σ</span>
-    </div>
-  </div>
-  <div class="mbsl">
-    <button class="msb" onclick="nudge(-0.05)">−</button>
-    <button class="msb" onclick="nudge(0.05)">+</button>
-  </div>
-  <div class="slval" id="slval">1.00σ</div>
-  <div class="savgind" id="savgind"></div>
-  <button class="rbtn" onclick="resetSl()">↺ Reset</button>
 </div>
 
 <div class="leg">
   <span style="font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:0.1em">DOTS:</span>
-  <span class="li">● 1Y TTM</span><span class="li">◆ 2Y TTM</span>
-  <span class="li" style="color:var(--muted2)">hollow = Fwd PE</span>
-  <span style="margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--muted)">● full &nbsp;◐ TTM only &nbsp;○ no data &nbsp;<span style="color:var(--amber)">◉ PE cross-check flag</span></span>
+  <span class="li">● TTM PE</span>
+  <span class="li" style="color:var(--muted2)">○ Fwd PE</span>
+  <span style="font-family:var(--mono);font-size:9px;color:var(--muted)">● full &nbsp;◐ TTM only &nbsp;○ no data &nbsp;<span style="color:var(--amber)">◉ cross-check</span></span>
+  <div class="notch-legend">
+    <span class="nl"><span class="nldot" style="background:var(--c30)"></span><span style="color:var(--c30)">30d</span></span>
+    <span class="nl"><span class="nldot" style="background:var(--c90)"></span><span style="color:var(--c90)">90d</span></span>
+    <span class="nl"><span class="nldot" style="background:var(--c1y)"></span><span style="color:var(--c1y)">1Y</span></span>
+    <span class="nl"><span class="nldot" style="background:var(--c2y)"></span><span style="color:var(--c2y)">2Y</span></span>
+  </div>
 </div>
 
 <div class="layout">
@@ -249,9 +274,11 @@ footer { padding: 9px 22px; border-top: 1px solid var(--border); font-family: va
     <div class="lbh">
       <span class="lbtitle">Rankings</span>
       <div style="display:flex;gap:7px;align-items:center">
-        <div class="lbwt">
-          <button class="lbwb active" data-w="1" onclick="setLbW(1)">1Y</button>
-          <button class="lbwb" data-w="2" onclick="setLbW(2)">2Y</button>
+        <div class="lbwt" id="lbwt">
+          <button class="lbwb disabled" data-w="30" onclick="setLbW(30,this)">30d</button>
+          <button class="lbwb disabled" data-w="90" onclick="setLbW(90,this)">90d</button>
+          <button class="lbwb active" data-w="1" onclick="setLbW(1,this)">1Y</button>
+          <button class="lbwb" data-w="2" onclick="setLbW(2,this)">2Y</button>
         </div>
         <button class="lbx" onclick="toggleLB()">✕</button>
       </div>
@@ -271,7 +298,7 @@ footer { padding: 9px 22px; border-top: 1px solid var(--border); font-family: va
 
 <footer>
   <span>Data: FMP (TTM PE) · Finnhub (Fwd PE + fundamentals) · GitHub Actions daily snapshot · <span id="dbdays">0</span>d accumulated</span>
-  <span>Z = (PE − mean) ÷ std · Daily repo data preferred over annual bootstrap</span>
+  <span>Percentile = % of history current PE exceeds · 50% = avg · higher = more expensive</span>
 </footer>
 </div>
 
@@ -294,13 +321,48 @@ const TSEC = {};
 Object.entries(SECTORS).forEach(([s,ts])=>ts.forEach(t=>TSEC[t]=s));
 const ALL = Object.values(SECTORS).flat();
 const TOTAL = ALL.length;
-const WINDOWS = [1, 2];
+const ANNUAL_WINDOWS = [1, 2]; // years
 
-let SD = {}, activeSec = 'All', primW = 1, lbW = 1, thresh = 1.0, secAvgZ = {};
+// Window config: key → { label, color, minDays (0=annual), cssVar }
+const WIN_CFG = {
+  30:  { label:'30d',  color:'#38BDF8', minDays:30,  cssVar:'--c30' },
+  90:  { label:'90d',  color:'#A78BFA', minDays:90,  cssVar:'--c90' },
+  1:   { label:'1Y',   color:'#FB923C', minDays:0,   cssVar:'--c1y' },
+  2:   { label:'2Y',   color:'#34D399', minDays:0,   cssVar:'--c2y' },
+};
+const ALL_WINS = [30, 90, 1, 2];
+
+let SD = {}, activeSec = 'All', primW = 1, lbW = 1, thrPct = 65, secAvgPct = {};
 let repoDaily = {};
+let adHoc = []; // session-only watchlist tickers
 
 const sleep = ms => new Promise(r=>setTimeout(r,ms));
 const today = () => new Date().toISOString().split('T')[0];
+
+// ── Z → PERCENTILE ─────────────────────────────────────────
+// Using error function approximation of normal CDF
+function zToPct(z) {
+  if (z === null || !isFinite(z)) return null;
+  // Abramowitz & Stegun approximation
+  const t = 1 / (1 + 0.2316419 * Math.abs(z));
+  const d = 0.3989422820 * Math.exp(-z * z / 2);
+  const p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.7814779 + t * (-1.8212560 + t * 1.3302744))));
+  const cdf = z >= 0 ? 1 - p : p;
+  return Math.round(cdf * 100);
+}
+
+function pctCol(pct) {
+  if (pct === null) return 'var(--muted)';
+  if (pct <= 35) return 'var(--green)';
+  if (pct <= 50) return `color-mix(in srgb,var(--amber) ${Math.round((pct-35)/15*60)}%,var(--green))`;
+  if (pct <= 65) return `color-mix(in srgb,var(--amber) ${Math.round((65-pct)/15*60)}%,var(--red))`;
+  return 'var(--red)';
+}
+
+function fmtPct(pct) {
+  if (pct === null) return '—';
+  return pct + '%';
+}
 
 // ── REPO DATA ──────────────────────────────────────────────
 async function fetchRepoData(ticker) {
@@ -312,7 +374,6 @@ async function fetchRepoData(ticker) {
   } catch { return []; }
 }
 
-// ── API HELPERS ────────────────────────────────────────────
 async function apiFetch(url) {
   try { const r=await fetch(url); if(!r.ok) return null; return await r.json(); }
   catch { return null; }
@@ -339,8 +400,6 @@ async function getEarnings(t) {
   const d=await apiFetch(`${FMP_BASE}/earnings-calendar?symbol=${t}&from=${td}&to=${to}&apikey=${FMP_KEY}`);
   return (Array.isArray(d)&&d.length)?d[0].date:null;
 }
-
-// ── FINNHUB: single call, all enrichment ──────────────────
 async function getFinnhubMetrics(t) {
   const d = await apiFetch(`${FH_BASE}/stock/metric?symbol=${t}&metric=all&token=${FH_KEY}`);
   if (!d || !d.metric) return null;
@@ -367,27 +426,36 @@ async function getFinnhubMetrics(t) {
   };
 }
 
-// ── SERIES BUILDER ─────────────────────────────────────────
-function getSeries(ticker, years) {
+// ── SERIES BUILDERS ────────────────────────────────────────
+function getDailySeries(ticker, days) {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - days);
+  const cs = cutoff.toISOString().split('T')[0];
+  return (repoDaily[ticker]||[]).filter(d=>d.date>=cs&&d.ttmPE&&d.ttmPE>0&&d.ttmPE<500).map(d=>d.ttmPE);
+}
+function getAnnualSeries(ticker, years) {
   const cutoff = new Date();
   cutoff.setFullYear(cutoff.getFullYear() - years);
   const cs = cutoff.toISOString().split('T')[0];
   const daily = (repoDaily[ticker]||[])
-    .filter(d=>d.date>=cs&&d.ttmPE&&d.ttmPE>0&&d.ttmPE<500)
-    .map(d=>d.ttmPE);
+    .filter(d=>d.date>=cs&&d.ttmPE&&d.ttmPE>0&&d.ttmPE<500).map(d=>d.ttmPE);
   if (daily.length >= 3) return { pts: daily, source: 'daily' };
-  const ann = new Date().getFullYear();
+  const annY = new Date().getFullYear();
   const annPts = (SD[ticker]?._annual||[])
-    .filter(d=>d.year>=ann-years).map(d=>d.pe).filter(v=>v>0&&v<500);
+    .filter(d=>d.year>=annY-years).map(d=>d.pe).filter(v=>v>0&&v<500);
   return { pts: annPts, source: 'annual' };
 }
-function getFwdSeries(ticker, years) {
+function getFwdDailySeries(ticker, days) {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - days);
+  const cs = cutoff.toISOString().split('T')[0];
+  return (repoDaily[ticker]||[]).filter(d=>d.date>=cs&&d.fwdPE&&d.fwdPE>0&&d.fwdPE<500).map(d=>d.fwdPE);
+}
+function getFwdAnnualSeries(ticker, years) {
   const cutoff = new Date();
   cutoff.setFullYear(cutoff.getFullYear() - years);
   const cs = cutoff.toISOString().split('T')[0];
-  return (repoDaily[ticker]||[])
-    .filter(d=>d.date>=cs&&d.fwdPE&&d.fwdPE>0&&d.fwdPE<500)
-    .map(d=>d.fwdPE);
+  return (repoDaily[ticker]||[]).filter(d=>d.date>=cs&&d.fwdPE&&d.fwdPE>0&&d.fwdPE<500).map(d=>d.fwdPE);
 }
 function dayCount(ticker) { return (repoDaily[ticker]||[]).length; }
 
@@ -399,15 +467,57 @@ function stats(s) {
   return {mean:+m.toFixed(2),std:+Math.sqrt(v).toFixed(2)};
 }
 function zscore(v,m,std){ if(!std||!v) return null; return +((v-m)/std).toFixed(2); }
-function clamp(z){ return z===null?null:Math.max(-1,Math.min(3,z)); }
-function zcol(z){
-  if(z===null) return 'var(--muted)';
-  if(z<=0) return 'var(--green)';
-  if(z<=1) return `color-mix(in srgb,var(--amber) ${Math.round(z*100)}%,var(--green))`;
-  if(z<=2) return `color-mix(in srgb,var(--red) ${Math.round((z-1)*100)}%,var(--amber))`;
-  return 'var(--red)';
+
+// percentile from raw series: what % of pts is currentVal above?
+function seriesPct(val, pts) {
+  if (!val || !pts || pts.length < 2) return null;
+  const below = pts.filter(p => p <= val).length;
+  return Math.round((below / pts.length) * 100);
 }
-function zpct(z){ if(z===null) return null; return ((clamp(z)+1)/4)*100; }
+
+// 5th/95th percentile for bar endpoints
+function pctile(pts, p) {
+  if (!pts || !pts.length) return null;
+  const sorted = [...pts].sort((a,b)=>a-b);
+  const idx = (p/100) * (sorted.length - 1);
+  const lo = Math.floor(idx), hi = Math.ceil(idx);
+  return sorted[lo] + (sorted[hi]-sorted[lo]) * (idx-lo);
+}
+
+// ── WINDOW DATA BUILDER ────────────────────────────────────
+function getWinData(ticker, w, ttmPE, fwdPE) {
+  let pts, fpts, source;
+  if (w === 30 || w === 90) {
+    pts = getDailySeries(ticker, w);
+    fpts = getFwdDailySeries(ticker, w);
+    source = 'daily';
+  } else {
+    const s = getAnnualSeries(ticker, w);
+    pts = s.pts; source = s.source;
+    fpts = getFwdAnnualSeries(ticker, w);
+  }
+
+  const st = stats(pts);
+  const z = st && ttmPE ? zscore(ttmPE, st.mean, st.std) : null;
+  const pct = seriesPct(ttmPE, pts);
+  const avgPE = st ? st.mean : null;
+
+  const fst = fpts.length >= 3 ? stats(fpts) : null;
+  let fz = null, fpct = null;
+  if (fwdPE !== null) {
+    const fm = fst ? fst.mean : (st ? st.mean : null);
+    const fs = fst ? fst.std  : (st ? st.std  : null);
+    if (fm && fs) fz = zscore(fwdPE, fm, fs);
+    fpct = seriesPct(fwdPE, fpts.length >= 3 ? fpts : pts);
+  }
+
+  // bar range
+  const allPts = [...pts];
+  const p5  = pctile(allPts, 5);
+  const p95 = pctile(allPts, 95);
+
+  return { pts, fpts, source, z, pct, avgPE, mean: st?.mean, std: st?.std, fz, fpct, p5, p95 };
+}
 
 // ── PROCESS TICKER ─────────────────────────────────────────
 async function procTicker(t) {
@@ -433,7 +543,6 @@ async function procTicker(t) {
   const week52High        = fhm?.week52High        ?? null;
   const week52Low         = fhm?.week52Low         ?? null;
 
-  // PE cross-check: >15% divergence between FMP and Finnhub TTM PE
   let peCrossCheck = false;
   if (ttmPE && fhTTMPE && ttmPE>0 && fhTTMPE>0) {
     peCrossCheck = Math.abs(ttmPE - fhTTMPE) / ttmPE > 0.15;
@@ -442,7 +551,6 @@ async function procTicker(t) {
   SD[t] = SD[t] || {};
   SD[t]._annual = annual;
 
-  // Merge today into repoDaily
   if (ttmPE !== null) {
     if (!repoDaily[t]) repoDaily[t] = [];
     repoDaily[t] = repoDaily[t].filter(x=>x.date!==today());
@@ -450,22 +558,11 @@ async function procTicker(t) {
     repoDaily[t].sort((a,b)=>a.date.localeCompare(b.date));
   }
 
-  const wins = {}, fwins = {};
-  WINDOWS.forEach(y => {
-    const { pts, source } = getSeries(t, y);
-    const st = stats(pts);
-    wins[y] = st && ttmPE!==null
-      ? { z: zscore(ttmPE,st.mean,st.std), mean:st.mean, std:st.std, pts:pts.length, source }
-      : { z:null, mean:null, std:null, pts:pts.length, source };
-    const fpts = getFwdSeries(t, y);
-    const fst  = fpts.length>=3 ? stats(fpts) : null;
-    if (fwdPE!==null && wins[y].mean!==null && wins[y].std!==null) {
-      const fm  = fst ? fst.mean : wins[y].mean;
-      const fs2 = fst ? fst.std  : wins[y].std;
-      fwins[y] = { z: zscore(fwdPE, fm, fs2) };
-    } else {
-      fwins[y] = { z: null };
-    }
+  const wins = {}, dc = dayCount(t);
+  ALL_WINS.forEach(w => {
+    const hasData = (w === 30 || w === 90) ? dc >= w : true;
+    wins[w] = hasData ? getWinData(t, w, ttmPE, fwdPE) : { pts:[], pct:null, avgPE:null, z:null, fz:null, fpct:null, p5:null, p95:null, source:'none', hasData:false };
+    wins[w].hasData = hasData;
   });
 
   let dq = 'none';
@@ -474,60 +571,72 @@ async function procTicker(t) {
   let earnSoon = false;
   if (earnDate) { const df=(new Date(earnDate)-new Date())/86400000; if(df>=0&&df<=30) earnSoon=true; }
 
-  let pct = null;
-  const all2 = getSeries(t,2).pts;
-  if (ttmPE && all2.length>=5) pct = Math.round(all2.filter(p=>p>=ttmPE).length/all2.length*100);
-
   return {
-    ticker:t, name, sector:TSEC[t], ttmPE, fwdPE, price, wins, fwins, dq, peCrossCheck,
-    earnSoon, earnDate, pct,
-    pegTTM, evEbitdaTTM, epsGrowthTTMYoy, epsGrowth3Y, revenueGrowthTTM,
+    ticker:t, name, sector:TSEC[t], ttmPE, fwdPE, price, wins, dq, peCrossCheck,
+    earnSoon, earnDate, pegTTM, evEbitdaTTM, epsGrowthTTMYoy, epsGrowth3Y, revenueGrowthTTM,
     grossMarginTTM, netProfitMarginTTM, roeTTM, beta, week52High, week52Low, fhTTMPE,
   };
 }
 
 // ── RENDER ─────────────────────────────────────────────────
 function renderAll() {
-  Object.keys(SECTORS).forEach(s=>{
-    const zs=SECTORS[s].map(t=>SD[t]?.wins[primW]?.z).filter(z=>z!=null);
-    secAvgZ[s]=zs.length?+(zs.reduce((a,b)=>a+b,0)/zs.length).toFixed(2):null;
+  const dc = Math.max(...ALL.map(t=>dayCount(t)),0);
+  // update disabled state of primary & lb tabs
+  document.querySelectorAll('#wtog .wbtn').forEach(b=>{
+    const w = +b.dataset.w;
+    if (w === 30 || w === 90) {
+      const enough = dc >= w;
+      b.classList.toggle('disabled', !enough);
+    }
   });
-  const allZ=ALL.map(t=>SD[t]?.wins[primW]?.z).filter(z=>z!=null);
-  const pavgZ=allZ.length?+(allZ.reduce((a,b)=>a+b,0)/allZ.length).toFixed(2):null;
+  document.querySelectorAll('#lbwt .lbwb').forEach(b=>{
+    const w = +b.dataset.w;
+    if (w === 30 || w === 90) {
+      b.classList.toggle('disabled', dc < w);
+    }
+  });
+
+  Object.keys(SECTORS).forEach(s=>{
+    const pcts=SECTORS[s].map(t=>SD[t]?.wins[primW]?.pct).filter(p=>p!=null);
+    secAvgPct[s]=pcts.length?Math.round(pcts.reduce((a,b)=>a+b,0)/pcts.length):null;
+  });
+  const allPcts=ALL.map(t=>SD[t]?.wins[primW]?.pct).filter(p=>p!=null);
+  const pavgPct=allPcts.length?Math.round(allPcts.reduce((a,b)=>a+b,0)/allPcts.length):null;
   const vis=(activeSec==='All'?ALL:SECTORS[activeSec]||[]).map(t=>SD[t]).filter(Boolean);
 
-  const cheap=vis.filter(d=>{const z=d.wins[primW]?.z;return z!==null&&z<thresh;}).length;
-  const exp  =vis.filter(d=>{const z=d.wins[primW]?.z;return z!==null&&z>=thresh;}).length;
-  const na   =vis.filter(d=>d.wins[primW]?.z===null).length;
+  const cheap=vis.filter(d=>{const p=d.wins[primW]?.pct;return p!==null&&p<=(100-thrPct);}).length;
+  const exp  =vis.filter(d=>{const p=d.wins[primW]?.pct;return p!==null&&p>=thrPct;}).length;
+  const na   =vis.filter(d=>d.wins[primW]?.pct===null).length;
   const es   =vis.filter(d=>d.earnSoon).length;
 
   document.getElementById('st').textContent  = vis.length;
-  document.getElementById('saz').textContent = pavgZ!==null?pavgZ+'σ':'—';
+  document.getElementById('saz').textContent = pavgPct!==null?pavgPct+'%':'—';
   document.getElementById('sch').textContent = cheap;
   document.getElementById('sex').textContent = exp;
   document.getElementById('sea').textContent = es;
   document.getElementById('sna').textContent = na;
 
   const ab=document.getElementById('ab');
-  if(exp>0){ab.style.display='block';document.getElementById('abtxt').textContent=`${exp} stock${exp>1?'s':''} above ${thresh.toFixed(2)}σ`;}
+  if(exp>0){ab.style.display='block';document.getElementById('abtxt').textContent=`${exp} stock${exp>1?'s':''} above ${thrPct}th percentile`;}
   else ab.style.display='none';
 
-  const cavgZ=activeSec==='All'?pavgZ:secAvgZ[activeSec];
-  document.getElementById('savgind').textContent=cavgZ!==null?`${activeSec==='All'?'Portfolio':activeSec} avg: ${cavgZ>0?'+':''}${cavgZ}σ`:'';
-
-  const maxDays=Math.max(...ALL.map(t=>dayCount(t)),0);
-  document.getElementById('dbb').textContent=`DB: ${maxDays}d`;
-  document.getElementById('dbdays').textContent=maxDays;
+  document.getElementById('dbb').textContent=`DB: ${dc}d`;
+  document.getElementById('dbdays').textContent=dc;
 
   renderTabs(); renderList(); renderLB(vis);
+}
+
+function pctLabel(pct) {
+  if (pct === null) return '—';
+  return pct + 'th pct';
 }
 
 function renderTabs() {
   const el=document.getElementById('stabs');
   el.innerHTML=['All',...Object.keys(SECTORS)].map(s=>{
-    const z=s==='All'?null:secAvgZ[s];
-    const zs=z!==null?` <span class="sz" style="color:${zcol(z)}">${z>0?'+':''}${z}σ</span>`:'';
-    return `<div class="stab ${activeSec===s?'active':''}" onclick="setSec('${s}')">${s}${zs}</div>`;
+    const p=s==='All'?null:secAvgPct[s];
+    const ps=p!==null?` <span class="sz" style="color:${pctCol(p)}">${p}%</span>`:'';
+    return `<div class="stab ${activeSec===s?'active':''}" onclick="setSec('${s}')">${s}${ps}</div>`;
   }).join('');
 }
 
@@ -535,11 +644,23 @@ function renderList() {
   const el=document.getElementById('slist');
   const secs=activeSec==='All'?Object.keys(SECTORS):[activeSec];
   let html='';
+
+  // Ad hoc watchlist section
+  if (adHoc.length > 0) {
+    html += `<div><div class="adhoc-hdr"><span class="sname" style="color:var(--accent)">Watchlist</span><span class="scnt">${adHoc.length} added</span></div>`;
+    adHoc.forEach(t => {
+      if (!SD[t]) return;
+      const rowHtml = renderRow(SD[t]);
+      // wrap with remove button
+      html += `<div class="adhoc-row-wrap">${rowHtml}<button class="adhoc-remove" onclick="removeTicker('${t}')">✕</button></div>`;
+    });
+    html += '</div>';
+  }
   secs.forEach(sec=>{
     const ts=SECTORS[sec].filter(t=>SD[t]); if(!ts.length) return;
-    const az=secAvgZ[sec],azc=az!==null?zcol(az):'var(--muted)',azs=az!==null?`${az>0?'+':''}${az}σ avg`:'— avg';
-    html+=`<div><div class="shdr"><span class="sname">${sec}</span><span class="savgz" style="color:${azc}">${azs}</span><span class="scnt">${ts.length} stocks</span></div>`;
-    ts.slice().sort((a,b)=>{const za=SD[a]?.wins[primW]?.z??99,zb=SD[b]?.wins[primW]?.z??99;return za-zb;})
+    const ap=secAvgPct[sec],apc=ap!==null?pctCol(ap):'var(--muted)',aps=ap!==null?`${ap}% avg`:'— avg';
+    html+=`<div><div class="shdr"><span class="sname">${sec}</span><span class="savgz" style="color:${apc}">${aps}</span><span class="scnt">${ts.length} stocks</span></div>`;
+    ts.slice().sort((a,b)=>{const pa=SD[a]?.wins[primW]?.pct??99,pb=SD[b]?.wins[primW]?.pct??99;return pa-pb;})
       .forEach(t=>{html+=renderRow(SD[t]);});
     html+='</div>';
   });
@@ -547,16 +668,19 @@ function renderList() {
 }
 
 function renderRow(d) {
-  const {ticker:t,name,ttmPE,fwdPE,wins,fwins,dq,peCrossCheck,earnSoon,earnDate,pct,pegTTM,fhTTMPE}=d;
-  const pz=wins[primW]?.z??null;
-  const outCnt=WINDOWS.filter(w=>{const z=wins[w]?.z;return z!==null&&z>=thresh;}).length;
-  const isPegGrowth=pz!==null&&pz>=thresh&&pegTTM!==null&&pegTTM>0&&pegTTM<1;
+  const {ticker:t,name,ttmPE,fwdPE,wins,dq,peCrossCheck,earnSoon,earnDate,pegTTM,fhTTMPE}=d;
+  const pw = wins[primW];
+  const pct = pw?.pct ?? null;
+  const fpct = pw?.fpct ?? null;
 
-  let rc='',tc='';
+  const isPegGrowth = pct!==null && pct>=thrPct && pegTTM!==null && pegTTM>0 && pegTTM<1;
+  const expCnt = ANNUAL_WINDOWS.filter(w=>{const p=wins[w]?.pct;return p!==null&&p>=thrPct;}).length;
+
+  let rc='', tc='';
   if(isPegGrowth){rc='sgrow';tc='grow';}
-  else if(outCnt>=2){rc='sex';tc='exp';}
-  else if(outCnt===1){tc='amb';}
-  else if(pz!==null&&pz<0){rc='sch';tc='cheap';}
+  else if(expCnt>=2){rc='sex';tc='exp';}
+  else if(expCnt===1){tc='amb';}
+  else if(pct!==null&&pct<=(100-thrPct)){rc='sch';tc='cheap';}
 
   let dqc,dqtip;
   if(peCrossCheck){dqc='dqx';dqtip=`PE cross-check: FMP=${ttmPE} vs Finnhub=${fhTTMPE?.toFixed(1)} (>15% divergence)`;}
@@ -565,52 +689,72 @@ function renderRow(d) {
   else{dqc='dqn';dqtip='No PE data';}
 
   const eb=earnSoon?`<span class="ebdg" title="Earnings: ${earnDate}">E</span>`:'';
-  const tpct=((thresh+1)/4)*100;
 
-  let dots=`<div class="btrack"></div><div class="tline" style="left:${tpct}%"></div>`;
-  const wl={1:'1Y',2:'2Y'};
+  // ── Build bar ──
+  // Use primary window's range for bar endpoints
+  const p5  = pw?.p5  ?? null;
+  const p95 = pw?.p95 ?? null;
+  const hasRange = p5!==null && p95!==null && p95>p5;
 
-  WINDOWS.forEach(w=>{
-    const wz=wins[w]?.z??null,fz=fwins[w]?.z??null,ip=w===primW;
-    const m=wins[w]?.mean,s=wins[w]?.std,src=wins[w]?.source;
-    if(wz!==null){
-      const pp=zpct(wz),col=zcol(wz);
-      const srcLabel=src==='daily'?'(live daily)':'(annual hist)';
-      const tip=`${t} · ${wl[w]} TTM ${srcLabel}\nZ: ${wz>0?'+':''}${wz}σ  PE: ${ttmPE}x\n${wl[w]} mean: ${m}x  std: ${s}\n${pct!==null?`Higher than ${pct}% of history`:''}`;
-      let sh;
-      if(w===1) sh=`<circle cx="5" cy="5" r="${ip?4:3}" fill="${col}" ${!ip?'opacity="0.5"':''}/>`;
-      else sh=`<polygon points="5,${ip?1:1.5} ${ip?9:8.5},5 5,${ip?9:8.5} ${ip?1:1.5},5" fill="${col}" ${!ip?'opacity="0.5"':''}/>`;
-      dots+=`<div class="zdot" style="left:${pp}%"><svg width="10" height="10" viewBox="0 0 10 10">${sh}</svg><span class="tip">${tip}</span></div>`;
-    }
-    if(fz!==null){
-      const fp=zpct(fz),fc=zcol(fz);
-      const pegNote=pegTTM!==null?`  PEG: ${pegTTM}`:'';
-      const ftip=`${t} · ${wl[w]} Fwd\nZ: ${fz>0?'+':''}${fz}σ  Fwd PE: ${fwdPE}x\n${wl[w]} mean: ${m}x${pegNote}`;
-      let fs;
-      if(w===1) fs=`<circle cx="5" cy="5" r="3.5" fill="none" stroke="${fc}" stroke-width="1.5" ${!ip?'opacity="0.4"':''}/>`;
-      else fs=`<polygon points="5,1.5 8.5,5 5,8.5 1.5,5" fill="none" stroke="${fc}" stroke-width="1.5" ${!ip?'opacity="0.4"':''}/>`;
-      dots+=`<div class="zdot" style="left:${fp}%;margin-top:3px"><svg width="10" height="10" viewBox="0 0 10 10">${fs}</svg><span class="tip">${ftip}</span></div>`;
-      if(wz!==null&&Math.abs(fz-wz)>0.25){
-        const ap=(zpct(wz)+zpct(fz))/2,ar=fz<wz?'↓':'↑',ac=fz<wz?'var(--green)':'var(--red)';
-        dots+=`<div class="garrow" style="left:${ap}%;color:${ac}">${ar}</div>`;
-      }
-    }
+  function peToBarPct(pe) {
+    if (!hasRange || pe===null) return null;
+    return Math.max(2, Math.min(98, ((pe - p5) / (p95 - p5)) * 100));
+  }
+
+  let barHtml = `<div class="btrack"></div>`;
+
+  // Notches for each window
+  ALL_WINS.forEach(w => {
+    const wc = WIN_CFG[w];
+    const wd = wins[w];
+    const avg = wd?.avgPE ?? null;
+    const active = w === primW;
+    const hasData = wd?.hasData !== false && avg !== null;
+    const pos = peToBarPct(avg);
+    if (pos === null) return;
+
+    const dimClass = hasData ? '' : 'dim';
+    const lblClass = active && hasData ? 'show' : '';
+    const lblTxt = avg ? avg.toFixed(1)+'x' : '';
+
+    barHtml += `<div class="bnotch ${dimClass}" style="left:${pos}%;background:${wc.color}"></div>`;
+    barHtml += `<div class="bnotch-lbl ${lblClass}" style="left:${pos}%;color:${wc.color}">${wc.label} ${lblTxt}</div>`;
   });
 
-  const pzs=pz!==null?`${pz>0?'+':''}${pz}σ`:'—';
-  const fpz=fwins[primW]?.z??null,fpzs=fpz!==null?`${fpz>0?'+':''}${fpz}σ`:'—';
-  const pvh=`<div class="pr2"><span class="pl">TTM</span><span class="pn">${ttmPE!==null?ttmPE+'x':'—'}</span><span class="pz2" style="color:${zcol(pz)}">${pzs}</span></div>
-    <div class="pr2"><span class="pl" style="color:var(--muted2)">Fwd</span><span class="pn" style="color:var(--muted)">${fwdPE!==null?fwdPE+'x':'—'}</span><span class="pz2" style="color:${zcol(fpz)}">${fpzs}</span></div>`;
+  // TTM dot
+  if (ttmPE !== null) {
+    const pos = peToBarPct(ttmPE);
+    if (pos !== null) {
+      const col = pctCol(pct);
+      const tip = `${t} · TTM PE\nPE: ${ttmPE}x\nPercentile: ${pct!==null?pct+'th':'—'} (${WIN_CFG[primW].label})\n"Higher than ${pct??'—'}% of history"`;
+      barHtml += `<div class="zdot" style="left:${pos}%"><svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4" fill="${col}"/></svg><span class="tip">${tip}</span></div>`;
+    }
+  }
 
-  const dc=dayCount(t),cp=Math.min(dc/120*100,100);
-  const covh=`<div class="covb"><div class="covl">${dc}d</div><div class="covt"><div class="covf" style="width:${cp}%"></div></div></div>`;
+  // Fwd PE dot
+  if (fwdPE !== null) {
+    const pos = peToBarPct(fwdPE);
+    if (pos !== null) {
+      const fc = pctCol(fpct);
+      const tip = `${t} · Fwd PE\nFwd PE: ${fwdPE.toFixed(1)}x\nPercentile: ${fpct!==null?fpct+'th':'—'} (${WIN_CFG[primW].label})`;
+      barHtml += `<div class="zdot" style="left:${pos}%;margin-top:4px"><svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="3.5" fill="none" stroke="${fc}" stroke-width="1.5"/></svg><span class="tip">${tip}</span></div>`;
+    }
+  }
+
+  const pctStr = pct!==null ? pct+'th' : '—';
+  const fpctStr = fpct!==null ? fpct+'th' : '—';
+  const pvh=`<div class="pr2"><span class="pl">TTM</span><span class="pn">${ttmPE!==null?ttmPE.toFixed(1)+'x':'—'}</span><span class="pz2" style="color:${pctCol(pct)}">${pctStr}%</span></div>
+    <div class="pr2"><span class="pl">Fwd</span><span class="pn">${fwdPE!==null?fwdPE.toFixed(1)+'x':'—'}</span><span class="pz2" style="color:${pctCol(fpct)}">${fpctStr}%</span></div>`;
+
+  const dc2=dayCount(t),cp=Math.min(dc2/120*100,100);
+  const covh=`<div class="covb"><div class="covl">${dc2}d</div><div class="covt"><div class="covf" style="width:${cp}%"></div></div></div>`;
 
   return `<div class="srw" id="wrap-${t}">
     <div class="sr ${rc}" id="row-${t}">
       <div class="sinf"><div class="stk ${tc}">${t}</div><div class="snm" title="${name}">${name}</div></div>
       <div class="dqd ${dqc}" title="${dqtip}"></div>
       ${eb}
-      <div class="bzone">${dots}</div>
+      <div class="bzone">${barHtml}</div>
       <div class="peval">${pvh}</div>
       ${covh}
       <button class="atog" id="atog-${t}" onclick="togAn('${t}')"><span class="arr">▸</span> Analysis</button>
@@ -620,15 +764,15 @@ function renderRow(d) {
 }
 
 function renderLB(vis) {
-  const ranked=vis.filter(d=>d.fwins[lbW]?.z!==null).sort((a,b)=>(a.fwins[lbW].z??99)-(b.fwins[lbW].z??99));
+  const ranked=vis.filter(d=>d.wins[lbW]?.fpct!==null).sort((a,b)=>(a.wins[lbW].fpct??99)-(b.wins[lbW].fpct??99));
   const c5=ranked.slice(0,5),e5=ranked.slice(-5).reverse();
   const row=(d,i,isE)=>{
-    const fz=d.fwins[lbW]?.z??null,tz=d.wins[lbW]?.z??null;
+    const fp=d.wins[lbW]?.fpct??null,tp=d.wins[lbW]?.pct??null;
     const col=isE?'var(--red)':'var(--green)';
     return `<div class="lbrow" onclick="scrollToRow('${d.ticker}')">
       <span class="lbrk">${i}</span><span class="lbtk" style="color:${col}">${d.ticker}</span>
-      <span class="lbfz">${tz!==null?`TTM ${tz>0?'+':''}${tz}σ`:''}</span>
-      <span class="lbz" style="color:${col}">${fz!==null?`${fz>0?'+':''}${fz}σ`:'—'}</span>
+      <span class="lbfpct">${tp!==null?`TTM ${tp}th%`:''}</span>
+      <span class="lbpct" style="color:${col}">${fp!==null?`${fp}th%`:'—'}</span>
     </div>`;
   };
   const nd='<div style="padding:6px 13px;font-family:var(--mono);font-size:10px;color:var(--muted)">No data yet</div>';
@@ -652,110 +796,94 @@ function togAn(t) {
     return;
   }
 
-  const {ttmPE,fwdPE,wins,fwins,earnSoon,earnDate,pct,
-    pegTTM,evEbitdaTTM,epsGrowthTTMYoy,revenueGrowthTTM,
-    grossMarginTTM,roeTTM,beta,week52High,week52Low,
-    peCrossCheck,fhTTMPE}=d;
+  const {ttmPE,fwdPE,wins,earnSoon,earnDate,pegTTM,evEbitdaTTM,epsGrowthTTMYoy,revenueGrowthTTM,
+    grossMarginTTM,roeTTM,beta,week52High,week52Low,peCrossCheck,fhTTMPE}=d;
 
-  const pz =wins[primW]?.z??null;
-  const fz =fwins[primW]?.z??null;
-  const m  =wins[primW]?.mean;
-  const src=wins[primW]?.source;
-  const wl ={1:'1-year',2:'2-year'}[primW];
-  const dc =dayCount(t);
-  const outCnt=WINDOWS.filter(w=>{const z=wins[w]?.z;return z!==null&&z>=thresh;}).length;
-  const isPegGrowth=pz!==null&&pz>=thresh&&pegTTM!==null&&pegTTM>0&&pegTTM<1;
+  const pw   = wins[primW];
+  const pct  = pw?.pct  ?? null;
+  const fpct = pw?.fpct ?? null;
+  const avgPE= pw?.avgPE ?? null;
+  const src  = pw?.source ?? 'annual';
+  const dc   = dayCount(t);
+  const wl   = {30:'30-day',90:'90-day',1:'1-year',2:'2-year'}[primW];
+  const expCnt = ANNUAL_WINDOWS.filter(w=>{const p=wins[w]?.pct;return p!==null&&p>=thrPct;}).length;
+  const isPegGrowth = pct!==null&&pct>=thrPct&&pegTTM!==null&&pegTTM>0&&pegTTM<1;
 
-  // Verdict
   let tag,ts2;
-  if(pz===null){tag='LIMITED DATA';ts2='color:var(--muted);background:rgba(90,106,122,0.15)';}
+  if(pct===null){tag='LIMITED DATA';ts2='color:var(--muted);background:rgba(90,106,122,0.15)';}
   else if(isPegGrowth){tag='EXPENSIVE · GROWING';ts2='color:var(--amber);background:rgba(240,165,0,0.12)';}
-  else if(outCnt>=2){tag='EXPENSIVE';ts2='color:var(--red);background:rgba(255,64,96,0.12)';}
-  else if(pz<0){tag='CHEAP';ts2='color:var(--green);background:rgba(46,204,138,0.12)';}
-  else if(pz<thresh){tag='FAIR VALUE';ts2='color:var(--amber);background:rgba(240,165,0,0.12)';}
+  else if(expCnt>=2){tag='EXPENSIVE';ts2='color:var(--red);background:rgba(255,64,96,0.12)';}
+  else if(pct<=(100-thrPct)){tag='CHEAP';ts2='color:var(--green);background:rgba(46,204,138,0.12)';}
+  else if(pct<thrPct){tag='FAIR VALUE';ts2='color:var(--amber);background:rgba(240,165,0,0.12)';}
   else{tag='EXPENSIVE';ts2='color:var(--red);background:rgba(255,64,96,0.12)';}
 
-  // Narrative
+  const srcNote = src==='daily'?`(${dc} daily obs.)`:'(annual bootstrap)';
   let txt='';
-  const srcNote=src==='daily'?`(${dc} daily obs.)`:'(annual bootstrap)';
 
-  if(pz===null) txt+=`Insufficient history to compute a ${wl} z-score. `;
-  else if(isPegGrowth) txt+=`${t} trades above its ${wl} average PE (z: +${pz}σ) but a PEG of ${pegTTM.toFixed(2)} signals earnings growth is outpacing the premium — the price may be justified. `;
-  else if(outCnt>=2) txt+=`${t} is above its ${wl} average PE across both timeframes — high-conviction expensive signal ${srcNote}. `;
-  else if(pz<0) txt+=`${t} is below its ${wl} average PE of ${m}x (current: ${ttmPE}x, z: ${pz}σ) ${srcNote} — cheap by its own history. `;
-  else txt+=`${t} is near its ${wl} average PE of ${m}x (current: ${ttmPE}x, z: ${pz>0?'+':''}${pz}σ) ${srcNote}. `;
-
-  if(pct!==null) txt+=`Today's PE is higher than ${pct}% of available history. `;
+  if(pct===null) txt+=`Insufficient history to compute a ${wl} percentile. `;
+  else if(isPegGrowth) txt+=`${t} is at the ${pct}th percentile of its ${wl} PE history — historically expensive — but a PEG of ${pegTTM.toFixed(2)} suggests earnings growth may justify the premium. `;
+  else if(expCnt>=2) txt+=`${t}'s TTM PE is more expensive than ${pct}% of its history across multiple timeframes — high-conviction expensive signal ${srcNote}. `;
+  else if(pct<=(100-thrPct)) txt+=`${t}'s TTM PE is more expensive than only ${pct}% of its ${wl} history (current: ${ttmPE}x, avg: ${avgPE}x) ${srcNote} — cheap by its own history. `;
+  else txt+=`${t} is at the ${pct}th percentile of its ${wl} PE history (current: ${ttmPE}x, avg: ${avgPE}x) ${srcNote} — near fair value. `;
 
   // Timeframe agreement
-  const vzs=WINDOWS.map(w=>wins[w]?.z).filter(z=>z!==null);
-  if(vzs.length>=2){
-    const agree=vzs.every(z=>z>=thresh)||vzs.every(z=>z<thresh);
-    if(agree) txt+=`Both timeframes agree — high-conviction signal. `;
-    else txt+=`Mixed signals across timeframes (${WINDOWS.map(w=>wins[w]?.z!==null?`${w}Y:${wins[w].z>0?'+':''}${wins[w].z}σ`:`${w}Y:N/A`).join(', ')}) — lower conviction. `;
+  const vpcts = ANNUAL_WINDOWS.map(w=>wins[w]?.pct).filter(p=>p!==null);
+  if(vpcts.length>=2){
+    const agree=vpcts.every(p=>p>=thrPct)||vpcts.every(p=>p<=(100-thrPct));
+    if(agree) txt+=`Both annual timeframes agree — high-conviction signal. `;
+    else txt+=`Mixed signals across timeframes (1Y: ${wins[1]?.pct??'N/A'}th, 2Y: ${wins[2]?.pct??'N/A'}th pct) — lower conviction. `;
   }
 
-  // PEG (when not already the headline)
   if(!isPegGrowth&&pegTTM!==null){
     if(pegTTM<1) txt+=`PEG of ${pegTTM.toFixed(2)} — growth more than covers the multiple. `;
     else if(pegTTM<2) txt+=`PEG of ${pegTTM.toFixed(2)} — moderate growth relative to PE. `;
     else txt+=`PEG of ${pegTTM.toFixed(2)} — elevated; growth may not justify the current multiple. `;
   }
 
-  // EPS growth
   if(epsGrowthTTMYoy!==null){
     const g=epsGrowthTTMYoy;
-    if(g>50) txt+=`EPS grew ${g.toFixed(0)}% YoY — strong earnings acceleration supports a higher multiple. `;
-    else if(g>10) txt+=`EPS up ${g.toFixed(0)}% YoY — healthy growth trajectory. `;
-    else if(g<0) txt+=`EPS declined ${Math.abs(g).toFixed(0)}% YoY — contraction adds risk to the current valuation. `;
+    if(g>50) txt+=`EPS grew ${g.toFixed(0)}% YoY — strong earnings acceleration. `;
+    else if(g>10) txt+=`EPS up ${g.toFixed(0)}% YoY — healthy growth. `;
+    else if(g<0) txt+=`EPS declined ${Math.abs(g).toFixed(0)}% YoY — contraction adds risk. `;
   }
 
-  // Revenue growth
   if(revenueGrowthTTM!==null&&revenueGrowthTTM>20) txt+=`Revenue growing ${revenueGrowthTTM.toFixed(0)}% TTM — top-line momentum intact. `;
 
-  // Margin quality
   if(grossMarginTTM!==null){
     if(grossMarginTTM>60) txt+=`Gross margin of ${grossMarginTTM.toFixed(0)}% reflects strong pricing power. `;
     else if(grossMarginTTM<20) txt+=`Thin gross margins (${grossMarginTTM.toFixed(0)}%) limit earnings upside. `;
   }
 
-  // EV/EBITDA cross-check
   if(evEbitdaTTM!==null&&TSEC[t]!=='ETF'){
-    if(evEbitdaTTM>25) txt+=`EV/EBITDA of ${evEbitdaTTM.toFixed(1)}x confirms elevated valuation beyond PE alone. `;
-    else if(evEbitdaTTM<10) txt+=`EV/EBITDA of ${evEbitdaTTM.toFixed(1)}x is low — PE may be overstating expensiveness. `;
+    if(evEbitdaTTM>25) txt+=`EV/EBITDA of ${evEbitdaTTM.toFixed(1)}x confirms elevated valuation. `;
+    else if(evEbitdaTTM<10) txt+=`EV/EBITDA of ${evEbitdaTTM.toFixed(1)}x is low — PE may overstate expensiveness. `;
   }
 
-  // Beta
   if(beta!==null){
-    if(beta>1.5) txt+=`High beta (${beta.toFixed(2)}) — PE z-scores will swing more than the market; signals are noisier. `;
-    else if(beta<0.6) txt+=`Low beta (${beta.toFixed(2)}) — defensive profile; PE signals tend to be more reliable. `;
+    if(beta>1.5) txt+=`High beta (${beta.toFixed(2)}) — PE percentiles will swing more than the market. `;
+    else if(beta<0.6) txt+=`Low beta (${beta.toFixed(2)}) — defensive; signals tend to be more reliable. `;
   }
 
-  // TTM vs Fwd gap
-  if(fwdPE!==null&&fz!==null&&pz!==null){
-    const gap=pz-fz;
-    if(gap>0.4) txt+=`Forward PE z (${fz>0?'+':''}${fz}σ) is lower than TTM — market expects earnings growth to close the gap. `;
-    else if(gap<-0.4) txt+=`Forward PE z (${fz>0?'+':''}${fz}σ) is higher than TTM — analysts expect earnings to decline. `;
-    else txt+=`TTM and Forward PE z-scores are aligned — stable earnings expectations. `;
-  } else if(!fwdPE){
-    txt+=`No analyst forward estimates available. `;
-  }
+  if(fwdPE!==null&&fpct!==null&&pct!==null){
+    const gap=pct-fpct;
+    if(gap>10) txt+=`Fwd PE percentile (${fpct}th) is lower than TTM — market expects earnings to grow. `;
+    else if(gap<-10) txt+=`Fwd PE percentile (${fpct}th) is higher than TTM — analysts expect earnings decline. `;
+    else txt+=`TTM and Forward PE percentiles aligned (${pct}th vs ${fpct}th) — stable expectations. `;
+  } else if(!fwdPE) txt+=`No analyst forward estimates available. `;
 
-  // 52-week context
   if(week52High!==null&&week52Low!==null&&d.price){
     const range=week52High-week52Low;
     if(range>0){
       const pos=(d.price-week52Low)/range;
-      if(pos>0.85) txt+=`Trading near its 52-week high — momentum strong but limited technical cushion above. `;
-      else if(pos<0.2) txt+=`Trading near its 52-week low — PE may reflect price collapse rather than earnings expansion. `;
+      if(pos>0.85) txt+=`Trading near 52-week high — momentum strong but limited upside cushion. `;
+      else if(pos<0.2) txt+=`Trading near 52-week low — PE may reflect price collapse rather than earnings expansion. `;
     }
   }
 
-  if(earnSoon) txt+=`⚠ Earnings due ${earnDate} — signals subject to revision after report. `;
+  if(earnSoon) txt+=`⚠ Earnings due ${earnDate} — signals subject to revision. `;
   if(dc<30) txt+=`Daily database has ${dc} day${dc!==1?'s':''} — using annual bootstrap until 30 days accumulated. `;
-  if(peCrossCheck) txt+=`⚠ FMP and Finnhub TTM PE diverge >15% (FMP: ${ttmPE}x vs Finnhub: ${fhTTMPE?.toFixed(1)}x) — treat z-score with caution. `;
+  if(peCrossCheck) txt+=`⚠ FMP and Finnhub TTM PE diverge >15% (FMP: ${ttmPE}x vs Finnhub: ${fhTTMPE?.toFixed(1)}x) — treat with caution. `;
 
-  // Fundamentals strip
   const fItems=[
     pegTTM!==null         ?{k:'PEG',      v:pegTTM.toFixed(2)}:null,
     evEbitdaTTM!==null    ?{k:'EV/EBITDA',v:evEbitdaTTM.toFixed(1)+'x'}:null,
@@ -768,9 +896,9 @@ function togAn(t) {
   const fundHtml=fItems.length?`<div class="afund">${fItems.map(x=>`<span><span class="afk">${x.k}</span><span class="afv">${x.v}</span></span>`).join('')}</div>`:'';
 
   const meta=[
-    pz!==null?`TTM z: ${pz>0?'+':''}${pz}σ (${wl})`:'TTM: no data',
-    fz!==null?`Fwd z: ${fz>0?'+':''}${fz}σ`:'Fwd: no data',
-    ttmPE?`PE: ${ttmPE}x`:'',fwdPE?`Fwd: ${fwdPE}x`:'',
+    pct!==null?`TTM: ${pct}th pct (${wl})`:'TTM: no data',
+    fpct!==null?`Fwd: ${fpct}th pct`:'Fwd: no data',
+    ttmPE?`PE: ${ttmPE}x`:'',fwdPE?`Fwd: ${fwdPE.toFixed(1)}x`:'',
     `${dc}d in repo`,src==='daily'?'✓ live data':'~ annual bootstrap',
     peCrossCheck?'⚠ cross-check flag':'',
   ].filter(Boolean).join(' · ');
@@ -781,20 +909,94 @@ function togAn(t) {
 // ── CONTROLS ───────────────────────────────────────────────
 function setSec(s){
   activeSec=s;
-  const avgZ=s==='All'
-    ?(()=>{const zs=ALL.map(t=>SD[t]?.wins[primW]?.z).filter(z=>z!=null);return zs.length?+(zs.reduce((a,b)=>a+b,0)/zs.length).toFixed(2):1.0;})()
-    :(secAvgZ[s]??1.0);
-  thresh=+Math.max(0,Math.min(2,avgZ)).toFixed(2);
-  document.getElementById('slid').value=thresh;
-  document.getElementById('slval').textContent=thresh.toFixed(2)+'σ';
   renderAll();
 }
-function setPrimary(w){primW=w;document.querySelectorAll('#wtog .wbtn').forEach(b=>b.classList.toggle('active',+b.dataset.w===w));renderAll();}
-function setLbW(w){lbW=w;document.querySelectorAll('.lbwb').forEach(b=>b.classList.toggle('active',+b.dataset.w===w));const vis=(activeSec==='All'?ALL:SECTORS[activeSec]||[]).map(t=>SD[t]).filter(Boolean);renderLB(vis);}
-function onSl(){thresh=+parseFloat(document.getElementById('slid').value).toFixed(2);document.getElementById('slval').textContent=thresh.toFixed(2)+'σ';renderAll();}
-function nudge(d){const sl=document.getElementById('slid');thresh=+Math.max(0,Math.min(2,thresh+d)).toFixed(2);sl.value=thresh;document.getElementById('slval').textContent=thresh.toFixed(2)+'σ';renderAll();}
-function resetSl(){setSec(activeSec);}
-function jumpExp(){const t=ALL.find(t=>{const z=SD[t]?.wins[primW]?.z;return z!==null&&z>=thresh;});if(t)scrollToRow(t);}
+
+function setPrimary(w, btn) {
+  if (btn && btn.classList.contains('disabled')) return;
+  primW = w;
+  document.querySelectorAll('#wtog .wbtn').forEach(b=>b.classList.toggle('active', +b.dataset.w===w));
+  renderAll();
+}
+
+function setLbW(w, btn) {
+  if (btn && btn.classList.contains('disabled')) return;
+  lbW = w;
+  document.querySelectorAll('#lbwt .lbwb').forEach(b=>b.classList.toggle('active', +b.dataset.w===w));
+  const vis=(activeSec==='All'?ALL:SECTORS[activeSec]||[]).map(t=>SD[t]).filter(Boolean);
+  renderLB(vis);
+}
+
+function nudgeThr(delta) {
+  thrPct = Math.max(51, Math.min(95, thrPct + delta));
+  document.getElementById('thrval').textContent = thrPct + '%';
+  document.getElementById('thrnote').textContent = `above ${thrPct}th pct = expensive · below ${100-thrPct}th pct = cheap`;
+  renderAll();
+}
+
+function jumpExp(){const t=ALL.find(t=>{const p=SD[t]?.wins[primW]?.pct;return p!==null&&p>=thrPct;});if(t)scrollToRow(t);}
+
+async function addTicker() {
+  const box = document.getElementById('srchbox');
+  const btn = document.getElementById('srchbtn');
+  const status = document.getElementById('srchstatus');
+  const raw = box.value.trim().toUpperCase();
+  if (!raw) return;
+
+  // already in portfolio or watchlist
+  if (ALL.includes(raw)) {
+    status.textContent = `${raw} already in portfolio`;
+    status.style.color = 'var(--amber)';
+    setTimeout(()=>status.textContent='',2500);
+    return;
+  }
+  if (adHoc.includes(raw)) {
+    status.textContent = `${raw} already added`;
+    status.style.color = 'var(--amber)';
+    setTimeout(()=>status.textContent='',2500);
+    return;
+  }
+
+  btn.disabled = true;
+  status.textContent = `Fetching ${raw}...`;
+  status.style.color = 'var(--muted)';
+
+  try {
+    // temporarily add to TSEC so procTicker sector lookup works
+    TSEC[raw] = 'Watchlist';
+    repoDaily[raw] = [];
+    const data = await procTicker(raw);
+
+    if (!data || (data.ttmPE === null && data.fwdPE === null && data.dq === 'none')) {
+      status.textContent = `No data for ${raw}`;
+      status.style.color = 'var(--red)';
+      delete TSEC[raw];
+      setTimeout(()=>status.textContent='',3000);
+    } else {
+      SD[raw] = data;
+      adHoc.push(raw);
+      box.value = '';
+      status.textContent = `${raw} added`;
+      status.style.color = 'var(--green)';
+      setTimeout(()=>status.textContent='',2000);
+      renderAll();
+    }
+  } catch(e) {
+    status.textContent = `Error fetching ${raw}`;
+    status.style.color = 'var(--red)';
+    delete TSEC[raw];
+    setTimeout(()=>status.textContent='',3000);
+  }
+
+  btn.disabled = false;
+}
+
+function removeTicker(t) {
+  adHoc = adHoc.filter(x=>x!==t);
+  delete SD[t];
+  delete TSEC[t];
+  renderAll();
+}
 function scrollToRow(t){const el=document.getElementById(`row-${t}`);if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.style.background='#1a2535';setTimeout(()=>el.style.background='',1200);}}
 function toggleLB(){document.getElementById('lbpanel').classList.toggle('lbopen');}
 
@@ -802,6 +1004,7 @@ function toggleLB(){document.getElementById('lbpanel').classList.toggle('lbopen'
 async function initLoad(isRef=false) {
   const btn=document.getElementById('rfbtn');btn.disabled=true;btn.textContent='↻ Loading...';
   SD={};repoDaily={};
+  if(isRef) adHoc=[]; // clear watchlist on manual refresh
   const ls=document.getElementById('ls'),mc=document.getElementById('mc');
   ls.classList.remove('hidden');ls.style.opacity='1';mc.style.opacity='0';
 
@@ -837,8 +1040,7 @@ async function initLoad(isRef=false) {
 }
 
 window.addEventListener('DOMContentLoaded',()=>{
-  document.getElementById('slid').value=1.0;
-  document.getElementById('slval').textContent='1.00σ';
+  document.getElementById('thrval').textContent = thrPct + '%';
   initLoad();
 });
 </script>
