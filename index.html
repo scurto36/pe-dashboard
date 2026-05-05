@@ -58,7 +58,7 @@ button.hbtn:disabled { opacity: 0.4; cursor: not-allowed; }
 .sv.g{color:var(--green)} .sv.r{color:var(--red)} .sv.a{color:var(--amber)} .sv.b{color:var(--accent)}
 
 /* threshold control */
-.thrzone { padding: 8px 22px; border-bottom: 1px solid var(--border); background: var(--bg2); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.thrzone { padding: 8px 22px; border-bottom: 1px solid var(--border); background: var(--bg2); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; position: relative; }
 .thrlbl { font-family: var(--mono); font-size: 10px; color: #fff; letter-spacing: 0.07em; text-transform: uppercase; white-space: nowrap; }
 .thrbtns { display: flex; align-items: center; gap: 8px; }
 .thrb { font-family: var(--mono); font-size: 16px; width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--border2); background: none; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.12s; line-height: 1; }
@@ -84,7 +84,7 @@ button.hbtn:disabled { opacity: 0.4; cursor: not-allowed; }
 .wbtn.disabled { opacity: 0.35; cursor: not-allowed; }
 .wbtn.disabled:hover { background: none; color: #fff; }
 
-.leg { display: flex; gap: 14px; padding: 6px 22px; border-bottom: 1px solid var(--border); align-items: center; flex-wrap: wrap; }
+.leg { display: flex; gap: 14px; padding: 6px 22px; border-bottom: 1px solid var(--border); align-items: center; flex-wrap: wrap; position: relative; }
 .li { display: flex; align-items: center; gap: 5px; font-family: var(--mono); font-size: 10px; color: #fff; }
 .notch-legend { display: flex; gap: 10px; margin-left: auto; flex-wrap: wrap; }
 .nl { font-family: var(--mono); font-size: 9px; display: flex; align-items: center; gap: 4px; color: #fff; }
@@ -177,6 +177,12 @@ button.lbx:hover { border-color: var(--accent); color: var(--accent); }
 
 footer { padding: 9px 22px; border-top: 1px solid var(--border); font-family: var(--mono); font-size: 9px; color: #fff; display: flex; gap: 14px; flex-wrap: wrap; }
 
+/* help buttons */
+.helpbtn { background: none; border: 1px solid var(--border2); color: var(--accent); font-family: var(--mono); font-size: 10px; width: 18px; height: 18px; border-radius: 50%; cursor: pointer; padding: 0; line-height: 1; flex-shrink: 0; position: relative; transition: all 0.12s; }
+.helpbtn:hover { background: var(--accent); color: #fff; }
+.helppop { display: none; position: absolute; z-index: 200; background: #1a2535; border: 1px solid var(--border2); padding: 12px 14px; font-family: var(--mono); font-size: 10px; color: #fff; line-height: 1.7; border-radius: 3px; width: 280px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+.helppop.show { display: block; }
+
 @media(max-width:768px){
   .lb{display:none}
   .lb.lbopen{display:flex;position:fixed;right:0;top:0;bottom:0;z-index:200;background:var(--bg);box-shadow:-4px 0 20px rgba(0,0,0,0.6);width:270px}
@@ -237,6 +243,13 @@ footer { padding: 9px 22px; border-top: 1px solid var(--border); font-family: va
     <button class="thrb" onclick="nudgeThr(5)">►</button>
   </div>
   <span class="thrnote" id="thrnote">above 65th pct = expensive · below 35th pct = cheap</span>
+  <button class="helpbtn" onclick="toggleHelp('help-threshold')">?</button>
+  <div class="helppop" id="help-threshold">
+    <strong>Threshold</strong><br>
+    Controls where the line is drawn between cheap and expensive.<br><br>
+    At <strong>65%</strong>: a stock above its 65th historical percentile = Expensive (red), below its 35th = Cheap (green). Everything in between is neutral.<br><br>
+    Raise the threshold to flag only the most extreme cases. Lower it to flag more stocks.
+  </div>
 </div>
 
 <div class="ctrl">
@@ -257,6 +270,17 @@ footer { padding: 9px 22px; border-top: 1px solid var(--border); font-family: va
   <span class="li"><span style="color:var(--green)">●</span> TTM PE</span>
   <span class="li"><span style="color:var(--accent)">○</span> Fwd PE</span>
   <span style="font-family:var(--mono);font-size:9px;color:#fff"><span style="color:var(--green)">●</span> full &nbsp;<span style="color:var(--amber)">◐</span> TTM only &nbsp;○ no data &nbsp;<span style="color:var(--amber)">◉ cross-check</span></span>
+  <button class="helpbtn" onclick="toggleHelp('help-pct')">?</button>
+  <div class="helppop" id="help-pct">
+    <strong>Percentiles explained</strong><br>
+    Shows how expensive a stock is vs its <em>own</em> history — not vs other stocks.<br><br>
+    <strong>50th</strong> = trading at its historical average<br>
+    <strong>80th</strong> = more expensive than 80% of its history<br>
+    <strong>20th</strong> = cheaper than 80% of its history<br><br>
+    Example: MSFT at 6th means it's cheaper than it's been 94% of the time over the past 1-2 years.<br><br>
+    <span style="color:var(--green)">●</span> TTM = trailing 12 month PE (solid dot)<br>
+    <span style="color:var(--accent)">○</span> Fwd = analyst forward PE estimate (hollow dot)
+  </div>
   <div class="notch-legend">
     <span class="nl"><span class="nldot" style="background:var(--c30)"></span><span style="color:var(--c30)">30d</span></span>
     <span class="nl"><span class="nldot" style="background:var(--c90)"></span><span style="color:var(--c90)">90d</span></span>
@@ -610,15 +634,15 @@ function renderAll() {
   });
 
   Object.keys(SECTORS).forEach(s=>{
-    const pcts=SECTORS[s].map(t=>SD[t]?.ttmPct).filter(p=>p!=null);
+    const pcts=SECTORS[s].map(t=>SD[t]?getWindowPct(SD[t],primW):null).filter(p=>p!=null);
     secAvgPct[s]=pcts.length?Math.round(pcts.reduce((a,b)=>a+b,0)/pcts.length):null;
   });
-  const allPcts=ALL.map(t=>SD[t]?.ttmPct).filter(p=>p!=null);
+  const allPcts=ALL.map(t=>SD[t]?getWindowPct(SD[t],primW):null).filter(p=>p!=null);
   const pavgPct=allPcts.length?Math.round(allPcts.reduce((a,b)=>a+b,0)/allPcts.length):null;
   const vis=(activeSec==='All'?ALL:SECTORS[activeSec]||[]).map(t=>SD[t]).filter(Boolean);
 
-  const cheap=vis.filter(d=>d.ttmPct!==null&&d.ttmPct<=(100-thrPct)).length;
-  const exp  =vis.filter(d=>d.ttmPct!==null&&d.ttmPct>=thrPct).length;
+  const cheap=vis.filter(d=>{ const p=getWindowPct(d,primW); return p!==null&&p<=(100-thrPct); }).length;
+  const exp  =vis.filter(d=>{ const p=getWindowPct(d,primW); return p!==null&&p>=thrPct; }).length;
   const na   =vis.filter(d=>d.ttmPct===null&&d.fwdPct===null).length;
   const es   =vis.filter(d=>d.earnSoon).length;
 
@@ -677,7 +701,7 @@ function renderList() {
     const ts=SECTORS[sec].filter(t=>SD[t]); if(!ts.length) return;
     const ap=secAvgPct[sec],apc=ap!==null?pctCol(ap):'var(--muted)',aps=ap!==null?`${ap}% avg`:'— avg';
     html+=`<div><div class="shdr"><span class="sname">${sec}</span><span class="savgz" style="color:${apc}">${aps}</span><span class="scnt">${ts.length} stocks</span></div>`;
-    ts.slice().sort((a,b)=>{const pa=SD[a]?.ttmPct??99,pb=SD[b]?.ttmPct??99;return pa-pb;})
+    ts.slice().sort((a,b)=>{const pa=getWindowPct(SD[a],primW)??99,pb=getWindowPct(SD[b],primW)??99;return pa-pb;})
       .forEach(t=>{html+=renderRow(SD[t]);});
     html+='</div>';
   });
@@ -732,7 +756,7 @@ function renderRow(d) {
   if (ttmPE !== null) {
     const pos = peToBarPct(ttmPE);
     if (pos !== null) {
-      const tip = `${t} · TTM PE\nPE: ${ttmPE}x\nPercentile: ${ttmPct!==null?ordinal(ttmPct):'—'}\n"Higher than ${ttmPct??'—'}% of history"`;
+      const tip = `${t} · TTM PE\nPE: ${ttmPE}x\nPercentile: ${winTTMPct!==null?ordinal(winTTMPct):'—'} (${WIN_CFG[primW].label})\n"Higher than ${winTTMPct??'—'}% of history"`;
       barHtml += `<div class="zdot" style="left:${pos}%">
         <div style="position:absolute;bottom:14px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:8px;color:var(--green);white-space:nowrap;">${ttmPE.toFixed(1)}x</div>
         <svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4" fill="var(--green)"/></svg>
@@ -745,7 +769,7 @@ function renderRow(d) {
   if (fwdPE !== null) {
     const pos = peToBarPct(fwdPE);
     if (pos !== null) {
-      const tip = `${t} · Fwd PE\nFwd PE: ${fwdPE.toFixed(1)}x\nPercentile: ${fwdPct!==null?ordinal(fwdPct):'—'}`;
+      const tip = `${t} · Fwd PE\nFwd PE: ${fwdPE.toFixed(1)}x\nPercentile: ${winFwdPct!==null?ordinal(winFwdPct):'—'} (${WIN_CFG[primW].label})`;
       barHtml += `<div class="zdot" style="left:${pos}%;margin-top:4px">
         <div style="position:absolute;top:14px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:8px;color:var(--accent);white-space:nowrap;">${fwdPE.toFixed(1)}x</div>
         <svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="3.5" fill="none" stroke="var(--accent)" stroke-width="1.5"/></svg>
@@ -754,10 +778,14 @@ function renderRow(d) {
     }
   }
 
-  const pctStr  = ttmPct !== null ? ordinal(ttmPct) : '—';
-  const fpctStr = fwdPct !== null ? ordinal(fwdPct) : '—';
-  const pvh = `<div class="pr2"><span class="pl">TTM</span><span class="pn">${ttmPE!==null?ttmPE.toFixed(1)+'x':'—'}</span><span class="pz2" style="color:${pctCol(ttmPct)}">${pctStr}</span></div>
-    <div class="pr2"><span class="pl">Fwd</span><span class="pn">${fwdPE!==null?fwdPE.toFixed(1)+'x':'—'}</span><span class="pz2" style="color:${pctCol(fwdPct)}">${fpctStr}</span></div>`;
+  // Window-aware percentiles for display
+  const winTTMPct = getWindowPct(d, primW);
+  const winFwdPct = getWindowFwdPct(d, primW);
+
+  const pctStr  = winTTMPct !== null ? ordinal(winTTMPct) : '—';
+  const fpctStr = winFwdPct !== null ? ordinal(winFwdPct) : '—';
+  const pvh = `<div class="pr2"><span class="pl">TTM</span><span class="pn">${ttmPE!==null?ttmPE.toFixed(1)+'x':'—'}</span><span class="pz2" style="color:${pctCol(winTTMPct)}">${pctStr}</span></div>
+    <div class="pr2"><span class="pl">Fwd</span><span class="pn">${fwdPE!==null?fwdPE.toFixed(1)+'x':'—'}</span><span class="pz2" style="color:${pctCol(winFwdPct)}">${fpctStr}</span></div>`;
 
   const cp = Math.min(dc2/120*100,100);
   const covh = `<div class="covb"><div class="covl">${dc2}d</div><div class="covt"><div class="covf" style="width:${cp}%"></div></div></div>`;
@@ -994,6 +1022,20 @@ function nudgeThr(delta) {
   document.getElementById('thrval').textContent = thrPct + '%';
   document.getElementById('thrnote').textContent = `above ${thrPct}th pct = expensive · below ${100-thrPct}th pct = cheap`;
   renderAll();
+}
+
+function toggleHelp(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  // close all others first
+  document.querySelectorAll('.helppop').forEach(p => { if (p.id !== id) p.classList.remove('show'); });
+  el.classList.toggle('show');
+  // close on outside click
+  if (el.classList.contains('show')) {
+    setTimeout(() => document.addEventListener('click', function handler(e) {
+      if (!el.contains(e.target)) { el.classList.remove('show'); document.removeEventListener('click', handler); }
+    }), 10);
+  }
 }
 
 function jumpExp(){const t=ALL.find(t=>{const p=SD[t]?.wins[primW]?.pct;return p!==null&&p>=thrPct;});if(t)scrollToRow(t);}
