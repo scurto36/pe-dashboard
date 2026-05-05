@@ -842,6 +842,7 @@ function renderLB(vis) {
   document.getElementById('lbc-fwd').innerHTML = withFwd.slice(0,5).map(({d,pct},i) => fwdRow(d,i+1,false,pct)).join('') || nd;
   document.getElementById('lbe-fwd').innerHTML = withFwd.slice(-5).reverse().map(({d,pct},i) => fwdRow(d,i+1,true,pct)).join('') || nd;
   document.getElementById('lb-foreign').innerHTML = foreignSorted.map((d,i) => foreignRow(d,i+1)).join('') || nd;
+}
 
 // ── ANALYSIS PANEL ─────────────────────────────────────────
 function togAn(t) {
