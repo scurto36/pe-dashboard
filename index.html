@@ -253,10 +253,10 @@ footer { padding: 9px 22px; border-top: 1px solid var(--border); font-family: va
 </div>
 
 <div class="leg">
-  <span style="font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:0.1em">DOTS:</span>
-  <span class="li">● TTM PE</span>
-  <span class="li" style="color:var(--muted2)">○ Fwd PE</span>
-  <span style="font-family:var(--mono);font-size:9px;color:var(--muted)">● full &nbsp;◐ TTM only &nbsp;○ no data &nbsp;<span style="color:var(--amber)">◉ cross-check</span></span>
+  <span style="font-family:var(--mono);font-size:9px;color:#fff;letter-spacing:0.1em">DOTS:</span>
+  <span class="li"><span style="color:var(--green)">●</span> TTM PE</span>
+  <span class="li"><span style="color:var(--accent)">○</span> Fwd PE</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#fff"><span style="color:var(--green)">●</span> full &nbsp;<span style="color:var(--amber)">◐</span> TTM only &nbsp;○ no data &nbsp;<span style="color:var(--amber)">◉ cross-check</span></span>
   <div class="notch-legend">
     <span class="nl"><span class="nldot" style="background:var(--c30)"></span><span style="color:var(--c30)">30d</span></span>
     <span class="nl"><span class="nldot" style="background:var(--c90)"></span><span style="color:var(--c90)">90d</span></span>
@@ -716,34 +716,34 @@ function renderRow(d) {
     const pos = peToBarPct(avg);
     if (pos === null) return;
     const dimClass = hasData ? '' : 'dim';
-    const lblClass = active && hasData ? 'show' : '';
-    barHtml += `<div class="bnotch ${dimClass}" style="left:${pos}%;background:${wc.color}"></div>`;
-    barHtml += `<div class="bnotch-lbl ${lblClass}" style="left:${pos}%;color:${wc.color}">${wc.label} ${avg.toFixed(1)}x</div>`;
+    const isActive = w === primW;
+    const lblOpacity = !hasData ? 0 : isActive ? 1 : 0.5;
+    const fontWeight = isActive ? '600' : '400';
+    barHtml += `<div class="bnotch ${dimClass}" style="left:${pos}%;background:${wc.color};opacity:${isActive ? 1 : hasData ? 0.5 : 0.2}"></div>`;
+    barHtml += `<div class="bnotch-lbl" style="left:${pos}%;color:${wc.color};opacity:${lblOpacity};font-weight:${fontWeight}">${wc.label} ${avg.toFixed(1)}x</div>`;
   });
 
-  // TTM dot — solid, label above
+  // TTM dot — always green, label above
   if (ttmPE !== null) {
     const pos = peToBarPct(ttmPE);
     if (pos !== null) {
-      const col = pctCol(ttmPct);
       const tip = `${t} · TTM PE\nPE: ${ttmPE}x\nPercentile: ${ttmPct!==null?ordinal(ttmPct):'—'}\n"Higher than ${ttmPct??'—'}% of history"`;
       barHtml += `<div class="zdot" style="left:${pos}%">
-        <div style="position:absolute;bottom:14px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:8px;color:${col};white-space:nowrap;">${ttmPE.toFixed(1)}x</div>
-        <svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4" fill="${col}"/></svg>
+        <div style="position:absolute;bottom:14px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:8px;color:var(--green);white-space:nowrap;">${ttmPE.toFixed(1)}x</div>
+        <svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4" fill="var(--green)"/></svg>
         <span class="tip">${tip}</span>
       </div>`;
     }
   }
 
-  // Fwd dot — hollow, label below
+  // Fwd dot — always accent blue, label below
   if (fwdPE !== null) {
     const pos = peToBarPct(fwdPE);
     if (pos !== null) {
-      const fc = pctCol(fwdPct);
       const tip = `${t} · Fwd PE\nFwd PE: ${fwdPE.toFixed(1)}x\nPercentile: ${fwdPct!==null?ordinal(fwdPct):'—'}`;
       barHtml += `<div class="zdot" style="left:${pos}%;margin-top:4px">
-        <div style="position:absolute;top:14px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:8px;color:${fc};white-space:nowrap;">${fwdPE.toFixed(1)}x</div>
-        <svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="3.5" fill="none" stroke="${fc}" stroke-width="1.5"/></svg>
+        <div style="position:absolute;top:14px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:8px;color:var(--accent);white-space:nowrap;">${fwdPE.toFixed(1)}x</div>
+        <svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="3.5" fill="none" stroke="var(--accent)" stroke-width="1.5"/></svg>
         <span class="tip">${tip}</span>
       </div>`;
     }
@@ -771,36 +771,54 @@ function renderRow(d) {
   </div>`;
 }
 
+function getWindowPct(d, w) {
+  const rolling = repoRollingPE[d.ticker] || [];
+  if (!rolling.length) return d.ttmPct;
+  const sorted = [...rolling].sort((a,b) => b.date.localeCompare(a.date));
+  const nDays = (w === 1) ? 252 : 504;
+  const pts = sorted.slice(0, nDays).map(p => p.pe);
+  return seriesPct(d.ttmPE, pts);
+}
+
+function getWindowFwdPct(d, w) {
+  const rolling = repoRollingPE[d.ticker] || [];
+  if (!rolling.length) return d.fwdPct;
+  const sorted = [...rolling].sort((a,b) => b.date.localeCompare(a.date));
+  const nDays = (w === 1) ? 252 : 504;
+  const pts = sorted.slice(0, nDays).map(p => p.pe);
+  return seriesPct(d.fwdPE, pts);
+}
+
 function renderLB(vis) {
   const nd = '<div style="padding:6px 13px;font-family:var(--mono);font-size:10px;color:#fff;opacity:0.4">No data yet</div>';
 
-  const ttmRow = (d, i, isE) => {
+  const ttmRow = (d, i, isE, pct) => {
     const col = isE ? 'var(--red)' : 'var(--green)';
     return `<div class="lbrow" onclick="scrollToRow('${d.ticker}')">
       <span class="lbrk">${i}</span>
       <span class="lbtk" style="color:${col}">${d.ticker}</span>
       <span class="lbfpct">${d.ttmPE !== null ? d.ttmPE.toFixed(1)+'x' : ''}</span>
-      <span class="lbpct" style="color:${col}">${d.ttmPct !== null ? ordinal(d.ttmPct) : '—'}</span>
+      <span class="lbpct" style="color:${col}">${pct !== null ? ordinal(pct) : '—'}</span>
     </div>`;
   };
 
-  const fwdRow = (d, i, isE) => {
+  const fwdRow = (d, i, isE, pct) => {
     const col = isE ? 'var(--red)' : 'var(--green)';
     return `<div class="lbrow" onclick="scrollToRow('${d.ticker}')">
       <span class="lbrk">${i}</span>
       <span class="lbtk" style="color:${col}">${d.ticker}</span>
       <span class="lbfpct">${d.fwdPE !== null ? d.fwdPE.toFixed(1)+'x' : ''}</span>
-      <span class="lbpct" style="color:${col}">${d.fwdPct !== null ? ordinal(d.fwdPct) : '—'}</span>
+      <span class="lbpct" style="color:${col}">${pct !== null ? ordinal(pct) : '—'}</span>
     </div>`;
   };
 
-  const ttmRanked = vis.filter(d => d.ttmPct !== null).sort((a,b) => a.ttmPct - b.ttmPct);
-  const fwdRanked = vis.filter(d => d.fwdPct !== null && d.fwdPE !== null).sort((a,b) => a.fwdPct - b.fwdPct);
+  const withTTM = vis.map(d => ({ d, pct: getWindowPct(d, lbW) })).filter(x => x.pct !== null).sort((a,b) => a.pct - b.pct);
+  const withFwd = vis.filter(d => d.fwdPE !== null).map(d => ({ d, pct: getWindowFwdPct(d, lbW) })).filter(x => x.pct !== null).sort((a,b) => a.pct - b.pct);
 
-  document.getElementById('lbc-ttm').innerHTML = ttmRanked.slice(0,5).map((d,i) => ttmRow(d,i+1,false)).join('') || nd;
-  document.getElementById('lbe-ttm').innerHTML = ttmRanked.slice(-5).reverse().map((d,i) => ttmRow(d,i+1,true)).join('') || nd;
-  document.getElementById('lbc-fwd').innerHTML = fwdRanked.slice(0,5).map((d,i) => fwdRow(d,i+1,false)).join('') || nd;
-  document.getElementById('lbe-fwd').innerHTML = fwdRanked.slice(-5).reverse().map((d,i) => fwdRow(d,i+1,true)).join('') || nd;
+  document.getElementById('lbc-ttm').innerHTML = withTTM.slice(0,5).map(({d,pct},i) => ttmRow(d,i+1,false,pct)).join('') || nd;
+  document.getElementById('lbe-ttm').innerHTML = withTTM.slice(-5).reverse().map(({d,pct},i) => ttmRow(d,i+1,true,pct)).join('') || nd;
+  document.getElementById('lbc-fwd').innerHTML = withFwd.slice(0,5).map(({d,pct},i) => fwdRow(d,i+1,false,pct)).join('') || nd;
+  document.getElementById('lbe-fwd').innerHTML = withFwd.slice(-5).reverse().map(({d,pct},i) => fwdRow(d,i+1,true,pct)).join('') || nd;
 }
 
 // ── ANALYSIS PANEL ─────────────────────────────────────────
