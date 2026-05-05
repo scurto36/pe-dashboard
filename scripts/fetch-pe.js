@@ -11,8 +11,8 @@ const FMP_BASE = 'https://financialmodelingprep.com/stable';
 const FH_BASE  = 'https://finnhub.io/api/v1';
 
 const TICKERS = [
-  'MSFT','NVDA','ADBE','CRM','AAPL','AMZN','TSM','ASML','GOOGL','WIX','DELL','PLAB','IFX',
-  'NEE','CEG','VST','SLB','NXE',
+  'MSFT','NVDA','ADBE','CRM','AAPL','AMZN','TSM','ASML','GOOGL','WIX','DELL','PLAB','IFX','HPQ','HPE',
+  'NEE','CEG','VST','SLB','NXE','TPL',
   'JPM','BCS',
   'COST','WMT','TGT','VFC','UAL',
   'VKTX','IVVD',
@@ -74,7 +74,7 @@ function calcRollingPE(quarters, prices) {
     const ttmEPS = trailing.reduce((a, q) => a + q.eps, 0);
     if (ttmEPS <= 0) continue;
     const pe = +(p.price / ttmEPS).toFixed(2);
-    if (pe > 0 && pe < 500) {
+    if (pe >= 3 && pe <= 200) {
       rollingPEs.push({ date: p.date, pe });
     }
   }
