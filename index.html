@@ -338,7 +338,7 @@ const WIN_CFG = {
 const ALL_WINS = [30, 90, 1, 2];
 
 let SD = {}, activeSec = 'All', primW = 1, lbW = 1, thrPct = 65, secAvgPct = {};
-let repoDaily = {};
+let repoDaily = {}, repoRollingPE = {};
 let adHoc = []; // session-only watchlist tickers
 
 const sleep = ms => new Promise(r=>setTimeout(r,ms));
@@ -378,10 +378,13 @@ function fmtPct(pct) {
 async function fetchRepoData(ticker) {
   try {
     const r = await fetch(`${DATA_BASE}/${ticker}.json?cb=${Date.now()}`);
-    if (!r.ok) return [];
+    if (!r.ok) return { daily: [], rollingPE: [] };
     const d = await r.json();
-    return Array.isArray(d.daily) ? d.daily : [];
-  } catch { return []; }
+    return {
+      daily: Array.isArray(d.daily) ? d.daily : [],
+      rollingPE: Array.isArray(d.rollingPE) ? d.rollingPE : [],
+    };
+  } catch { return { daily: [], rollingPE: [] }; }
 }
 
 async function apiFetch(url) {
@@ -527,31 +530,40 @@ async function procTicker(t) {
     repoDaily[t].sort((a,b)=>a.date.localeCompare(b.date));
   }
 
-  // fullPts from annual — FMP returns newest first, reverse for oldest→newest
-  const fullPts = annual.map(d=>d.pe).filter(v=>v>0&&v<500).reverse();
-  const fullSt  = stats(fullPts);
+  // ── Use rolling PE history if available, else fall back to annual ──
+  const rollingPts = (repoRollingPE[t] || []).map(d => d.pe).filter(v => v > 0 && v < 300);
+  const annualPts  = annual.map(d => d.pe).filter(v => v > 0 && v < 500).reverse();
+  const fullPts    = rollingPts.length >= 30 ? rollingPts : annualPts;
+  const fullSt     = stats(fullPts);
 
-  // Static percentiles — never change with tab switching
+  // Static percentiles — based on full rolling history
   const ttmPct = seriesPct(ttmPE, fullPts);
   const fwdPct = seriesPct(fwdPE, fullPts);
 
-  // Bar range — cap at 80x max to prevent extreme outliers distorting scale
+  // Bar range — cap at 80x to prevent outlier distortion
   const clampedPts = fullPts.filter(v => v <= 80);
   const ptsForRange = clampedPts.length >= 2 ? clampedPts : fullPts;
   const barP5  = Math.max(0,  pctile(ptsForRange, 5)  ?? (fullSt ? fullSt.mean * 0.5 : 10));
   const barP95 = Math.min(80, pctile(ptsForRange, 95) ?? (fullSt ? fullSt.mean * 1.5 : 60));
 
-  // Notch avg PE per window
+  // Notch avg PE per window — using rolling PE for 1Y/2Y
   const dc = dayCount(t);
   const notchAvg = {};
   ALL_WINS.forEach(w => {
     if (w === 30 || w === 90) {
       notchAvg[w] = dc >= w ? getAvgForWindow(t, w) : null;
     } else {
-      // fullPts is oldest→newest, so slice from end for most recent points
-      const nPts = w === 1 ? 3 : 6;
-      const pts = fullPts.slice(-nPts);
-      notchAvg[w] = pts.length ? pts.reduce((a,b)=>a+b,0)/pts.length : null;
+      if (rollingPts.length >= 30) {
+        // Use true rolling data — sorted oldest→newest, take last N trading days
+        const nDays = w === 1 ? 252 : 504;
+        const pts = rollingPts.slice(-nDays);
+        notchAvg[w] = pts.length ? pts.reduce((a,b)=>a+b,0)/pts.length : null;
+      } else {
+        // Fall back to annual data
+        const nPts = w === 1 ? 3 : 6;
+        const pts = annualPts.slice(-nPts);
+        notchAvg[w] = pts.length ? pts.reduce((a,b)=>a+b,0)/pts.length : null;
+      }
     }
   });
 
@@ -1012,18 +1024,23 @@ function toggleLB(){document.getElementById('lbpanel').classList.toggle('lbopen'
 // ── LOAD ───────────────────────────────────────────────────
 async function initLoad(isRef=false) {
   const btn=document.getElementById('rfbtn');btn.disabled=true;btn.textContent='↻ Loading...';
-  SD={};repoDaily={};
+  SD={};repoDaily={};repoRollingPE={};
   if(isRef) adHoc=[]; // clear watchlist on manual refresh
   const ls=document.getElementById('ls'),mc=document.getElementById('mc');
   ls.classList.remove('hidden');ls.style.opacity='1';mc.style.opacity='0';
 
   document.getElementById('ltick').textContent='Loading repo history...';
   document.getElementById('lnote').textContent='Fetching daily PE database from GitHub...';
-  await Promise.all(ALL.map(async t=>{repoDaily[t]=await fetchRepoData(t);}));
+  await Promise.all(ALL.map(async t=>{
+    const repo = await fetchRepoData(t);
+    repoDaily[t] = repo.daily;
+    repoRollingPE[t] = repo.rollingPE;
+  }));
 
   const maxDays=Math.max(...ALL.map(t=>dayCount(t)),0);
+  const rollingCount = ALL.filter(t=>repoRollingPE[t]?.length>0).length;
   document.getElementById('lnote').textContent=maxDays>0
-    ?`Repo database: ${maxDays}d of daily PE loaded`
+    ?`Repo database: ${maxDays}d daily · ${rollingCount} tickers with rolling PE history`
     :'First run — bootstrapping from annual PE history';
 
   for(let i=0;i<ALL.length;i++){
