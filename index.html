@@ -297,6 +297,11 @@ footer { padding: 9px 22px; border-top: 1px solid var(--border); font-family: va
         <div class="lbst" style="color:var(--red)">▲ Fwd Most Expensive</div>
         <div id="lbe-fwd"></div>
       </div>
+      <div class="lbsec">
+        <div class="lbst" style="color:var(--accent)">◈ Foreign Listed (Fwd)</div>
+        <div style="font-family:var(--mono);font-size:8px;color:#fff;opacity:0.4;padding:0 13px 4px">annual FMP data · cheap → expensive</div>
+        <div id="lb-foreign"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -315,8 +320,8 @@ const FH_BASE   = 'https://finnhub.io/api/v1';
 const DATA_BASE = 'https://raw.githubusercontent.com/scurto36/pe-dashboard/main/data';
 
 const SECTORS = {
-  'Tech':     ['MSFT','NVDA','ADBE','CRM','AAPL','AMZN','TSM','ASML','GOOGL','WIX','DELL','PLAB','IFX'],
-  'Energy':   ['NEE','CEG','VST','SLB','NXE'],
+  'Tech':     ['MSFT','NVDA','ADBE','CRM','AAPL','AMZN','TSM','ASML','GOOGL','WIX','DELL','PLAB','IFX','HPQ','HPE'],
+  'Energy':   ['NEE','CEG','VST','SLB','NXE','TPL'],
   'Finance':  ['JPM','BCS'],
   'Consumer': ['COST','WMT','TGT','VFC','UAL'],
   'Biotech':  ['VKTX','IVVD'],
@@ -531,8 +536,8 @@ async function procTicker(t) {
   }
 
   // ── Use rolling PE history if available, else fall back to annual ──
-  const rollingPts = (repoRollingPE[t] || []).map(d => d.pe).filter(v => v > 0 && v < 300);
-  const annualPts  = annual.map(d => d.pe).filter(v => v > 0 && v < 500).reverse();
+  const rollingPts = (repoRollingPE[t] || []).map(d => d.pe).filter(v => v >= 3 && v <= 200);
+  const annualPts  = annual.map(d => d.pe).filter(v => v >= 3 && v < 500).reverse();
   const fullPts    = rollingPts.length >= 30 ? rollingPts : annualPts;
   const fullSt     = stats(fullPts);
 
@@ -771,12 +776,14 @@ function renderRow(d) {
   </div>`;
 }
 
+const FOREIGN_TICKERS = new Set(['TSM','ASML','IFX','BCS']);
+
 function getWindowPct(d, w) {
   const rolling = repoRollingPE[d.ticker] || [];
   if (!rolling.length) return d.ttmPct;
   const sorted = [...rolling].sort((a,b) => b.date.localeCompare(a.date));
   const nDays = (w === 1) ? 252 : 504;
-  const pts = sorted.slice(0, nDays).map(p => p.pe);
+  const pts = sorted.slice(0, nDays).map(p => p.pe).filter(v => v >= 3 && v <= 200);
   return seriesPct(d.ttmPE, pts);
 }
 
@@ -785,7 +792,7 @@ function getWindowFwdPct(d, w) {
   if (!rolling.length) return d.fwdPct;
   const sorted = [...rolling].sort((a,b) => b.date.localeCompare(a.date));
   const nDays = (w === 1) ? 252 : 504;
-  const pts = sorted.slice(0, nDays).map(p => p.pe);
+  const pts = sorted.slice(0, nDays).map(p => p.pe).filter(v => v >= 3 && v <= 200);
   return seriesPct(d.fwdPE, pts);
 }
 
@@ -812,14 +819,29 @@ function renderLB(vis) {
     </div>`;
   };
 
-  const withTTM = vis.map(d => ({ d, pct: getWindowPct(d, lbW) })).filter(x => x.pct !== null).sort((a,b) => a.pct - b.pct);
-  const withFwd = vis.filter(d => d.fwdPE !== null).map(d => ({ d, pct: getWindowFwdPct(d, lbW) })).filter(x => x.pct !== null).sort((a,b) => a.pct - b.pct);
+  const domestic = vis.filter(d => !FOREIGN_TICKERS.has(d.ticker));
+  const foreign  = vis.filter(d => FOREIGN_TICKERS.has(d.ticker));
+
+  const withTTM = domestic.map(d => ({ d, pct: getWindowPct(d, lbW) })).filter(x => x.pct !== null).sort((a,b) => a.pct - b.pct);
+  const withFwd = domestic.filter(d => d.fwdPE !== null).map(d => ({ d, pct: getWindowFwdPct(d, lbW) })).filter(x => x.pct !== null).sort((a,b) => a.pct - b.pct);
+
+  // Foreign listed — use static fwdPct from annual FMP, sorted cheap→expensive
+  const foreignSorted = foreign.filter(d => d.fwdPE !== null && d.fwdPct !== null).sort((a,b) => a.fwdPct - b.fwdPct);
+  const foreignRow = (d, i) => {
+    const col = d.fwdPct >= thrPct ? 'var(--red)' : d.fwdPct <= (100-thrPct) ? 'var(--green)' : '#fff';
+    return `<div class="lbrow" onclick="scrollToRow('${d.ticker}')">
+      <span class="lbrk">${i}</span>
+      <span class="lbtk" style="color:${col}">${d.ticker}</span>
+      <span class="lbfpct">${d.fwdPE !== null ? d.fwdPE.toFixed(1)+'x' : ''}</span>
+      <span class="lbpct" style="color:${col}">${d.fwdPct !== null ? ordinal(d.fwdPct) : '—'}</span>
+    </div>`;
+  };
 
   document.getElementById('lbc-ttm').innerHTML = withTTM.slice(0,5).map(({d,pct},i) => ttmRow(d,i+1,false,pct)).join('') || nd;
   document.getElementById('lbe-ttm').innerHTML = withTTM.slice(-5).reverse().map(({d,pct},i) => ttmRow(d,i+1,true,pct)).join('') || nd;
   document.getElementById('lbc-fwd').innerHTML = withFwd.slice(0,5).map(({d,pct},i) => fwdRow(d,i+1,false,pct)).join('') || nd;
   document.getElementById('lbe-fwd').innerHTML = withFwd.slice(-5).reverse().map(({d,pct},i) => fwdRow(d,i+1,true,pct)).join('') || nd;
-}
+  document.getElementById('lb-foreign').innerHTML = foreignSorted.map((d,i) => foreignRow(d,i+1)).join('') || nd;
 
 // ── ANALYSIS PANEL ─────────────────────────────────────────
 function togAn(t) {
