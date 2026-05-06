@@ -752,6 +752,10 @@ function renderRow(d) {
     barHtml += `<div class="bnotch-lbl" style="left:${pos}%;color:${wc.color};opacity:${lblOpacity};font-weight:${fontWeight}">${wc.label} ${avg.toFixed(1)}x</div>`;
   });
 
+  // Window-aware percentiles — must be declared before dots use them
+  const winTTMPct = getWindowPct(d, primW);
+  const winFwdPct = getWindowFwdPct(d, primW);
+
   // TTM dot — always green, label above
   if (ttmPE !== null) {
     const pos = peToBarPct(ttmPE);
@@ -777,10 +781,6 @@ function renderRow(d) {
       </div>`;
     }
   }
-
-  // Window-aware percentiles for display
-  const winTTMPct = getWindowPct(d, primW);
-  const winFwdPct = getWindowFwdPct(d, primW);
 
   const pctStr  = winTTMPct !== null ? ordinal(winTTMPct) : '—';
   const fpctStr = winFwdPct !== null ? ordinal(winFwdPct) : '—';
