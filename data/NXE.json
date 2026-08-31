@@ -1785,6 +1785,23 @@
       "week52High": 18.91,
       "week52Low": 9.93,
       "peCrossCheck": null
+    },
+    {
+      "date": "2026-08-31",
+      "ttmPE": null,
+      "fwdPE": null,
+      "pegTTM": -0.427615427588396,
+      "evEbitdaTTM": 89.6362,
+      "epsGrowthTTMYoy": null,
+      "epsGrowth3Y": null,
+      "revenueGrowthTTM": null,
+      "grossMarginTTM": null,
+      "netProfitMarginTTM": null,
+      "roeTTM": -16.12,
+      "beta": 1.7817142,
+      "week52High": 18.91,
+      "week52Low": 10,
+      "peCrossCheck": null
     }
   ],
   "rollingPE": []
